@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="description" content="Asset Management System" />
+    <title>Asset Management System</title>
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem('theme');
+          var useDark = saved ? (saved === 'dark') : window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          document.documentElement.setAttribute('data-theme', useDark ? 'dark' : 'light');
+        } catch (e) {
+          // no-op
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+  </body>
+</html>
