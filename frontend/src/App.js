@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 import { AuthProvider } from "./contexts/AuthContext"
 import { ToastProvider } from "./contexts/ToastContext"
+import { ThemeProvider } from "./contexts/ThemeContext"
 import ToastContainer from "./components/ToastContainer"
 import { useToast } from "./contexts/ToastContext"
 import ProtectedRoute from "./components/ProtectedRoute"
@@ -12,6 +13,7 @@ import RoleSelection from "./pages/RoleSelection"
 import Register from "./pages/Register"
 import Profile from "./pages/Profile"
 import Dashboard from "./pages/Dashboard"
+import ResetPassword from "./pages/ResetPassword"
 
 // ---------- SUPER ADMIN PAGES ----------
 import Categories from "./pages/Categories"
@@ -45,14 +47,16 @@ import "./App.css"
 
 function App() {
   return (
-    <ToastProvider>
-      <AuthProvider>
-        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/role-selection" element={<RoleSelection />} />
-            <Route path="/register/:role" element={<Register />} />
+    <ThemeProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/role-selection" element={<RoleSelection />} />
+              <Route path="/register/:role" element={<Register />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
 
             {/* Default Redirect */}
             <Route path="/" element={<Navigate to="/login" replace />} />
@@ -105,6 +109,7 @@ function App() {
         <ToastContainer />
       </AuthProvider>
     </ToastProvider>
+  </ThemeProvider>
   )
 }
 

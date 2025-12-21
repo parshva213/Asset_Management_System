@@ -2,8 +2,12 @@
 
 import { Link, Outlet, useLocation } from "react-router-dom"
 import { useAuth } from "./../contexts/AuthContext"
+import { useTheme } from "./../contexts/ThemeContext"
 import { useMemo, useState, useEffect } from "react"
 import Loading from "./Loading"
+import Footer from "./Footer"
+
+import ThemeToggle from "./ThemeToggle"
 
 const MENU_ITEMS = {
   "Super Admin": [
@@ -52,6 +56,7 @@ const MENU_ITEMS = {
 
 const Layout = () => {
   const { user, logout } = useAuth()
+  const { theme } = useTheme()
   const location = useLocation()
 
   // ------------------ ROLE BASED MENUS ------------------
@@ -62,11 +67,15 @@ const Layout = () => {
   }
 
   return (
-    <div className="layout">
+    <div className={`layout ${theme}`}>
       {/* Sidebar */}
       <aside className="sidebar">
         <div className="sidebar-header">
-          <div className="sidebar-title">Asset Manager</div>
+           <div className="sidebar-title" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              {/* AMS Logo PlaceHolder - circle */}
+              <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'linear-gradient(to right, #818cf8, #c7d2fe)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold' }}>A</div>
+              Asset Manager
+           </div>
         </div>
         <nav className="sidebar-nav">
           <ul>
@@ -96,6 +105,7 @@ const Layout = () => {
             {currentMenu.find(item => item.path === location.pathname)?.name || 'Dashboard'}
           </div>
           <div className="header-actions">
+            <ThemeToggle style={{ marginRight: '1rem' }} />
             <div className="user-info">
               <span style={{ fontWeight: 600 }}>{user.name}</span>
               <span style={{ opacity: 0.7 }}>({user.role})</span>
@@ -105,6 +115,7 @@ const Layout = () => {
         <main className="content">
           <Outlet />
         </main>
+        <Footer />
       </div>
     </div>
   )

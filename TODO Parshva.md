@@ -46,7 +46,7 @@
 [ ] make css grid-template-columns: repeat(auto-fit, minmax(285px, 1fr)) for .dashboard-stats.
 [ ] light and dark theme is not working.
 [ ] In Quick Actions put a link tag into a button of seccondary color with secondory text and also put there content in space around and provide some internal padding in buttons.
-[ ] ![alt text](quick_action_hover.png) make this and change color and background as need in same way only.
+[ ] ![alt text](./img/quick_action_hover.png) make this and change color and background as need in same way only.
 
 ### /employees
 [ ] Change the Authentication for view the user.
@@ -60,7 +60,7 @@
 [ ] Remove Delete Button from the table rows from the action.
 
 ### /assets
-[ ] ![alt text](asset_table_header_list.png) update the table in the given formate.
+[ ] ![alt text](./img/asset_table_header_list.png) update the table in the given formate.
 [ ] in Purchase Date it were showing with time 0 hour 0 min and 0 sec so show only the date.
 
 ### /requests

@@ -161,7 +161,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem("token")
+    const token = localStorage.getItem("token") || sessionStorage.getItem("token")
     if (token) {
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`
       fetchProfile()
@@ -183,12 +183,17 @@ export const AuthProvider = ({ children }) => {
   }
 
   // ✅ Login
-  const login = async (email, password) => {
+  const login = async (email, password, rememberMe = false) => {
     try {
       const response = await axios.post(`${API_BASE}/login`, { email, password })
       const { token, user } = response.data
 
-      localStorage.setItem("token", token)
+      if (rememberMe) {
+          localStorage.setItem("token", token)
+      } else {
+          sessionStorage.setItem("token", token)
+      }
+      
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`
       setUser(user)
 
@@ -293,6 +298,7 @@ export const AuthProvider = ({ children }) => {
   // ✅ Logout
   const logout = () => {
     localStorage.removeItem("token")
+    sessionStorage.removeItem("token")
     delete axios.defaults.headers.common["Authorization"]
     setUser(null)
   }
