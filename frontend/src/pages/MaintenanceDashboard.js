@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react"
 import axios from "axios"
 import { useAuth } from "../contexts/AuthContext"
+import { Link } from "react-router-dom"
 
 const MaintenanceDashboard = () => {
   const { user } = useAuth()
@@ -89,9 +90,9 @@ const MaintenanceDashboard = () => {
       <div className="card">
         <h3>Quick Actions</h3>
         <ul>
-          <li><a href="/new-configuration">Configure New Asset</a></li>
-          <li><a href="/update-maintenance">Update Maintenance Record</a></li>
-          <li><a href="/maintenance-tasks">View All Tasks</a></li>
+          <li><Link to="/new-configuration">Configure New Asset</Link></li>
+          <li><Link to="/update-maintenance">Update Maintenance Record</Link></li>
+          <li><Link to="/maintenance-tasks">View All Tasks</Link></li>
         </ul>
       </div>
     </div>

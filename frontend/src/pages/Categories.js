@@ -105,9 +105,7 @@ const Categories = () => {
         <div>
             <div className="flex-between mb-4">
                 <h2>Categories Management</h2>
-                {user?.role === "Super Admin" && (
-                    <Button onClick={() => setShowModal(true)}>Add Category</Button>
-                )}
+
             </div>
 
             {categories.length === 0 ? (

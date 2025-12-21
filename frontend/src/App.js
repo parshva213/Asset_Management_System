@@ -10,7 +10,6 @@ import Layout from "./components/Layout"
 // ---------- COMMON PAGES ----------
 import Login from "./pages/Login"
 import RoleSelection from "./pages/RoleSelection"
-import Register from "./pages/Register"
 import Profile from "./pages/Profile"
 import Dashboard from "./pages/Dashboard"
 import ResetPassword from "./pages/ResetPassword"
@@ -55,7 +54,7 @@ function App() {
               {/* Public Routes */}
               <Route path="/login" element={<Login />} />
               <Route path="/role-selection" element={<RoleSelection />} />
-              <Route path="/register/:role" element={<Register />} />
+              <Route path="/role-selection" element={<RoleSelection />} />
               <Route path="/reset-password" element={<ResetPassword />} />
 
             {/* Default Redirect */}

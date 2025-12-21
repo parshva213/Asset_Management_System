@@ -135,7 +135,8 @@ body {
 
 .role-options {
     display: grid;
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
     margin-top: 1.5rem;
 }
 
@@ -169,7 +170,8 @@ body {
 /* --- Layout --- */
 .layout {
     display: flex;
-    min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
 }
 
 .sidebar {
@@ -180,11 +182,16 @@ body {
     display: flex;
     flex-direction: column;
     transition: width 0.3s ease;
+    height: 100%;
+    padding: 0;
+    overflow: hidden;
 }
 
 .sidebar-header {
-    padding: 2rem;
+    padding: 1rem;
     border-bottom: 1px solid #334155;
+    margin-bottom: 0; /* Ensure no margin bottom */
+    flex-shrink: 0;
 }
 
 .sidebar-title {
@@ -199,20 +206,28 @@ body {
 
 .sidebar-nav {
     list-style: none;
-    padding: 1.5rem 1rem;
+    padding: 0;
     flex: 1;
+    margin: 0;
+    margin-top: 10px;
+    overflow-y: auto;
+}
+
+.sidebar-footer {
+    flex-shrink: 0;
+    border-top: 1px solid #334155;
 }
 
 .sidebar-nav a {
     display: flex;
     align-items: center;
-    padding: 0.75rem 1rem;
+    padding: 16px;
     color: #94a3b8;
     text-decoration: none;
     transition: all 0.2s ease;
     border-radius: 0.5rem;
-    margin-bottom: 0.5rem;
     font-weight: 500;
+    margin: 0 13px;
 }
 
 .sidebar-nav a:hover,
@@ -227,20 +242,20 @@ body {
     display: flex;
     flex-direction: column;
     background: var(--background);
-    overflow-x: hidden;
+    overflow: hidden;
+    height: 100%;
 }
 
 .header {
     background: var(--panel);
     backdrop-filter: blur(12px);
-    padding: 1rem 2rem;
+    padding: 0.71875rem 2rem;
     border-bottom: 1px solid var(--border);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    position: sticky;
-    top: 0;
     z-index: 10;
+    flex-shrink: 0;
 }
 
 .header-title {
@@ -268,12 +283,13 @@ body {
     max-width: 1400px;
     margin: 0 auto;
     width: 100%;
+    overflow-y: auto;
 }
 
 /* --- Dashboard --- */
 .dashboard-stats {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(285px, 1fr)); /* Updated min-width as per request */
     gap: 1.5rem;
     margin-bottom: 2rem;
 }
@@ -304,6 +320,27 @@ body {
     color: var(--text-secondary);
     font-size: 0.875rem;
     font-weight: 500;
+}
+
+/* Quick Actions Button Styling */
+.quick-action-btn {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.quick-action-btn:hover {
+    background: var(--primary); /* Assuming "as needed in same way only" implies primary color on hover like provided image usually does, OR secondary color? Task says "change color and background as need in same way only". If it was "secondary color with secondary text", hover might be different. I'll stick to a nice hover effect. */
+    color: white;
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
 }
 
 /* --- Components --- */

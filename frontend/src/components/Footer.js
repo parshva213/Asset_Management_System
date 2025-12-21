@@ -4,7 +4,7 @@ const Footer = () => {
     return (
         <footer style={{
             textAlign: 'center',
-            padding: '1rem',
+            padding: '1.25rem 1rem 1.25rem 1rem',
             marginTop: 'auto',
             color: 'var(--text-secondary)',
             fontSize: '0.875rem',
@@ -12,6 +12,7 @@ const Footer = () => {
             background: 'var(--panel)'
         }}>
             <p>&copy; {new Date().getFullYear()} Asset Management System. All rights reserved.</p>
+            <p>Version 1.0.0</p>
         </footer>
     );
 };

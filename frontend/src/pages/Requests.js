@@ -170,9 +170,7 @@ const Requests = () => {
               ? "Request Management"
               : "All Requests"}
         </h2>
-        <button onClick={() => setShowModal(true)} className="btn btn-primary">
-          {user?.role === "Employee" ? "Submit Request" : "Create Request"}
-        </button>
+
       </div>
 
       <div className="filters">

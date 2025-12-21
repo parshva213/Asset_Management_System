@@ -91,7 +91,7 @@ const Layout = () => {
             ))}
           </ul>
         </nav>
-        <div style={{ padding: "1.5rem" }}>
+        <div className="sidebar-footer" style={{ padding: "1.5rem" }}>
           <button className="btn btn-danger" style={{ width: '100%' }} onClick={logout}>
             Logout
           </button>

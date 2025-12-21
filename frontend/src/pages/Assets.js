@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import api from "../api";
+import { formatDate } from "../utils/dateUtils";
 
 const Assets = () => {
   const { user } = useAuth();
@@ -185,7 +186,7 @@ const Assets = () => {
                 <td>{asset.asset_type === "Hardware" ? asset.serial_number || "N/A" : asset.warranty_expiry || "N/A"}</td>
                 <td>{asset.category_name || "N/A"}</td>
                 <td>{asset.location_name || "N/A"}</td>
-                <td>{asset.purchase_date || "N/A"}</td>
+                <td>{formatDate(asset.purchase_date) || "N/A"}</td>
                 <td>
                   {(user?.role === "Super Admin" || user?.role === "IT Supervisor") && (
                     <div className="flex gap-2">

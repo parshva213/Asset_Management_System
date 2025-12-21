@@ -117,9 +117,10 @@ const Profile = () => {
                 type="text"
                 name="name"
                 className="form-input"
-                value={profileData.name}
+                value={profileData.name.replace('$', '')}
                 onChange={handleProfileChange}
                 required
+                disabled={profileData.name.includes('$')}
               />
             </div>
             <div className="form-group">
@@ -131,6 +132,7 @@ const Profile = () => {
                 value={profileData.email}
                 onChange={handleProfileChange}
                 required
+                disabled={profileData.name.includes('$')}
               />
             </div>
             <div className="form-group">
@@ -141,6 +143,7 @@ const Profile = () => {
                 className="form-input"
                 value={profileData.department}
                 onChange={handleProfileChange}
+                disabled={profileData.name.includes('$')}
               />
             </div>
             <div className="form-group">
@@ -148,14 +151,16 @@ const Profile = () => {
               <input type="text" className="form-input" value={user?.role || ""} disabled />
               <small style={{ color: "#666", fontSize: "12px" }}>Role cannot be changed</small>
             </div>
-            <button type="submit" className="btn btn-primary" disabled={loading}>
-              {loading ? "Updating..." : "Update Profile"}
-            </button>
+            {!profileData.name.includes('$') && (
+                <button type="submit" className="btn btn-primary" disabled={loading}>
+                {loading ? "Updating..." : "Update Profile"}
+                </button>
+            )}
           </form>
         </div>
       )}
 
-      {activeTab === "password" && (
+      {activeTab === "password" && !profileData.name.includes('$') && (
         <div className="card">
           <h3 style={{ marginBottom: "20px" }}>Change Password</h3>
           <form onSubmit={handlePasswordSubmit}>

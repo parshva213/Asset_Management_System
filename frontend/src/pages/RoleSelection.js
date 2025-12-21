@@ -14,7 +14,7 @@ const RoleSelection = () => {
   ]
 
   const handleRoleSelect = (roleKey) => {
-    navigate(`/register/${roleKey}`)
+    navigate(`/login`)
   }
 
   return (

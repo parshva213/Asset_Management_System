@@ -157,18 +157,7 @@ const Locations = () => {
     <div>
       <div className="flex-between mb-4">
         <h2>{user?.role === "IT Supervisor" ? "Room Management" : "Locations & Rooms Management"}</h2>
-        <div className="flex gap-2">
-          {user?.role === "Super Admin" && (
-            <button onClick={() => setShowLocationModal(true)} className="btn btn-primary">
-              Add Location
-            </button>
-          )}
-          {(user?.role === "Super Admin" || user?.role === "IT Supervisor") && (
-            <button onClick={() => setShowRoomModal(true)} className="btn btn-secondary">
-              Add Room
-            </button>
-          )}
-        </div>
+
       </div>
 
       {user?.role === "Super Admin" && (
@@ -217,9 +206,6 @@ const Locations = () => {
                         <button onClick={() => handleEditLocation(location)} className="btn btn-secondary">
                           Edit
                         </button>
-                        <button onClick={() => handleDeleteLocation(location.id)} className="btn btn-danger">
-                          Delete
-                        </button>
                       </div>
                     </td>
                   </tr>
@@ -260,9 +246,6 @@ const Locations = () => {
                       <div className="flex gap-2">
                         <button onClick={() => handleEditRoom(room)} className="btn btn-secondary">
                           Edit
-                        </button>
-                        <button onClick={() => handleDeleteRoom(room.id)} className="btn btn-danger">
-                          Delete
                         </button>
                       </div>
                     </td>

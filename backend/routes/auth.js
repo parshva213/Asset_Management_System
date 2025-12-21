@@ -195,16 +195,25 @@ router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const result = await db.query(
+    // Check if user exists first (As requested: "fire query to check the account is registerd or not")
+    const userResult = await db.query(
       `SELECT id, name, email, password, role, department
        FROM users
-       WHERE email = $1 AND password = $2`,
-      [email, password]
+       WHERE email = $1`,
+      [email]
     );
 
-    if (result.rows.length === 0) return res.status(401).json({ message: "Invalid credentials" });
+    if (userResult.rows.length === 0) {
+        return res.status(404).json({ message: "Account is not registered" });
+    }
 
-    const user = result.rows[0];
+    const user = userResult.rows[0];
+
+    // Check password
+    if (user.password !== password) {
+        return res.status(401).json({ message: "Password does not match" });
+    }
+
     const token = jwt.sign(
       { id: user.id, name: user.name, email: user.email, role: user.role },
       JWT_SECRET,
