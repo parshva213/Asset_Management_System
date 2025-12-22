@@ -285,14 +285,13 @@ app.get("/api/dashboard", authenticate(), async (req, res) => {
     try {
         let stats = {};
 
-        if (req.user.role === "Super Admin") {
+        if (req.user.role === "Super Admin" || req.user.role === "Admin") {
             // Total assets, users, requests, etc.
             const [totalAssets] = await pool.query("SELECT COUNT(*) as count FROM assets");
             const [totalUsers] = await pool.query("SELECT COUNT(*) as count FROM users WHERE role != 'Super Admin'");
             const [pendingRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE status = 'Pending'");
             const [availableAssets] = await pool.query("SELECT COUNT(*) as count FROM assets WHERE status = 'Available'");
             const [assignedAssets] = await pool.query("SELECT COUNT(*) as count FROM assets WHERE status = 'Assigned'");
-
             stats = {
                 totalAssets: totalAssets[0].count,
                 totalUsers: totalUsers[0].count,
@@ -479,12 +478,12 @@ app.get("/api/maintenance/dashboard", authenticate(["Maintenance"]), async (req,
 });
 
 // ------------------ ADMIN (Manage Users) ------------------
-app.get("/api/users", authenticate(["Admin"]), async (req, res) => {
+app.get("/api/users", authenticate(["Super Admin", "Admin"]), async (req, res) => {
     const [rows] = await pool.query("SELECT id, name, email, role, department, phone FROM users");
     res.json(rows);
 });
 
-app.post("/api/users", authenticate(["Admin"]), async (req, res) => {
+app.post("/api/users", authenticate(["Super Admin", "Admin"]), async (req, res) => {
     const { name, email, password, role, department, phone } = req.body;
     await pool.query(
         "INSERT INTO users (name, email, password, role, department, phone) VALUES (?, ?, ?, ?, ?, ?)", [name, email, password, role, department || null, phone || null]
@@ -492,7 +491,7 @@ app.post("/api/users", authenticate(["Admin"]), async (req, res) => {
     res.json({ success: true });
 });
 
-app.put("/api/users/:id", authenticate(["Admin"]), async (req, res) => {
+app.put("/api/users/:id", authenticate(["Super Admin", "Admin"]), async (req, res) => {
     const { name, email, password, role, department, phone } = req.body;
     await pool.query(
         "UPDATE users SET name=?, email=?, password=?, role=?, department=?, phone=? WHERE id=?", [name, email, password, role, department || null, phone || null, req.params.id]
@@ -500,7 +499,7 @@ app.put("/api/users/:id", authenticate(["Admin"]), async (req, res) => {
     res.json({ success: true });
 }); 
 
-app.delete("/api/users/:id", authenticate(["Admin"]), async (req, res) => {
+app.delete("/api/users/:id", authenticate(["Super Admin", "Admin"]), async (req, res) => {
     await pool.query("DELETE FROM users WHERE id=?", [req.params.id]);
     res.json({ success: true });
 });

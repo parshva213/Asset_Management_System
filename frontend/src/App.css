@@ -323,20 +323,20 @@ body {
 }
 
 /* Quick Actions Button Styling */
-.quick-action-btn {
+a.quick-action-btn {
     display: flex;
     align-items: center;
     border: 1px solid var(--border-color);
-    background: var(--bg-secondary);
-    color: var(--text-secondary);
+    background: var(--panel);
+    color: var(--text);
     font-weight: 600;
     text-decoration: none;
     transition: all 0.3s ease;
     box-shadow: var(--shadow-sm);
 }
 
-.quick-action-btn:hover {
-    background: var(--primary); /* Assuming "as needed in same way only" implies primary color on hover like provided image usually does, OR secondary color? Task says "change color and background as need in same way only". If it was "secondary color with secondary text", hover might be different. I'll stick to a nice hover effect. */
+a.quick-action-btn:hover {
+    background: var(--primary);
     color: white;
     border-color: var(--primary);
     transform: translateY(-2px);
