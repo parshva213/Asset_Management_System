@@ -94,7 +94,7 @@ const Employees = () => {
   return (
     <div>
       <div className="flex-between mb-4">
-        <h2>Employee Management</h2>
+        <h2>User Management</h2>
       </div>
 
       {employees.length === 0 ? (

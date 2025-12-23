@@ -177,6 +177,9 @@ const app = express();
 app.use(helmet());
 app.use(cors());
 
+// Trust Proxy for Rate Limiting
+app.set('trust proxy', 1);
+
 // Logging Middleware
 app.use(morgan('dev'));
 
@@ -543,4 +546,19 @@ server.on("error", (err) => {
     }
     console.error("Server error:", err);
     process.exit(1);
+});
+
+// Global Error Handling to prevent crash
+process.on('uncaughtException', (err) => {
+    console.error('UNCAUGHT EXCEPTION! 💥 Shutting down...');
+    console.error(err.name, err.message, err.stack);
+    process.exit(1);
+});
+
+process.on('unhandledRejection', (err) => {
+    console.error('UNHANDLED REJECTION! 💥 Shutting down...');
+    console.error(err.name, err.message, err.stack);
+    server.close(() => {
+        process.exit(1);
+    });
 });

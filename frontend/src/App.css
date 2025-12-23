@@ -1,27 +1,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
+    /* ... existing vars ... */
     --primary: #6366f1;
-    /* Indigo 500 */
     --primary-hover: #4f46e5;
-    /* Indigo 600 */
     --secondary: #64748b;
-    /* Slate 500 */
     --success: #10b981;
-    /* Emerald 500 */
     --danger: #ef4444;
-    /* Red 500 */
     --warning: #f59e0b;
-    /* Amber 500 */
     --background: #f8fafc;
-    /* Slate 50 */
     --panel: #ffffff;
     --text: #0f172a;
-    /* Slate 900 */
     --text-secondary: #64748b;
-    /* Slate 500 */
     --border: #e2e8f0;
-    /* Slate 200 */
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
@@ -33,6 +24,14 @@
     --text-primary: #0f172a;
     --text-secondary: #64748b;
     --border-color: #e2e8f0;
+
+    /* Sidebar Defaults (Light Mode) */
+    --sidebar-bg: #ffffff;
+    --sidebar-text: #64748b;
+    --sidebar-hover-bg: #f1f5f9;
+    --sidebar-active-bg: #e2e8f0;
+    --sidebar-active-text: #0f172a;
+    --sidebar-border: #e2e8f0;
 }
 
 body.light {
@@ -41,23 +40,69 @@ body.light {
     --text-primary: #0f172a;
     --text-secondary: #64748b;
     --border-color: #e2e8f0;
+    /* Redundant but explicit */
+    --sidebar-bg: #ffffff;
+    --sidebar-text: #64748b;
+    --sidebar-hover-bg: #f1f5f9;
+    --sidebar-active-bg: #e2e8f0;
+    --sidebar-active-text: #0f172a;
+    --sidebar-border: #e2e8f0;
 }
 
 body.dark {
     --bg-primary: #0f172a;
-    /* Slate 900 */
     --bg-secondary: #1e293b;
-    /* Slate 800 */
     --text-primary: #f8fafc;
-    /* Slate 50 */
     --text-secondary: #94a3b8;
-    /* Slate 400 */
     --border-color: #334155;
-    /* Slate 700 */
     --background: #0f172a;
     --panel: #1e293b;
     --text: #f8fafc;
     --border: #334155;
+
+    /* Sidebar Dark Mode */
+    --sidebar-bg: #1e293b;
+    --sidebar-text: #94a3b8;
+    --sidebar-hover-bg: #334155;
+    --sidebar-active-bg: #334155;
+    --sidebar-active-text: #ffffff;
+    --sidebar-border: #334155;
+}
+
+/* ... existing code ... */
+
+.sidebar {
+    width: 280px;
+    background: var(--sidebar-bg);
+    color: var(--sidebar-text);
+    display: flex;
+    flex-direction: column;
+    transition: width 0.3s ease, background 0.3s ease;
+    height: 100%;
+    padding: 0;
+    overflow: hidden;
+    border-right: 1px solid var(--sidebar-border);
+}
+
+/* ... existing code ... */
+
+.sidebar-nav a {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    color: var(--sidebar-text);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    margin: 0 13px;
+}
+
+.sidebar-nav a:hover,
+.sidebar-nav a.active {
+    background: var(--sidebar-active-bg);
+    color: var(--sidebar-active-text);
+    transform: translateX(4px);
 }
 
 * {
@@ -156,6 +201,10 @@ body {
     transform: translateY(-2px);
 }
 
+body.dark .role-option:hover {
+    background: #334155;
+}
+
 .role-option h3 {
     margin-bottom: 0.5rem;
     color: var(--text);
@@ -168,41 +217,89 @@ body {
 }
 
 /* --- Layout --- */
-.layout {
-    display: flex;
-    height: 100vh;
-    overflow: hidden;
-}
-
-.sidebar {
-    width: 280px;
-    background: #1e293b;
-    /* Slate 800 */
-    color: white;
+.layout-container {
     display: flex;
     flex-direction: column;
-    transition: width 0.3s ease;
-    height: 100%;
-    padding: 0;
+    height: 100vh;
     overflow: hidden;
+    background-color: var(--background);
+    color: var(--text);
 }
 
-.sidebar-header {
-    padding: 1rem;
-    border-bottom: 1px solid #334155;
-    margin-bottom: 0; /* Ensure no margin bottom */
+.global-header {
+    height: 64px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
     flex-shrink: 0;
+    z-index: 50;
+    box-shadow: var(--shadow-sm);
 }
 
-.sidebar-title {
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.logo-circle {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, #6366f1, #818cf8);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.brand-name {
     font-size: 1.25rem;
     font-weight: 700;
+    color: var(--text);
     letter-spacing: -0.025em;
-    background: linear-gradient(to right, #818cf8, #c7d2fe);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
 }
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.user-profile {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    line-height: 1.2;
+}
+
+.user-name {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--text);
+}
+
+.user-role {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.layout-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    /* Ensure footer aligns correctly if needed */
+}
+
+/* Footer styling handled in component but layout ensures it sits at bottom */
+
+
 
 .sidebar-nav {
     list-style: none;
@@ -213,29 +310,7 @@ body {
     overflow-y: auto;
 }
 
-.sidebar-footer {
-    flex-shrink: 0;
-    border-top: 1px solid #334155;
-}
 
-.sidebar-nav a {
-    display: flex;
-    align-items: center;
-    padding: 16px;
-    color: #94a3b8;
-    text-decoration: none;
-    transition: all 0.2s ease;
-    border-radius: 0.5rem;
-    font-weight: 500;
-    margin: 0 13px;
-}
-
-.sidebar-nav a:hover,
-.sidebar-nav a.active {
-    background: #334155;
-    color: white;
-    transform: translateX(4px);
-}
 
 .main-content {
     flex: 1;
@@ -279,11 +354,15 @@ body {
 
 .content {
     flex: 1;
-    padding: 2rem;
+    padding: 2rem; /* Default padding for all pages */
     max-width: 1400px;
     margin: 0 auto;
     width: 100%;
     overflow-y: auto;
+}
+
+.content.dashboard-content {
+    padding: 0 2rem; /* Remove top/bottom padding for dashboard */
 }
 
 /* --- Dashboard --- */
@@ -371,14 +450,14 @@ a.quick-action-btn:hover {
 }
 
 .btn-secondary {
-    background: white;
+    background: var(--panel);
     color: var(--text);
     border: 1px solid var(--border);
 }
 
 .btn-secondary:hover {
-    background: #f8fafc;
-    border-color: #cbd5e1;
+    background: var(--bg-primary);
+    border-color: var(--border);
 }
 
 .btn-danger {
@@ -494,16 +573,35 @@ a.quick-action-btn:hover {
     padding: 0.75rem 1rem;
     border-radius: 0.5rem;
     border: 1px solid var(--border);
-    background: #f8fafc;
+    background: var(--bg-primary);
+    color: var(--text);
     transition: all 0.2s;
     font-size: 0.9375rem;
+}
+
+/* Fix for Chrome/Edge Autofill White Background */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active{
+    -webkit-box-shadow: 0 0 0 30px var(--bg-primary) inset !important;
+    -webkit-text-fill-color: var(--text) !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+body.dark input:-webkit-autofill,
+body.dark input:-webkit-autofill:hover, 
+body.dark input:-webkit-autofill:focus, 
+body.dark input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px #0f172a inset !important;
+    -webkit-text-fill-color: white !important;
 }
 
 .form-input:focus {
     outline: none;
     border-color: var(--primary);
-    background: white;
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    background: var(--bg-primary);
+    box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.2);
 }
 
 .form-label {

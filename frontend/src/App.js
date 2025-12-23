@@ -3,12 +3,13 @@ import { AuthProvider } from "./contexts/AuthContext"
 import { ToastProvider } from "./contexts/ToastContext"
 import { ThemeProvider } from "./contexts/ThemeContext"
 import ToastContainer from "./components/ToastContainer"
-import { useToast } from "./contexts/ToastContext"
+
 import ProtectedRoute from "./components/ProtectedRoute"
 import Layout from "./components/Layout"
 
 // ---------- COMMON PAGES ----------
 import Login from "./pages/Login"
+import Register from "./pages/Register"
 import RoleSelection from "./pages/RoleSelection"
 import Profile from "./pages/Profile"
 import Dashboard from "./pages/Dashboard"
@@ -53,6 +54,7 @@ function App() {
             <Routes>
               {/* Public Routes */}
               <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
               <Route path="/role-selection" element={<RoleSelection />} />
               <Route path="/role-selection" element={<RoleSelection />} />
               <Route path="/reset-password" element={<ResetPassword />} />

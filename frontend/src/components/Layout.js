@@ -3,7 +3,7 @@
 import { Link, Outlet, useLocation } from "react-router-dom"
 import { useAuth } from "./../contexts/AuthContext"
 import { useTheme } from "./../contexts/ThemeContext"
-import { useMemo, useState, useEffect } from "react"
+import { useMemo } from "react"
 import Loading from "./Loading"
 import Footer from "./Footer"
 
@@ -12,7 +12,7 @@ import ThemeToggle from "./ThemeToggle"
 const MENU_ITEMS = {
   "Super Admin": [
     { name: "Dashboard", path: "/dashboard" },
-    { name: "Employees", path: "/employees" },
+    { name: "Users", path: "/employees" },
     { name: "Categories", path: "/categories" },
     { name: "Locations", path: "/locations" },
     { name: "Assets", path: "/assets" },
@@ -67,56 +67,64 @@ const Layout = () => {
   }
 
   return (
-    <div className={`layout ${theme}`}>
-      {/* Sidebar */}
-      <aside className="sidebar">
-        <div className="sidebar-header">
-           <div className="sidebar-title" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              {/* AMS Logo PlaceHolder - circle */}
-              <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'linear-gradient(to right, #818cf8, #c7d2fe)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold' }}>A</div>
-              Asset Manager
-           </div>
+    <div className={`layout-container ${theme}`}>
+      {/* Global Header */}
+      <header className="global-header">
+        <div className="header-left">
+            <div className="logo-circle">A</div>
+            <span className="brand-name">Asset Management System</span>
         </div>
-        <nav className="sidebar-nav">
-          <ul>
-            {currentMenu.map((item, idx) => (
-              <li key={idx}>
-                <Link
-                  to={item.path}
-                  className={location.pathname === item.path ? 'active' : ''}
-                >
-                  {item.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
-        <div className="sidebar-footer" style={{ padding: "1.5rem" }}>
-          <button className="btn btn-danger" style={{ width: '100%' }} onClick={logout}>
-            Logout
-          </button>
+        
+        <div className="header-center">
+            {/* Blank as requested */}
         </div>
-      </aside>
 
-      {/* Main Content */}
-      <div className="main-content">
-        <header className="header">
-          <div className="header-title">
-            {currentMenu.find(item => item.path === location.pathname)?.name || 'Dashboard'}
-          </div>
-          <div className="header-actions">
-            <ThemeToggle style={{ marginRight: '1rem' }} />
-            <div className="user-info">
-              <span style={{ fontWeight: 600 }}>{user.name}</span>
-              <span style={{ opacity: 0.7 }}>({user.role})</span>
-            </div>
-          </div>
-        </header>
-        <main className="content">
-          <Outlet />
-        </main>
-        <Footer />
+        <div className="header-right">
+             <div className="user-profile">
+                <span className="user-name">{user.name}</span>
+                <span className="user-role">({user.role})</span>
+             </div>
+             <ThemeToggle />
+             <button 
+                onClick={logout} 
+                className="btn btn-danger" 
+                style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
+             >
+                Logout
+             </button>
+        </div>
+      </header>
+
+      <div className="layout-body">
+        {/* Sidebar */}
+        <aside className="sidebar">
+            {/* Sidebar Header Removed as requested */}
+            <nav className="sidebar-nav">
+            <ul>
+                {currentMenu.map((item, idx) => (
+                <li key={idx}>
+                    <Link
+                    to={item.path}
+                    className={location.pathname === item.path ? 'active' : ''}
+                    >
+                    {item.name}
+                    </Link>
+                </li>
+                ))}
+            </ul>
+            </nav>
+        </aside>
+
+        {/* Main Content Area */}
+        <div className="main-content">
+            <main className={`content ${location.pathname.includes('dashboard') ? 'dashboard-content' : ''}`}>
+            <Outlet />
+            </main>
+        </div>
       </div>
+      
+      {/* Footer - Sticky/Fixed at bottom */}
+      <Footer />
     </div>
   )
 }

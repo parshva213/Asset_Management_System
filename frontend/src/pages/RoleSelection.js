@@ -2,6 +2,8 @@
 
 import { useNavigate } from "react-router-dom"
 
+import ThemeToggle from "../components/ThemeToggle"
+
 const RoleSelection = () => {
   const navigate = useNavigate()
 
@@ -13,12 +15,15 @@ const RoleSelection = () => {
     { key: "maintenance-staff", title: "Maintenance Staff", description: "Manage maintenance tasks for assets" },
   ]
 
-  const handleRoleSelect = (roleKey) => {
-    navigate(`/login`)
+  const handleRoleSelect = (role) => {
+    navigate(`/register`, { state: { role: role.title } })
   }
 
   return (
-    <div className="role-selection-container">
+    <div className="role-selection-container" style={{ position: 'relative' }}>
+        <div style={{ position: 'absolute', top: '1rem', right: '1rem' }}>
+            <ThemeToggle />
+        </div>
       <div className="role-selection-card">
         <h2 className="auth-title">Select Your Role</h2>
         <p style={{ textAlign: "center", color: "#666", marginBottom: "20px" }}>
@@ -27,7 +32,7 @@ const RoleSelection = () => {
 
         <div className="role-options">
           {roles.map((role) => (
-            <div key={role.key} className="role-option" onClick={() => handleRoleSelect(role.key)}>
+            <div key={role.key} className="role-option" onClick={() => handleRoleSelect(role)}>
               <h3>{role.title}</h3>
               <p>{role.description}</p>
             </div>

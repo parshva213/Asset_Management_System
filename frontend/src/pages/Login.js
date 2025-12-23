@@ -73,7 +73,7 @@ const Login = () => {
             A
         </div>
 
-        <h2 className="auth-title">Simple Login</h2>
+        <h2 className="auth-title">Login</h2>
 
         {message && (
           <div className={`alert ${message.includes("success") ? "alert-success" : "alert-error"}`}>{message}</div>
