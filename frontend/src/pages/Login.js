@@ -51,25 +51,13 @@ const Login = () => {
   }
 
   return (
-    <div className="auth-container" style={{ position: 'relative' }}>
-      <div style={{ position: 'absolute', top: '1rem', right: '1rem' }}>
+    <div className="auth-wrapper">
+      <div className="theme-toggle-wrapper">
           <ThemeToggle />
       </div>
       <div className="auth-card">
         {/* AMS Logo in Circle */}
-        <div style={{
-            width: '80px',
-            height: '80px',
-            borderRadius: '50%',
-            background: 'linear-gradient(to right, #818cf8, #c7d2fe)',
-            color: 'white',
-            fontSize: '2rem',
-            fontWeight: 'bold',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 1.5rem auto'
-        }}>
+        <div className="auth-logo">
             A
         </div>
 
@@ -104,21 +92,21 @@ const Login = () => {
           </div>
           
           <div className="flex-between mb-4">
-              <label className="flex gap-2" style={{ alignItems: 'center', cursor: 'pointer' }}>
+              <label className="remember-me-label">
                   <input 
                     type="checkbox" 
                     checked={rememberMe} 
                     onChange={(e) => setRememberMe(e.target.checked)} 
                   />
-                  <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Remember me</span>
+                  <span>Remember me</span>
               </label>
               
-              <Link to="/reset-password" style={{ fontSize: '0.875rem', color: 'var(--primary)', textDecoration: 'none', fontWeight: 500 }}>
+              <Link to="/reset-password" className="forgot-password-link">
                   Forgot Password?
               </Link>
           </div>
 
-          <button type="submit" className="btn btn-primary" style={{ width: "100%" }} disabled={loading}>
+          <button type="submit" className="btn btn-primary w-full" disabled={loading}>
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
@@ -131,7 +119,7 @@ const Login = () => {
       </div>
       
       {/* Footer for Login Page */}
-      <div style={{ position: 'absolute', bottom: 0, width: '100%' }}>
+      <div className="auth-footer-wrapper">
          <Footer />
       </div>
     </div>
