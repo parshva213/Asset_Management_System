@@ -6,6 +6,7 @@ import { useTheme } from "./../contexts/ThemeContext"
 import { useMemo } from "react"
 import Loading from "./Loading"
 import Footer from "./Footer"
+import logo from "../img/logo.png"
 
 import ThemeToggle from "./ThemeToggle"
 
@@ -71,7 +72,7 @@ const Layout = () => {
       {/* Global Header */}
       <header className="global-header">
         <div className="header-left">
-            <div className="logo-circle">A</div>
+            <img src={logo} alt="Logo" className="header-logo" />
             <span className="brand-name">Asset Management System</span>
         </div>
         

@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
 import ThemeToggle from "../components/ThemeToggle"
 import Footer from "../components/Footer"
+import logo from "../img/logo.png"
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" })
@@ -56,10 +57,8 @@ const Login = () => {
           <ThemeToggle />
       </div>
       <div className="auth-card">
-        {/* AMS Logo in Circle */}
-        <div className="auth-logo">
-            A
-        </div>
+        {/* AMS Logo */}
+        <img src={logo} alt="AMS Logo" className="auth-logo" />
 
         <h2 className="auth-title">Login</h2>
 
