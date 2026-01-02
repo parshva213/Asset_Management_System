@@ -127,3 +127,14 @@ CREATE TABLE maintenance_records (
     FOREIGN KEY (asset_id) REFERENCES assets(id) ON DELETE CASCADE,
     FOREIGN KEY (maintenance_by) REFERENCES users(id) ON DELETE CASCADE
 );
+
+CREATE TABLE asset_assignments (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    asset_id INT NOT NULL,
+    user_id INT NOT NULL,
+    description VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (asset_id) REFERENCES assets(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);

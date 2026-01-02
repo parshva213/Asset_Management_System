@@ -39,48 +39,128 @@ A comprehensive web-based Asset Management System built with React.js, Node.js, 
 - **Axios** - API communication
 - **CSS3** - Styling and responsive design
 
+## Branding & Design
+
+### Logo Color Palette
+The official color palette for the Asset Management System logo and branding is defined in `logo_color_palette.txt`. The palette includes:
+
+- **Primary Colors**: Professional blue (#007bff) and success green (#28a745)
+- **Secondary Colors**: Accent yellow (#ffc107) and dark gray (#333333)
+- **Neutral Colors**: White (#ffffff), light gray (#f8f9fa), and medium gray (#6c757d)
+
+### Design Guidelines
+- Use primary colors for main branding elements and UI components
+- Apply secondary colors for highlights, warnings, and interactive states
+- Maintain WCAG AA accessibility standards for color contrast
+- Ensure consistent application across all user interfaces and documentation
+
 ## Project Structure
 
-\`\`\`
+```
 AMS/
 ├── backend/                    # Node.js + Express.js API
 │   ├── config/
 │   │   └── database.js        # MySQL connection configuration
 │   ├── middleware/
-│   │   └── auth.js           # JWT authentication middleware
+│   │   ├── auth.js           # JWT authentication middleware
+│   │   ├── errorHandler.js   # Error handling middleware
+│   │   └── validate.js       # Input validation middleware
 │   ├── routes/
-│   │   ├── auth.js           # Authentication endpoints
 │   │   ├── assets.js         # Asset management endpoints
+│   │   ├── auth.js           # Authentication endpoints
 │   │   ├── categories.js     # Category management endpoints
 │   │   ├── locations.js      # Location and room endpoints
-│   │   ├── users.js          # User management endpoints
-│   │   └── requests.js       # Request management endpoints
+│   │   ├── maintenance.js    # Maintenance task endpoints
+│   │   ├── purchaseOrders.js # Purchase order endpoints
+│   │   ├── requests.js       # Request management endpoints
+│   │   └── users.js          # User management endpoints
+│   ├── scripts/
+│   │   └── checkAdminUser.js # Admin user verification script
+│   ├── utils/
+│   │   └── activityLogger.js # Activity logging utility
 │   ├── package.json          # Backend dependencies
 │   ├── server.js            # Express server configuration
-│   └── .env                 # Environment variables
+│   └── .env                 # Environment variables (create if needed)
 ├── frontend/                  # React.js Application
 │   ├── public/
 │   │   └── index.html       # HTML template
 │   ├── src/
 │   │   ├── components/      # Reusable components
+│   │   │   ├── Button.js
+│   │   │   ├── Footer.js
+│   │   │   ├── Layout.js
+│   │   │   ├── Loading.js
+│   │   │   ├── ProtectedRoute.js
+│   │   │   ├── ThemeToggle.js
+│   │   │   ├── Toast.js
+│   │   │   └── ToastContainer.js
 │   │   ├── contexts/        # React contexts
+│   │   │   ├── AuthContext.js
+│   │   │   ├── ThemeContext.js
+│   │   │   └── ToastContext.js
+│   │   ├── hooks/           # Custom hooks
+│   │   │   └── useCrud.js
 │   │   ├── pages/          # Page components
+│   │   │   ├── AdminDashboard.js
+│   │   │   ├── Assets.js
+│   │   │   ├── Categories.js
+│   │   │   ├── Dashboard.js
+│   │   │   ├── EmployeeDashboard.js
+│   │   │   ├── Employees.js
+│   │   │   ├── Locations.js
+│   │   │   ├── Login.js
+│   │   │   ├── MaintenanceDashboard.js
+│   │   │   ├── MaintenanceTasks.js
+│   │   │   ├── NewConfiguration.js
+│   │   │   ├── Profile.js
+│   │   │   ├── purchase-orders.js
+│   │   │   ├── Register.js
+│   │   │   ├── RegistrationRequests.js
+│   │   │   ├── Requests.js
+│   │   │   ├── ResetPassword.js
+│   │   │   ├── RoleSelection.js
+│   │   │   ├── SupervisorDashboard.js
+│   │   │   ├── SupplyAssets.js
+│   │   │   ├── UpdateMaintenance.js
+│   │   │   ├── VendorAssets.js
+│   │   │   ├── VendorDashboard.js
+│   │   │   ├── VendorRequests.js
+│   │   │   └── WarrantyDocs.js
+│   │   ├── utils/           # Utility functions
+│   │   │   └── dateUtils.js
+│   │   ├── api.js          # API configuration
 │   │   ├── App.js          # Main application component
 │   │   ├── App.css         # Application styles
+│   │   ├── index.css       # Global styles
 │   │   └── index.js        # Application entry point
+│   ├── build/              # Production build output
 │   └── package.json        # Frontend dependencies
 ├── database/                 # MySQL Database
 │   ├── schema.sql          # Database structure
 │   └── seed.sql           # Initial data (empty)
+├── img/                     # Images and documentation
 └── README.md              # Project documentation
-\`\`\`
+```
+
+## Quick Start
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/parshva213/Asset_Management_System.git
+   cd Asset_Management_System
+   ```
+
+2. Set up the database (see Database Setup section below).
+
+3. Install dependencies and start the application:
+   ```bash
+   npm install
+   npm run dev
+   ```
+
+   This will start both the backend server (http://localhost:5000) and frontend application (http://localhost:3000) concurrently.
 
 ## Installation & Setup
-
-### Prerequisites
-- Node.js (v14 or higher)
-- MySQL (v8.0 or higher)
-- npm or yarn package manager
 
 ### Database Setup
 1. Create a MySQL database:
@@ -198,6 +278,8 @@ Users with valid credentials are automatically approved and logged in. Invalid c
 - `GET /api/users` - Get users (role-based access)
 - `POST /api/users/assign-asset` - Assign asset to user
 - `POST /api/users/unassign-asset` - Unassign asset from user
+- `GET /api/users/assigned-assets` - Get all assets assigned to all users (Admin/Supervisor only)
+- `GET /api/users/my-assets` - Get assets assigned to current user (Employee)
 
 ### Requests
 - `GET /api/requests` - Get requests (filtered by role)
@@ -274,11 +356,15 @@ For support and questions:
 3. Examine the database schema
 4. Test with the provided demo credentials
 
-## Version History
+## Development Status
 
-- **v1.0.0**: Initial release with complete asset management functionality
-  - Role-based authentication system
-  - Asset CRUD operations
-  - Request workflow management
-  - User and location management
-  - Activity logging and audit trail
+The project is actively maintained with ongoing improvements. Current focus areas include:
+
+- Completing API integration for all frontend components
+- Testing and validation of all forms and data storage
+- UI/UX refinements based on user feedback
+- Security enhancements for production deployment
+
+For the latest updates, check the TODO.md file in the repository.
+
+## Version History
