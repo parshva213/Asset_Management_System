@@ -274,6 +274,12 @@ body.dark .role-option:hover {
     gap: 1rem;
 }
 
+.header-logo {
+    height: 40px;
+    width: auto;
+    object-fit: contain;
+}
+
 .logo-circle {
     width: 32px;
     height: 32px;
