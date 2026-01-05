@@ -71,38 +71,74 @@ body.dark {
 
 /* ... existing code ... */
 
+/* Smartsheet-style Icon Rail Sidebar */
 .sidebar {
-    width: 280px;
-    background: var(--sidebar-bg);
-    color: var(--sidebar-text);
+    width: 100px; /* Increased width as requested */
+    background: #1e1b4b; /* Deep Indigo/Purple */
+    color: white;
     display: flex;
     flex-direction: column;
-    transition: width 0.3s ease, background 0.3s ease;
+    transition: width 0.3s ease;
     height: 100%;
-    padding: 0;
+    padding: 10px 0;
     overflow: hidden;
-    border-right: 1px solid var(--sidebar-border);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 20;
 }
 
 /* ... existing code ... */
 
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.sidebar-nav ul {
+    width: 100%;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.sidebar-nav li {
+    width: 100%;
+    padding: 0 4px; /* Slight padding container */
+}
+
 .sidebar-nav a {
     display: flex;
+    flex-direction: column; /* Stack Icon and Text */
     align-items: center;
-    padding: 16px;
-    color: var(--sidebar-text);
+    justify-content: center;
+    padding: 6px 4px;
+    height: 48px; /* Reduced height as requested */
+    color: #94a3b8; /* Muted text */
     text-decoration: none;
     transition: all 0.2s ease;
-    border-radius: 0.5rem;
+    border-radius: 8px;
     font-weight: 500;
-    margin: 0 13px;
+    font-size: 0.65rem; /* Tiny text */
+    text-align: center;
+    line-height: 1.2;
+    margin: 0;
 }
 
 .sidebar-nav a:hover,
 .sidebar-nav a.active {
-    background: var(--sidebar-active-bg);
-    color: var(--sidebar-active-text);
-    transform: translateX(4px);
+    background: #312e81; /* Lighter indigo hover */
+    color: white; /* White text on active/hover */
+    transform: none; /* Remove translation */
+}
+
+/* Hide sidebar border var usage for this specific layout override */
+body.light .sidebar, body.dark .sidebar {
+    background: #1e1b4b;
+    color: white;
 }
 
 * {
@@ -326,23 +362,27 @@ body.dark .role-option:hover {
 
 .layout-body {
     display: flex;
+    flex-direction: row; /* Explicit row */
     flex: 1;
     overflow: hidden;
     position: relative;
-    /* Ensure footer aligns correctly if needed */
+    height: 100%; /* Ensure full height */
 }
 
+/* Footer styling handled in component but layout ensures it sits at bottom */
 /* Footer styling handled in component but layout ensures it sits at bottom */
 .site-footer {
     text-align: center;
     padding: 1.25rem 1rem;
-    margin-top: auto;
+    margin-top: auto; /* Push to bottom of flex container */
     color: var(--text-secondary);
     font-size: 0.875rem;
     border-top: 1px solid var(--border-color);
     background: var(--panel);
     width: 100%;
     flex-shrink: 0;
+    position: relative; /* Ensure it flows */
+    z-index: 1; /* Low z-index just to be above background */
 }
 
 /* Auth Page Footer Override */
@@ -370,8 +410,9 @@ body.dark .role-option:hover {
     display: flex;
     flex-direction: column;
     background: var(--background);
-    overflow: hidden;
+    overflow-y: auto; /* Scroll is here now */
     height: 100%;
+    position: relative;
 }
 
 .header {
@@ -384,6 +425,8 @@ body.dark .role-option:hover {
     align-items: center;
     z-index: 10;
     flex-shrink: 0;
+    position: sticky; /* Sticky header if desired, or can be static */
+    top: 0;
 }
 
 .header-title {
@@ -406,12 +449,11 @@ body.dark .role-option:hover {
 }
 
 .content {
-    flex: 1;
-    padding: 2rem; /* Default padding for all pages */
-    max-width: 1400px;
-    margin: 0 auto;
-    width: 100%;
-    overflow-y: auto;
+    flex: 1 0 auto; /* Grow yes, Shrink NO. Forces scroll if content is long. */
+    padding: 2rem; 
+    width: 100%; /* Ensure full width */
+    position: relative;
+    /* Removed explicit overflow on content, parent handles it */
 }
 
 .content.dashboard-content {
@@ -619,6 +661,10 @@ a.quick-action-btn:hover {
 
 .table tr:hover td {
     background: #f8fafc;
+}
+
+body.dark .table tr:hover td {
+    background: #1e293b; /* Darker background for dark mode hover */
 }
 
 .form-input {

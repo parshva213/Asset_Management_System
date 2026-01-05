@@ -119,13 +119,11 @@ const Layout = () => {
         {/* Main Content Area */}
         <div className="main-content">
             <main className={`content ${location.pathname.includes('dashboard') ? 'dashboard-content' : ''}`}>
-            <Outlet />
+                <Outlet />
             </main>
+            <Footer />
         </div>
       </div>
-      
-      {/* Footer - Sticky/Fixed at bottom */}
-      <Footer />
     </div>
   )
 }
