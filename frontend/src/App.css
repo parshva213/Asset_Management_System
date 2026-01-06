@@ -80,7 +80,7 @@ body.dark {
     flex-direction: column;
     transition: width 0.3s ease;
     height: 100%;
-    padding: 10px 0;
+    padding: 0;
     overflow: hidden;
     border-right: 1px solid rgba(255, 255, 255, 0.1);
     z-index: 20;
@@ -93,6 +93,8 @@ body.dark {
     flex-direction: column;
     align-items: center;
     width: 100%;
+    overflow: hidden; /* Remove scrollbar as requested */
+    padding-top: 0; /* Top padding for list */
 }
 
 .sidebar-nav ul {
@@ -102,12 +104,15 @@ body.dark {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 0px; /* Increased gap between items */
+    overflow: hidden;
 }
 
 .sidebar-nav li {
     width: 100%;
-    padding: 0 4px; /* Slight padding container */
+    padding: 0 12px; /* Horizontal padding only */
+    display: flex;
+    justify-content: center;
 }
 
 .sidebar-nav a {
@@ -115,24 +120,60 @@ body.dark {
     flex-direction: column; /* Stack Icon and Text */
     align-items: center;
     justify-content: center;
-    padding: 6px 4px;
-    height: 48px; /* Reduced height as requested */
+    width: 100%;
+    max-width: 80px; /* constrain width */
+    padding: 0 4px;
+    height: 67px;
+    aspect-ratio: 1 / 1; /* Make it square-ish */
     color: #94a3b8; /* Muted text */
     text-decoration: none;
     transition: all 0.2s ease;
-    border-radius: 8px;
+    border-radius: 16px; /* More rounded */
     font-weight: 500;
-    font-size: 0.65rem; /* Tiny text */
     text-align: center;
-    line-height: 1.2;
     margin: 0;
 }
 
+.sidebar-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidebar-icon svg {
+    width: 26px;
+    height: 26px;
+}
+
+.sidebar-text {
+    font-size: 0.75rem;
+    line-height: 1.1;
+    display: none; /* Hidden by default */
+}
+
+/* Show text on hover or active */
+.sidebar-nav a:hover .sidebar-text,
+.sidebar-nav a.active .sidebar-text {
+    display: block;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-2px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+
+.sidebar-nav a:hover .sidebar-text,
+.sidebar-nav a.active .sidebar-text {
+    display: block;
+}
 .sidebar-nav a:hover,
 .sidebar-nav a.active {
-    background: #312e81; /* Lighter indigo hover */
-    color: white; /* White text on active/hover */
-    transform: none; /* Remove translation */
+    background: #4338ca; /* Indigo-700 for active state (per image style) */
+    color: white;
+    transform: none;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 /* Hide sidebar border var usage for this specific layout override */
@@ -399,7 +440,6 @@ body.dark .role-option:hover {
     padding: 0;
     flex: 1;
     margin: 0;
-    margin-top: 10px;
     overflow-y: auto;
 }
 

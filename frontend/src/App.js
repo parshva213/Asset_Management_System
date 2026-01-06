@@ -18,6 +18,7 @@ import ResetPassword from "./pages/ResetPassword"
 // ---------- SUPER ADMIN PAGES ----------
 import Categories from "./pages/Categories"
 import Locations from "./pages/Locations"
+import LocationRooms from "./pages/LocationRooms"
 import Assets from "./pages/Assets"
 import Employees from "./pages/Employees"
 import AdminDashboard from "./pages/AdminDashboard"
@@ -80,6 +81,7 @@ function App() {
               <Route path="employees" element={<ProtectedRoute roles={['Super Admin']}><Employees /></ProtectedRoute>} />
               <Route path="categories" element={<ProtectedRoute roles={['Super Admin']}><Categories /></ProtectedRoute>} />
               <Route path="locations" element={<ProtectedRoute roles={['Super Admin', 'Supervisor']}><Locations /></ProtectedRoute>} />
+              <Route path="rooms" element={<ProtectedRoute roles={['Super Admin', 'Supervisor']}><LocationRooms /></ProtectedRoute>} />
               <Route path="assets" element={<ProtectedRoute roles={['Super Admin', 'Supervisor', 'Employee', 'Maintenance']}><Assets /></ProtectedRoute>} />
 
               {/* Supervisor */}
