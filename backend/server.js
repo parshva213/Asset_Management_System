@@ -481,10 +481,10 @@ app.get("/api/maintenance/dashboard", authenticate(["Maintenance", "Super Admin"
 });
 
 // ------------------ ADMIN (Manage Users) ------------------
-app.get("/api/users", authenticate(["Super Admin", "Admin"]), async (req, res) => {
-    const [rows] = await pool.query("SELECT id, name, email, role, department, phone FROM users where role <> 'super admin' AND role <> 'Admin'");
-    res.json(rows);
-});
+// app.get("/api/users", authenticate(["Super Admin", "Admin"]), async (req, res) => {
+//     const [rows] = await pool.query("SELECT id, name, email, role, department, phone FROM users where role <> 'super admin' AND role <> 'Admin'");
+//     res.json(rows);
+// });
 
 app.post("/api/users", authenticate(["Super Admin", "Admin"]), async (req, res) => {
     const { name, email, password, role, department, phone } = req.body;

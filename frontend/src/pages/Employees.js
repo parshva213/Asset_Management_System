@@ -102,7 +102,7 @@ const Employees = () => {
           <p>No employees found</p>
         </div>
       ) : (
-        <div className="employee-grid">
+          <div className="employee-grid">
           {employees.map((employee) => (
             <div key={employee.id} className="card">
               <div className="employee-header">
