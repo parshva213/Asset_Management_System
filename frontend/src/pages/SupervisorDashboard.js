@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import { useAuth } from "../contexts/AuthContext"
 
 const SupervisorDashboard = () => {
-  const { user } = useAuth()
+  const { logout } = useAuth()
   const [stats, setStats] = useState({
     totalAssets: 0,
     assignedAssets: 0,
@@ -22,6 +22,10 @@ const SupervisorDashboard = () => {
           Authorization: `Bearer ${token}`,
         },
       })
+      if (response.status === 403) {
+        logout()
+        return
+      }
       const data = await response.json()
       setStats({
         totalAssets: data.totalAssets || 0,
@@ -35,7 +39,7 @@ const SupervisorDashboard = () => {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [logout])
 
   useEffect(() => {
     fetchDashboardData()

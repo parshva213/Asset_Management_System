@@ -29,6 +29,22 @@ router.get("/rooms", verifyToken, async (req, res) => {
   }
 })
 
+router.get("/:id", verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params
+    const [rows] = await db.query("SELECT * FROM locations WHERE id = ?", [id])
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "Location not found" })
+    }
+    
+    res.json(rows[0])
+  } catch (error) {
+    console.error("Error fetching location:", error)
+    res.status(500).json({ message: "Server error" })
+  }
+})
+
 router.post("/", verifyToken, async (req, res) => {
   try {
     if (req.user.role !== "Super Admin") {

@@ -52,46 +52,46 @@ const ICONS = {
 
 const MENU_ITEMS = {
   "Super Admin": [
-    { name: "Dashboard", path: "/admin-dashboard", icon: "dashboard" },
-    { name: "Users", path: "/employees", icon: "users" },
-    { name: "Categories", path: "/categories", icon: "categories" },
-    { name: "Locations", path: "/locations", icon: "locations" },
-    { name: "Assets", path: "/assets", icon: "assets" },
-    { name: "Orders", path: "/purchase-orders", icon: "orders" },
-    { name: "Requests", path: "/requests", icon: "requests" },
-    { name: "Maintenance", path: "/maintenance-dashboard", icon: "maintenance" },
-    { name: "Profile", path: "/profile", icon: "profile" },
+    { name: "Dashboard", path: ["/admin-dashboard"], icon: "dashboard" },
+    { name: "Users", path: ["/employees"], icon: "users" },
+    { name: "Categories", path: ["/categories"], icon: "categories" },
+    { name: "Locations", path: ["/locations","/rooms?locationId="], icon: "locations" },
+    { name: "Assets", path: ["/assets"], icon: "assets" },
+    { name: "Orders", path: ["/purchase-orders"], icon: "orders" },
+    { name: "Requests", path: ["/requests"], icon: "requests" },
+    { name: "Maintenance", path: ["/maintenance-dashboard"], icon: "maintenance" },
+    { name: "Profile", path: ["/profile"], icon: "profile" },
   ],
   "Supervisor": [
-    { name: "Dashboard", path: "/dashboard", icon: "dashboard" },
-    { name: "Locations", path: "/locations", icon: "locations" },
-    { name: "Assets", path: "/assets", icon: "assets" },
-    { name: "Orders", path: "/purchase-orders", icon: "orders" },
-    { name: "Requests", path: "/requests", icon: "requests" },
-    { name: "Profile", path: "/profile", icon: "profile" },
+    { name: "Dashboard", path: ["/dashboard"], icon: "dashboard" },
+    { name: "Locations", path: ["/locations"], icon: "locations" },
+    { name: "Assets", path: ["/assets"], icon: "assets" },
+    { name: "Orders", path: ["/purchase-orders"], icon: "orders" },
+    { name: "Requests", path: ["/requests"], icon: "requests" },
+    { name: "Profile", path: ["/profile"], icon: "profile" },
   ],
   "Employee": [
-    { name: "Dashboard", path: "/dashboard", icon: "dashboard" },
-    { name: "Assets", path: "/assets", icon: "assets" },
-    { name: "Requests", path: "/requests", icon: "requests" },
-    { name: "Profile", path: "/profile", icon: "profile" },
+    { name: "Dashboard", path: ["/dashboard"], icon: "dashboard" },
+    { name: "Assets", path: ["/assets"], icon: "assets" },
+    { name: "Requests", path: ["/requests"], icon: "requests" },
+    { name: "Profile", path: ["/profile"], icon: "profile" },
   ],
   "Vendor": [
-    { name: "Dashboard", path: "/dashboard", icon: "dashboard" },
-    { name: "My Dashboard", path: "/vendor-dashboard", icon: "vendor" },
-    { name: "Supply", path: "/supply-assets", icon: "assets" },
-    { name: "Warranty", path: "/warranty-docs", icon: "file" },
-    { name: "Products", path: "/vendor-assets", icon: "assets" },
-    { name: "Requests", path: "/vendor-requests", icon: "requests" },
-    { name: "Profile", path: "/profile", icon: "profile" },
+    { name: "Dashboard", path: ["/dashboard"], icon: "dashboard" },
+    { name: "My Dashboard", path: ["/vendor-dashboard"], icon: "vendor" },
+    { name: "Supply", path: ["/supply-assets"], icon: "assets" },
+    { name: "Warranty", path: ["/warranty-docs"], icon: "file" },
+    { name: "Products", path: ["/vendor-assets"], icon: "assets" },
+    { name: "Requests", path: ["/vendor-requests"], icon: "requests" },
+    { name: "Profile", path: ["/profile"], icon: "profile" },
   ],
   "Maintenance": [
-    { name: "Dashboard", path: "/dashboard", icon: "dashboard" },
-    { name: "Main. Dash", path: "/maintenance-dashboard", icon: "maintenance" },
-    { name: "Config", path: "/new-configuration", icon: "settings" },
-    { name: "Update", path: "/update-maintenance", icon: "maintenance" },
-    { name: "Tasks", path: "/maintenance-tasks", icon: "file" },
-    { name: "Profile", path: "/profile", icon: "profile" },
+    { name: "Dashboard", path: ["/dashboard"], icon: "dashboard" },
+    { name: "Main. Dash", path: ["/maintenance-dashboard"], icon: "maintenance" },
+    { name: "Config", path: ["/new-configuration"], icon: "settings" },
+    { name: "Update", path: ["/update-maintenance"], icon: "maintenance" },
+    { name: "Tasks", path: ["/maintenance-tasks"], icon: "file" },
+    { name: "Profile", path: ["/profile"], icon: "profile" },
   ],
 }
 
@@ -147,8 +147,13 @@ const Layout = () => {
                     return (
                         <li key={idx}>
                             <Link
-                            to={item.path}
-                            className={location.pathname === item.path ? 'active' : ''}
+                            to={item.path[0]}
+                            className={
+                                item.path.some(p => 
+                                    location.pathname === p || 
+                                    location.pathname === p.split('?')[0]
+                                ) ? 'active' : ''
+                            }
                             >
                             <span className="sidebar-icon">
                                 <Icon />

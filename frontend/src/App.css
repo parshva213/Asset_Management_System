@@ -40,12 +40,13 @@ body.light {
     --text-primary: #0f172a;
     --text-secondary: #64748b;
     --border-color: #e2e8f0;
-    /* Redundant but explicit */
+
+    /* Light Sidebar for Light Mode */
     --sidebar-bg: #ffffff;
-    --sidebar-text: #64748b;
+    --sidebar-text: #334155;
     --sidebar-hover-bg: #f1f5f9;
-    --sidebar-active-bg: #e2e8f0;
-    --sidebar-active-text: #0f172a;
+    --sidebar-active-bg: #e0e7ff; /* Indigo 100 for active item bg */
+    --sidebar-active-text: #4f46e5; /* Indigo 600 for active item text */
     --sidebar-border: #e2e8f0;
 }
 
@@ -61,12 +62,12 @@ body.dark {
     --border: #334155;
 
     /* Sidebar Dark Mode */
-    --sidebar-bg: #1e293b;
+    --sidebar-bg: #1e1b4b; /* Restore Deep Indigo */
     --sidebar-text: #94a3b8;
-    --sidebar-hover-bg: #334155;
-    --sidebar-active-bg: #334155;
+    --sidebar-hover-bg: #1e293b;
+    --sidebar-active-bg: #1e293b;
     --sidebar-active-text: #ffffff;
-    --sidebar-border: #334155;
+    --sidebar-border: #1e293b;
 }
 
 /* ... existing code ... */
@@ -74,15 +75,16 @@ body.dark {
 /* Smartsheet-style Icon Rail Sidebar */
 .sidebar {
     width: 100px; /* Increased width as requested */
-    background: #1e1b4b; /* Deep Indigo/Purple */
-    color: white;
+    background: var(--sidebar-bg); 
+    /* background: #fff; */
+    color: var(--sidebar-text);
     display: flex;
     flex-direction: column;
     transition: width 0.3s ease;
     height: 100%;
     padding: 0;
     overflow: hidden;
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    border-right: 1px solid var(--sidebar-border);
     z-index: 20;
 }
 
@@ -104,8 +106,9 @@ body.dark {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0px; /* Increased gap between items */
+    gap: 5px; /* Increased gap between items */
     overflow: hidden;
+    margin-top: 6px;
 }
 
 .sidebar-nav li {
@@ -122,8 +125,8 @@ body.dark {
     justify-content: center;
     width: 100%;
     max-width: 80px; /* constrain width */
-    padding: 0 4px;
-    height: 67px;
+    padding: 0 2px;
+    height: 60px;
     aspect-ratio: 1 / 1; /* Make it square-ish */
     color: #94a3b8; /* Muted text */
     text-decoration: none;
@@ -141,8 +144,8 @@ body.dark {
 }
 
 .sidebar-icon svg {
-    width: 26px;
-    height: 26px;
+    width: 22px;
+    height: 22px;
 }
 
 .sidebar-text {
@@ -156,6 +159,15 @@ body.dark {
 .sidebar-nav a.active .sidebar-text {
     display: block;
     animation: fadeIn 0.2s ease;
+}
+.sidebar-nav a:hover .sidebar-icon svg,
+.sidebar-nav a.active .sidebar-icon svg {
+    width: 26px; /* Slight scale up on hover/active */
+    height: 26px;
+    stroke: currentColor; /* Use text color (white) for lines */
+    fill: currentColor; /* Use text color for fill... */
+    fill-opacity: 0.2; /* ...but make it semi-transparent so lines are visible */
+    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.3)); /* Glow effect */
 }
 
 @keyframes fadeIn {
@@ -176,11 +188,6 @@ body.dark {
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-/* Hide sidebar border var usage for this specific layout override */
-body.light .sidebar, body.dark .sidebar {
-    background: #1e1b4b;
-    color: white;
-}
 
 * {
     box-sizing: border-box;
@@ -320,6 +327,62 @@ body.dark .role-option:hover {
 .role-option p {
     color: var(--text-secondary);
     font-size: 0.875rem;
+}
+
+/* --- Loading Component --- */
+.loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100%;
+    background-color: var(--background);
+    z-index: 9999;
+    position: fixed;
+    top: 0;
+    left: 0;
+}
+
+.loading-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.loading-logo {
+    width: 80px;
+    height: auto;
+    animation: pulse 2s infinite ease-in-out;
+    filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.3));
+}
+
+.spinner {
+    border: 3px solid rgba(99, 102, 241, 0.1);
+    border-left-color: var(--primary);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+}
+
+.loading-text {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+    0% { transform: scale(0.95); opacity: 0.8; }
+    50% { transform: scale(1.05); opacity: 1; }
+    100% { transform: scale(0.95); opacity: 0.8; }
 }
 
 /* --- Layout --- */
@@ -489,14 +552,6 @@ body.dark .role-option:hover {
 }
 
 .content {
-    flex: 1 0 auto; /* Grow yes, Shrink NO. Forces scroll if content is long. */
-    padding: 2rem; 
-    width: 100%; /* Ensure full width */
-    position: relative;
-    /* Removed explicit overflow on content, parent handles it */
-}
-
-.content.dashboard-content {
     padding: 0 2rem; /* Remove top/bottom padding for dashboard */
 }
 
@@ -892,4 +947,24 @@ body.dark input:-webkit-autofill:active {
     flex-direction: column;
     gap: 1rem;
     color: var(--text-secondary);
+}
+/* Dashboard Stats Grid */
+.dashboard-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* Force 3 columns as requested */
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+/* Responsive adjustment for smaller screens */
+@media (max-width: 1024px) {
+    .dashboard-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .dashboard-stats {
+        grid-template-columns: 1fr;
+    }
 }

@@ -5,7 +5,7 @@ import { useAuth } from "../contexts/AuthContext"
 import { Link } from "react-router-dom"
 
 const MaintenanceDashboard = () => {
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
   const [pendingTasks, setPendingTasks] = useState([])
   const [completedTasks, setCompletedTasks] = useState([])
   const [assetsToMaintain, setAssetsToMaintain] = useState([])
@@ -17,8 +17,9 @@ const MaintenanceDashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token')
       const response = await axios.get("http://localhost:5000/api/maintenance/dashboard", {
-        headers: { Authorization: `Bearer ${user?.token}` },
+        headers: { Authorization: `Bearer ${token}` },
       })
       const data = response.data
       setPendingTasks(data.pendingTasks || [])
@@ -30,7 +31,11 @@ const MaintenanceDashboard = () => {
         totalAssets: data.totalAssets || 0,
       })
     } catch (err) {
-      console.error(err)
+      if (err.response?.status === 403) {
+        logout()
+      } else {
+        console.error(err)
+      }
     }
   }
 

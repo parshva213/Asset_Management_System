@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import { useAuth } from "../contexts/AuthContext"
 
 const EmployeeDashboard = () => {
-  const { user } = useAuth()
+  const { logout } = useAuth()
   const [stats, setStats] = useState({
     totalAssets: 0,
     pendingRequests: 0,
@@ -20,6 +20,10 @@ const EmployeeDashboard = () => {
           Authorization: `Bearer ${token}`,
         },
       })
+      if (response.status === 403) {
+        logout()
+        return
+      }
       const data = await response.json()
       setStats({
         totalAssets: data.totalAssets || 0,
@@ -31,7 +35,7 @@ const EmployeeDashboard = () => {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [logout])
 
   useEffect(() => {
     fetchDashboardData()

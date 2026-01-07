@@ -3,13 +3,12 @@
 import { useState, useEffect } from "react"
 import { useAuth } from "../contexts/AuthContext"
 import { useNavigate } from "react-router-dom"
-import api from "../api"
 import useCrud from "../hooks/useCrud"
 
 const Locations = () => {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const { items: locations, loading: locationsLoading, error: locError, create: createLocation, update: updateLocation, remove: removeLocation, list: listLocations } = useCrud("locations")
+  const { items: locations, loading: locationsLoading, create: createLocation, update: updateLocation, remove: removeLocation, list: listLocations } = useCrud("locations")
   const [loading, setLoading] = useState(true)
   const [showLocationModal, setShowLocationModal] = useState(false)
   const [editingLocation, setEditingLocation] = useState(null)
@@ -21,7 +20,7 @@ const Locations = () => {
 
   useEffect(() => {
     listLocations()
-  }, [])
+  }, [listLocations])
 
   useEffect(() => {
     if (!locationsLoading) setLoading(false)

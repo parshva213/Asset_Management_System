@@ -4,7 +4,7 @@ import axios from "axios"
 import { useAuth } from "../contexts/AuthContext"
 
 const VendorDashboard = () => {
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
   const [pendingOrders, setPendingOrders] = useState([])
   const [completedOrders, setCompletedOrders] = useState([])
   const [suppliedAssets, setSuppliedAssets] = useState([])
@@ -16,8 +16,9 @@ const VendorDashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token')
       const response = await axios.get("http://localhost:5000/api/vendor/dashboard", {
-        headers: { Authorization: `Bearer ${user?.token}` },
+        headers: { Authorization: `Bearer ${token}` },
       })
       const data = response.data
       setPendingOrders(data.pendingOrders || [])
@@ -29,7 +30,11 @@ const VendorDashboard = () => {
         totalSupplied: data.totalSupplied || 0,
       })
     } catch (err) {
-      console.error(err)
+      if (err.response?.status === 403) {
+        logout()
+      } else {
+        console.error(err)
+      }
     }
   }
 

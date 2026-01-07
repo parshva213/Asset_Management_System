@@ -205,7 +205,7 @@ const Profile = () => {
         </div>
       )}
 
-      <style jsx>{`
+      <style>{`
         .tabs {
           display: flex;
           gap: 10px;

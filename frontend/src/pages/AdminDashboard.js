@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import { useAuth } from "../contexts/AuthContext"
 
 const AdminDashboard = () => {
-  const { user } = useAuth()
+  const { logout } = useAuth()
   const [stats, setStats] = useState({
     totalAssets: 0,
     assignedAssets: 0,
@@ -23,6 +23,10 @@ const AdminDashboard = () => {
           Authorization: `Bearer ${token}`,
         },
       })
+      if (response.status === 403) {
+        logout()
+        return
+      }
       const data = await response.json()
       setStats({
         totalAssets: data.totalAssets || 0,
@@ -37,7 +41,7 @@ const AdminDashboard = () => {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [logout])
 
   useEffect(() => {
     fetchDashboardData()
@@ -51,7 +55,7 @@ const AdminDashboard = () => {
     <div>
       <h2 style={{ marginBottom: "30px" }}>Admin Dashboard</h2>
 
-      <div className="dashboard-stats" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(285px, 1fr))' }}>
+      <div className="dashboard-stats">
         <div className="stat-card">
           <div className="stat-number">{stats.totalAssets}</div>
           <div className="stat-label">Total Assets</div>

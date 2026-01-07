@@ -1,6 +1,9 @@
 import jwt from "jsonwebtoken";
 import db from "../config/database.js";
 
+// Use the same secret fallback as auth routes to keep signing & verification aligned
+const JWT_SECRET = process.env.JWT_SECRET || "secret";
+
 // Verify JWT token
 export const verifyToken = async (req, res, next) => {
   try {
@@ -10,7 +13,7 @@ export const verifyToken = async (req, res, next) => {
       return res.status(401).json({ message: "Access denied. No token provided." });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET);
 
     // Get user from database (token payload uses `id`)
     const [rows] = await db.query("SELECT id, email, name, role FROM users WHERE id = ?", [decoded.id]);
