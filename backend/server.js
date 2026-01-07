@@ -443,10 +443,10 @@ app.get("/api/vendor/dashboard", authenticate(["Vendor"]), async (req, res) => {
 });
 
 // ------------------ MAINTENANCE DASHBOARD ------------------
-app.get("/api/maintenance/dashboard", authenticate(["Maintenance"]), async (req, res) => {
+app.get("/api/maintenance/dashboard", authenticate(["Maintenance", "Super Admin"]), async (req, res) => {
     try {
         const [pendingTasks] = await pool.query(`
-      SELECT mr.id, mr.maintenance_type, mr.priority, a.name as asset_name
+      SELECT mr.id, mr.maintenance_type, a.name as asset_name
       FROM maintenance_records mr
       LEFT JOIN assets a ON mr.asset_id = a.id
       WHERE mr.status = 'Pending'
@@ -482,7 +482,7 @@ app.get("/api/maintenance/dashboard", authenticate(["Maintenance"]), async (req,
 
 // ------------------ ADMIN (Manage Users) ------------------
 app.get("/api/users", authenticate(["Super Admin", "Admin"]), async (req, res) => {
-    const [rows] = await pool.query("SELECT id, name, email, role, department, phone FROM users");
+    const [rows] = await pool.query("SELECT id, name, email, role, department, phone FROM users where role <> 'super admin' AND role <> 'Admin'");
     res.json(rows);
 });
 

@@ -5,11 +5,13 @@ import { useAuth } from "../contexts/AuthContext"
 import { Link } from "react-router-dom"
 
 const MaintenanceDashboard = () => {
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const [pendingTasks, setPendingTasks] = useState([])
   const [completedTasks, setCompletedTasks] = useState([])
   const [assetsToMaintain, setAssetsToMaintain] = useState([])
   const [stats, setStats] = useState({ pending: 0, completed: 0, totalAssets: 0 })
+
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     fetchDashboardData()
@@ -17,6 +19,7 @@ const MaintenanceDashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
+        setError(null)
       const token = localStorage.getItem('token') || sessionStorage.getItem('token')
       const response = await axios.get("http://localhost:5000/api/maintenance/dashboard", {
         headers: { Authorization: `Bearer ${token}` },
@@ -32,9 +35,11 @@ const MaintenanceDashboard = () => {
       })
     } catch (err) {
       if (err.response?.status === 403) {
-        logout()
+        // logout() // Prevent auto-logout to debug/UX
+        setError("Access Denied: You do not have permission to view the Maintenance Dashboard. (Please ensure backend is restarted if you recently updated permissions)")
       } else {
         console.error(err)
+        setError("Failed to load dashboard data.")
       }
     }
   }
@@ -43,6 +48,12 @@ const MaintenanceDashboard = () => {
     <div>
       <h2>Maintenance Dashboard</h2>
       <p>Welcome {user?.name}, manage maintenance tasks and asset configurations.</p>
+      
+      {error && (
+        <div className="error-message" style={{ color: 'red', margin: '1rem 0', padding: '1rem', border: '1px solid red', borderRadius: '8px' }}>
+            {error}
+        </div>
+      )}
 
       <div className="dashboard-stats">
         <div className="stat-card">

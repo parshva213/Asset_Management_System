@@ -552,7 +552,11 @@ body.dark .role-option:hover {
 }
 
 .content {
-    padding: 0 2rem; /* Remove top/bottom padding for dashboard */
+    padding: 1rem 2rem; /* Remove top/bottom padding for dashboard */
+}
+
+.dashboard-content {
+    overflow: hidden;
 }
 
 /* --- Dashboard --- */
