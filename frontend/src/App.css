@@ -807,11 +807,11 @@ a.quick-action-btn:hover {
 }
 
 .table th {
-    background: #f8fafc;
+    background: var(--text-secondary);
     padding: 1rem;
     text-align: left;
     font-weight: 600;
-    color: var(--text-secondary);
+    color: #ffffff;
     border-bottom: 1px solid var(--border);
     font-size: 0.875rem;
     text-transform: uppercase;

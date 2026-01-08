@@ -460,7 +460,7 @@ app.get("/api/maintenance/dashboard", authenticate(["Maintenance", "Super Admin"
       WHERE mr.status = 'Completed'
     `);
         const [assetsToMaintain] = await pool.query(`
-      SELECT a.id, a.name, a.status, a.last_maintenance
+      SELECT a.id, a.name, a.status
       FROM assets a
       WHERE a.status IN ('Needs Maintenance', 'Under Maintenance')
     `);

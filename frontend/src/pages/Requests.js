@@ -175,17 +175,6 @@ const Requests = () => {
 
       <div className="filters">
         <div className="filter-group">
-          <label className="form-label">Status</label>
-          <select name="status" className="form-select" value={filters.status} onChange={handleFilterChange}>
-            <option value="">All Status</option>
-            <option value="Pending">Pending</option>
-            <option value="In Progress">In Progress</option>
-            <option value="Approved">Approved</option>
-            <option value="Rejected">Rejected</option>
-            <option value="Completed">Completed</option>
-          </select>
-        </div>
-        <div className="filter-group">
           <label className="form-label">Priority</label>
           <select name="priority" className="form-select" value={filters.priority} onChange={handleFilterChange}>
             <option value="">All Priorities</option>
@@ -204,6 +193,17 @@ const Requests = () => {
             <option value="New Asset">New Asset</option>
           </select>
         </div>
+        <div className="filter-group">
+          <label className="form-label">Status</label>
+          <select name="status" className="form-select" value={filters.status} onChange={handleFilterChange}>
+            <option value="">All Status</option>
+            <option value="Pending">Pending</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Approved">Approved</option>
+            <option value="Rejected">Rejected</option>
+            <option value="Completed">Completed</option>
+          </select>
+        </div>
       </div>
 
       {filteredRequests.length === 0 ? (
@@ -215,11 +215,10 @@ const Requests = () => {
           <thead>
             <tr>
               <th>Request ID</th>
-              <th>Asset</th>
-              <th>Type</th>
-              <th>Requested By</th>
-              <th>Created At</th>
               <th>Priority</th>
+              <th>Type</th>
+              <th>Asset</th>
+              <th>Requested By</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
@@ -228,20 +227,19 @@ const Requests = () => {
             {filteredRequests.map((request) => (
               <tr key={request.id}>
                 <td>#{request.id}</td>
-                <td>{request.asset_name || "N/A"}</td>
-                <td>{request.request_type}</td>
-                <td>{request.requester_name || "N/A"}</td>
-                <td>{new Date(request.created_at).toLocaleDateString()}</td>
                 <td>
                   <span
                     style={{
                       color: getPriorityColor(request.priority),
                       fontWeight: "bold",
                     }}
-                  >
+                    >
                     {request.priority}
                   </span>
                 </td>
+                    <td>{request.request_type}</td>
+                    <td>{request.asset_name || "N/A"}</td>
+                    <td>{request.requester_name || "N/A"}</td>
                 <td>
                   <span
                     style={{

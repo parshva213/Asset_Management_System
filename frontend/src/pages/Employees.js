@@ -8,7 +8,6 @@ const Employees = () => {
   const { user } = useAuth()
   const [employees, setEmployees] = useState([])
   const [assets, setAssets] = useState([])
-  const [loading, setLoading] = useState(true)
   // Details Modal State
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [detailsEmployee, setDetailsEmployee] = useState(null)
@@ -33,7 +32,7 @@ const Employees = () => {
     } catch (error) {
       console.error("Error fetching employees:", error)
     } finally {
-      setLoading(false)
+      // setLoading(false)
     }
   }
 
@@ -322,7 +321,7 @@ const Employees = () => {
           justify-content: space-between;
           align-items: center;
           padding: 10px;
-          background: var(--bg);
+          background: var(--bg-primary);
           border: 1px solid rgba(148,163,184,.15);
           border-radius: 6px;
           margin-bottom: 8px;
