@@ -3,7 +3,7 @@
 import { Link, Outlet, useLocation } from "react-router-dom"
 import { useAuth } from "./../contexts/AuthContext"
 import { useTheme } from "./../contexts/ThemeContext"
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import Loading from "./Loading"
 import Footer from "./Footer"
 import logo from "../img/logo.png"
@@ -95,10 +95,23 @@ const MENU_ITEMS = {
   ],
 }
 
+
+
+// ... (ICONS constant remains same, skipping for brevity in replacement if possible, but replace_file_content needs exact match usually. 
+// Actually I can target the component start line to update imports and component body.)
+
+// I will do it in chunks. first imports.
+// Wait, I can do it in one go if I target the component definition.
+
 const Layout = () => {
   const { user, logout } = useAuth()
   const { theme } = useTheme()
   const location = useLocation()
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen)
+  }
 
   // ------------------ ROLE BASED MENUS ------------------
   const currentMenu = useMemo(() => (user ? (MENU_ITEMS[user.role] || []) : []), [user])
@@ -112,8 +125,8 @@ const Layout = () => {
       {/* Global Header */}
       <header className="global-header">
         <div className="header-left">
-            <img src={logo} alt="Logo" className="header-logo" />
-            <span className="brand-name">Asset Management System</span>
+            <img src={logo} alt="Logo" className="header-logo" onClick={toggleSidebar} style={{ cursor: 'pointer' }} title="Toggle Sidebar" />
+            <span className="brand-name">Asset Management System IT</span>
         </div>
         
         <div className="header-center">
@@ -138,7 +151,7 @@ const Layout = () => {
 
       <div className="layout-body">
         {/* Sidebar */}
-        <aside className="sidebar">
+        <aside className={`sidebar ${!isSidebarOpen ? 'closed' : ''}`}>
             {/* Sidebar Header Removed as requested */}
             <nav className="sidebar-nav">
             <ul>
@@ -168,7 +181,7 @@ const Layout = () => {
         </aside>
 
         {/* Main Content Area */}
-        <div className="main-content">
+        <div className={`main-content ${location.pathname.includes('dashboard') ? 'dashboard-mode' : ''}`}>
             <main className={`content ${location.pathname.includes('dashboard') ? 'dashboard-content' : ''}`}>
                 <Outlet />
             </main>

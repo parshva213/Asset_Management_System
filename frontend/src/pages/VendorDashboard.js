@@ -40,7 +40,7 @@ const VendorDashboard = () => {
 
   return (
     <div>
-      <h2>Vendor Dashboard</h2>
+      <h2 style={{ marginBottom: "10px" }}>Vendor Dashboard</h2>
       <p>Welcome {user?.name}, manage your supplies and orders.</p>
 
       <div className="dashboard-stats">

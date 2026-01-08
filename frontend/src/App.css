@@ -84,12 +84,19 @@ body.dark {
     color: var(--sidebar-text);
     display: flex;
     flex-direction: column;
-    transition: width 0.3s ease;
+    transition: width 0.3s ease, transform 0.3s ease;
     height: 100%;
     padding: 0;
     overflow: hidden;
-    border-right: 1px solid var(--sidebar-border);
+    border-right: 1px solid var(--border-color);
     z-index: 20;
+    flex-shrink: 0;
+}
+
+.sidebar.closed {
+    width: 0;
+    border-right: none;
+    padding: 0;
 }
 
 /* ... existing code ... */
@@ -571,6 +578,8 @@ body.dark .role-option:hover {
     position: relative;
 }
 
+/* Scrollbar hidden hack removed to allow scrolling on small screens */
+
 .header {
     background: var(--panel);
     backdrop-filter: blur(12px);
@@ -610,8 +619,12 @@ body.dark .role-option:hover {
     /* Remove top/bottom padding for dashboard */
 }
 
-.dashboard-content {
-    overflow: hidden;
+/* .dashboard-content overflow hidden removed */
+
+@media (max-width:1500px){
+    .dashboard-content{
+        overflow-y: scroll;
+    }
 }
 
 /* --- Dashboard --- */

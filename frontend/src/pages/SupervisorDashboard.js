@@ -51,7 +51,7 @@ const SupervisorDashboard = () => {
 
   return (
     <div>
-      <h2 style={{ marginBottom: "30px" }}>IT Supervisor Dashboard</h2>
+      <h2 style={{ marginBottom: "10px" }}>IT Supervisor Dashboard</h2>
 
       <div className="dashboard-stats">
         <div className="stat-card">

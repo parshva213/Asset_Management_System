@@ -53,7 +53,7 @@ const AdminDashboard = () => {
 
   return (
     <div>
-      <h2 style={{ marginBottom: "30px" }}>Admin Dashboard</h2>
+      <h2 style={{ marginBottom: "10px" }}>Admin Dashboard</h2>
 
       <div className="dashboard-stats">
         <div className="stat-card">

@@ -47,7 +47,7 @@ const EmployeeDashboard = () => {
 
   return (
     <div>
-      <h2 style={{ marginBottom: "30px" }}>Employee Dashboard</h2>
+      <h2 style={{ marginBottom: "10px" }}>Employee Dashboard</h2>
 
       <div className="dashboard-stats">
         <div className="stat-card">

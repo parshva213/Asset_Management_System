@@ -46,7 +46,7 @@ const MaintenanceDashboard = () => {
 
   return (
     <div>
-      <h2>Maintenance Dashboard</h2>
+      <h2 style={{ marginBottom: "10px" }}>Maintenance Dashboard</h2>
       <p>Welcome {user?.name}, manage maintenance tasks and asset configurations.</p>
       
       {error && (

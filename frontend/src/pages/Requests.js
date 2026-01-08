@@ -217,10 +217,10 @@ const Requests = () => {
               <th>Request ID</th>
               <th>Asset</th>
               <th>Type</th>
-              <th>Priority</th>
-              <th>Status</th>
               <th>Requested By</th>
               <th>Created At</th>
+              <th>Priority</th>
+              <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -230,6 +230,8 @@ const Requests = () => {
                 <td>#{request.id}</td>
                 <td>{request.asset_name || "N/A"}</td>
                 <td>{request.request_type}</td>
+                <td>{request.requester_name || "N/A"}</td>
+                <td>{new Date(request.created_at).toLocaleDateString()}</td>
                 <td>
                   <span
                     style={{
@@ -250,8 +252,6 @@ const Requests = () => {
                     {request.status}
                   </span>
                 </td>
-                <td>{request.requester_name || "N/A"}</td>
-                <td>{new Date(request.created_at).toLocaleDateString()}</td>
                 <td>
                   <div className="flex gap-2">
                     {user?.role === "Employee" && request.status === "Pending" && (
