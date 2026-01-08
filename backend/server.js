@@ -190,12 +190,7 @@ app.set('trust proxy', 1);
 // Logging Middleware
 app.use(morgan('dev'));
 
-// Rate Limiting
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
-});
-app.use(limiter);
+// Rate Limiting removed
 
 app.use(express.json());
 
