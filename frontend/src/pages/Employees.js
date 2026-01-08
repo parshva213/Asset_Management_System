@@ -9,6 +9,11 @@ const Employees = () => {
   const [employees, setEmployees] = useState([])
   const [assets, setAssets] = useState([])
   const [loading, setLoading] = useState(true)
+  // Details Modal State
+  const [showDetailsModal, setShowDetailsModal] = useState(false)
+  const [detailsEmployee, setDetailsEmployee] = useState(null)
+
+  // Assignment Modal State
   const [showAssignModal, setShowAssignModal] = useState(false)
   const [selectedEmployee, setSelectedEmployee] = useState(null)
   const [assignmentData, setAssignmentData] = useState({
@@ -41,6 +46,16 @@ const Employees = () => {
     }
   }
 
+  const openDetailsModal = (employee) => {
+    setDetailsEmployee(employee)
+    setShowDetailsModal(true)
+  }
+
+  const openAssignModal = (employee) => {
+    setSelectedEmployee(employee)
+    setShowAssignModal(true)
+  }
+
   const handleAssignAsset = async (e) => {
     e.preventDefault()
     try {
@@ -66,6 +81,13 @@ const Employees = () => {
           user_id: userId,
           asset_id: assetId,
         })
+
+        // If unassigning from details modal, update the local details view too
+        if (detailsEmployee && detailsEmployee.id === userId) {
+          const updatedAssets = detailsEmployee.assigned_assets.filter(a => a.id !== assetId);
+          setDetailsEmployee({ ...detailsEmployee, assigned_assets: updatedAssets });
+        }
+
         fetchEmployees()
         fetchAssets()
       } catch (error) {
@@ -74,21 +96,12 @@ const Employees = () => {
     }
   }
 
-  const openAssignModal = (employee) => {
-    setSelectedEmployee(employee)
-    setShowAssignModal(true)
-  }
-
   const handleAssignmentChange = (e) => {
     setAssignmentData({ ...assignmentData, [e.target.name]: e.target.value })
   }
 
   const getAvailableAssets = () => {
     return assets.filter((asset) => asset.status === "Available")
-  }
-
-  if (loading) {
-    return <div className="loading">Loading employees...</div>
   }
 
   return (
@@ -102,7 +115,7 @@ const Employees = () => {
           <p>No employees found</p>
         </div>
       ) : (
-          <div className="employee-grid">
+        <div className="employee-grid">
           {employees.map((employee) => (
             <div key={employee.id} className="card">
               <div className="employee-header">
@@ -121,38 +134,84 @@ const Employees = () => {
                 </p>
               </div>
 
-              {employee.assigned_assets && employee.assigned_assets.length > 0 && (
-                <div className="assigned-assets">
-                  <h4>Assigned Assets:</h4>
-                  <ul>
-                    {employee.assigned_assets.map((asset) => (
-                      <li key={asset.id} className="asset-item">
-                        <span>
-                          {asset.name} - {asset.serial_number}
-                        </span>
-                        {(user?.role === "Super Admin" || user?.role === "IT Supervisor") && (
-                          <button
-                            onClick={() => handleUnassignAsset(employee.id, asset.id)}
-                            className="btn btn-danger btn-sm"
-                          >
-                            Unassign
-                          </button>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {(user?.role === "Super Admin" || user?.role === "IT Supervisor") && (
-                <div className="employee-actions">
-                  <button onClick={() => openAssignModal(employee)} className="btn btn-primary">
+              <div className="employee-actions flex gap-2">
+                <button onClick={() => openDetailsModal(employee)} className="btn btn-secondary flex-1">
+                  View Details
+                </button>
+                {(user?.role === "Super Admin" || user?.role === "IT Supervisor") && (
+                  <button onClick={() => openAssignModal(employee)} className="btn btn-primary flex-1">
                     Assign Asset
                   </button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Details Modal */}
+      {showDetailsModal && detailsEmployee && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <div className="modal-header">
+              <h3 className="modal-title">{detailsEmployee.name} - Details</h3>
+              <button
+                className="close-btn"
+                onClick={() => {
+                  setShowDetailsModal(false)
+                  setDetailsEmployee(null)
+                }}
+              >
+                ×
+              </button>
+            </div>
+            <div className="employee-details">
+              <div className="mb-4">
+                <p><strong>Email:</strong> {detailsEmployee.email}</p>
+                <p><strong>Role:</strong> {detailsEmployee.role}</p>
+                <p><strong>Department:</strong> {detailsEmployee.department || "N/A"}</p>
+              </div>
+
+              <h4>Assigned Assets ({detailsEmployee.assigned_assets?.length || 0})</h4>
+              {detailsEmployee.assigned_assets && detailsEmployee.assigned_assets.length > 0 ? (
+                <ul className="assigned-assets-list">
+                  {detailsEmployee.assigned_assets.map((asset) => (
+                    <li key={asset.id} className="asset-item">
+                      <span>
+                        {asset.name} - {asset.serial_number}
+                      </span>
+                      {(user?.role === "Super Admin" || user?.role === "IT Supervisor") && (
+                        <button
+                          onClick={() => {
+                            handleUnassignAsset(detailsEmployee.id, asset.id);
+                            // Update the details view immediately by removing the asset locally or triggering a refetch
+                            // Since handleUnassignAsset calls fetchEmployees, we just need to keep the modal open.
+                            // However, detailsEmployee is a static snapshot. We should probably update it or close modal.
+                            // Better UX: update local state or re-fetch and update detailsEmployee.
+                            // For simplicity/reliability with current structure:
+                            setShowDetailsModal(false);
+                          }}
+                          className="btn btn-danger btn-sm"
+                        >
+                          Unassign
+                        </button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-muted">No assets assigned.</p>
+              )}
+            </div>
+            <div className="flex justify-end mt-4">
+              <button
+                className="btn btn-secondary"
+                onClick={() => setShowDetailsModal(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -169,6 +228,7 @@ const Employees = () => {
                   setAssignmentData({ asset_id: "", notes: "" })
                 }}
               >
+                ×
               </button>
             </div>
             <form onSubmit={handleAssignAsset}>
@@ -248,30 +308,24 @@ const Employees = () => {
         .employee-info p {
           margin-bottom: 8px;
         }
-
-        .assigned-assets {
-          margin-top: 15px;
-        }
-
-        .assigned-assets h4 {
-          margin-bottom: 10px;
-          font-size: 14px;
-          color: #666;
-        }
-
-        .assigned-assets ul {
+        
+        .assigned-assets-list {
           list-style: none;
           padding: 0;
+          margin-top: 10px;
+          max-height: 300px;
+          overflow-y: auto;
         }
 
         .asset-item {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 8px;
-          background: #f8f9fa;
-          border-radius: 4px;
-          margin-bottom: 5px;
+          padding: 10px;
+          background: var(--bg);
+          border: 1px solid rgba(148,163,184,.15);
+          border-radius: 6px;
+          margin-bottom: 8px;
         }
 
         .btn-sm {
@@ -282,7 +336,11 @@ const Employees = () => {
         .employee-actions {
           margin-top: 15px;
           padding-top: 15px;
-          border-top: 1px solid #eee;
+          border-top: 1px solid rgba(148,163,184,.15);
+        }
+        
+        .flex-1 {
+            flex: 1;
         }
       `}</style>
     </div>

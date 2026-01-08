@@ -157,6 +157,8 @@ import pool from "./config/database.js";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
 import assetsRouter from './routes/assets.js';
 import authRouter from './routes/auth.js';
 import categoriesRouter from './routes/categories.js';
@@ -170,7 +172,12 @@ import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import errorHandler from './middleware/errorHandler.js';
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load .env from multiple locations (backend directory or root directory)
+dotenv.config({ path: path.join(__dirname, '.env') });
+dotenv.config({ path: path.join(__dirname, '../.env') });
 const app = express();
 
 // Security Middleware
@@ -452,7 +459,7 @@ app.get("/api/maintenance/dashboard", authenticate(["Maintenance", "Super Admin"
       WHERE mr.status = 'Pending'
     `);
         const [completedTasks] = await pool.query(`
-      SELECT mr.id, mr.maintenance_type, mr.completed_date, a.name as asset_name
+      SELECT mr.id, mr.maintenance_type, a.name as asset_name
       FROM maintenance_records mr
       LEFT JOIN assets a ON mr.asset_id = a.id
       WHERE mr.status = 'Completed'
@@ -500,7 +507,7 @@ app.put("/api/users/:id", authenticate(["Super Admin", "Admin"]), async (req, re
         "UPDATE users SET name=?, email=?, password=?, role=?, department=?, phone=? WHERE id=?", [name, email, password, role, department || null, phone || null, req.params.id]
     );
     res.json({ success: true });
-}); 
+});
 
 app.delete("/api/users/:id", authenticate(["Super Admin", "Admin"]), async (req, res) => {
     await pool.query("DELETE FROM users WHERE id=?", [req.params.id]);
@@ -535,8 +542,18 @@ app.use(errorHandler);
 // Start Server (with robust error handling)
 // ===================================================
 const PORT = process.env.PORT || 5000;
+
+// Log environment configuration (without sensitive data)
+console.log('\n🚀 Starting Asset Management System Server...');
+console.log(`   Port: ${PORT}`);
+console.log(`   Database: ${process.env.DB_NAME || 'not set'}`);
+console.log(`   DB Host: ${process.env.DB_HOST || 'not set'}`);
+console.log(`   DB User: ${process.env.DB_USER || 'not set'}`);
+console.log(`   Environment: ${process.env.NODE_ENV || 'development'}\n`);
+
 const server = app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`✅ Server running on port ${PORT}`);
+    console.log(`   API available at http://localhost:${PORT}/api\n`);
 });
 
 server.on("error", (err) => {

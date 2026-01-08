@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import api from "../api";
 import { formatDate } from "../utils/dateUtils";
@@ -26,18 +26,18 @@ const Assets = () => {
     purchase_date: "",
   });
 
-  useEffect(() => {
-    fetchInitial();
-  }, []);
-
-  const fetchInitial = async () => {
+  const fetchInitial = useCallback(async () => {
     try {
       setLoading(true);
       await Promise.all([fetchAssets(), fetchCategories(), fetchLocations()]);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchInitial();
+  }, [fetchInitial]);
 
   const fetchAssets = async () => {
     try {
@@ -171,7 +171,8 @@ const Assets = () => {
             <tr>
               <th>Name</th>
               <th>Type</th>
-              <th>Serial/Warranty Expiry</th>
+              <th>Serial Number</th>
+              <th>Warranty Expiry</th>
               <th>Category</th>
               <th>Location</th>
               <th>Purchase Date</th>
@@ -183,7 +184,8 @@ const Assets = () => {
               <tr key={asset.id}>
                 <td>{asset.name}</td>
                 <td>{asset.asset_type}</td>
-                <td>{asset.asset_type === "Hardware" ? asset.serial_number || "N/A" : asset.warranty_expiry || "N/A"}</td>
+                <td>{asset.serial_number || "N/A"}</td>
+                <td>{formatDate(asset.warranty_expiry) || "N/A"}</td>
                 <td>{asset.category_name || "N/A"}</td>
                 <td>{asset.location_name || "N/A"}</td>
                 <td>{formatDate(asset.purchase_date) || "N/A"}</td>

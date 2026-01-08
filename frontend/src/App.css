@@ -45,8 +45,10 @@ body.light {
     --sidebar-bg: #ffffff;
     --sidebar-text: #334155;
     --sidebar-hover-bg: #f1f5f9;
-    --sidebar-active-bg: #e0e7ff; /* Indigo 100 for active item bg */
-    --sidebar-active-text: #4f46e5; /* Indigo 600 for active item text */
+    --sidebar-active-bg: #e0e7ff;
+    /* Indigo 100 for active item bg */
+    --sidebar-active-text: #4f46e5;
+    /* Indigo 600 for active item text */
     --sidebar-border: #e2e8f0;
 }
 
@@ -62,7 +64,8 @@ body.dark {
     --border: #334155;
 
     /* Sidebar Dark Mode */
-    --sidebar-bg: #1e1b4b; /* Restore Deep Indigo */
+    --sidebar-bg: #1e1b4b;
+    /* Restore Deep Indigo */
     --sidebar-text: #94a3b8;
     --sidebar-hover-bg: #1e293b;
     --sidebar-active-bg: #1e293b;
@@ -74,8 +77,9 @@ body.dark {
 
 /* Smartsheet-style Icon Rail Sidebar */
 .sidebar {
-    width: 100px; /* Increased width as requested */
-    background: var(--sidebar-bg); 
+    width: 100px;
+    /* Increased width as requested */
+    background: var(--sidebar-bg);
     /* background: #fff; */
     color: var(--sidebar-text);
     display: flex;
@@ -95,8 +99,10 @@ body.dark {
     flex-direction: column;
     align-items: center;
     width: 100%;
-    overflow: hidden; /* Remove scrollbar as requested */
-    padding-top: 0; /* Top padding for list */
+    overflow: hidden;
+    /* Remove scrollbar as requested */
+    padding-top: 0;
+    /* Top padding for list */
 }
 
 .sidebar-nav ul {
@@ -106,32 +112,39 @@ body.dark {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 5px; /* Increased gap between items */
+    gap: 5px;
+    /* Increased gap between items */
     overflow: hidden;
     margin-top: 6px;
 }
 
 .sidebar-nav li {
     width: 100%;
-    padding: 0 12px; /* Horizontal padding only */
+    padding: 0 12px;
+    /* Horizontal padding only */
     display: flex;
     justify-content: center;
 }
 
 .sidebar-nav a {
     display: flex;
-    flex-direction: column; /* Stack Icon and Text */
+    flex-direction: column;
+    /* Stack Icon and Text */
     align-items: center;
     justify-content: center;
     width: 100%;
-    max-width: 80px; /* constrain width */
+    max-width: 80px;
+    /* constrain width */
     padding: 0 2px;
     height: 60px;
-    aspect-ratio: 1 / 1; /* Make it square-ish */
-    color: #94a3b8; /* Muted text */
+    aspect-ratio: 1 / 1;
+    /* Make it square-ish */
+    color: #94a3b8;
+    /* Muted text */
     text-decoration: none;
     transition: all 0.2s ease;
-    border-radius: 16px; /* More rounded */
+    border-radius: 16px;
+    /* More rounded */
     font-weight: 500;
     text-align: center;
     margin: 0;
@@ -151,7 +164,8 @@ body.dark {
 .sidebar-text {
     font-size: 0.75rem;
     line-height: 1.1;
-    display: none; /* Hidden by default */
+    display: none;
+    /* Hidden by default */
 }
 
 /* Show text on hover or active */
@@ -160,19 +174,32 @@ body.dark {
     display: block;
     animation: fadeIn 0.2s ease;
 }
+
 .sidebar-nav a:hover .sidebar-icon svg,
 .sidebar-nav a.active .sidebar-icon svg {
-    width: 26px; /* Slight scale up on hover/active */
+    width: 26px;
+    /* Slight scale up on hover/active */
     height: 26px;
-    stroke: currentColor; /* Use text color (white) for lines */
-    fill: currentColor; /* Use text color for fill... */
-    fill-opacity: 0.2; /* ...but make it semi-transparent so lines are visible */
-    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.3)); /* Glow effect */
+    stroke: currentColor;
+    /* Use text color (white) for lines */
+    fill: currentColor;
+    /* Use text color for fill... */
+    fill-opacity: 0.2;
+    /* ...but make it semi-transparent so lines are visible */
+    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.3));
+    /* Glow effect */
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-2px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-2px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 
@@ -180,9 +207,11 @@ body.dark {
 .sidebar-nav a.active .sidebar-text {
     display: block;
 }
+
 .sidebar-nav a:hover,
 .sidebar-nav a.active {
-    background: #4338ca; /* Indigo-700 for active state (per image style) */
+    background: #4338ca;
+    /* Indigo-700 for active state (per image style) */
     color: white;
     transform: none;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -227,7 +256,8 @@ body {
     align-items: center;
     background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
     position: relative;
-    padding: 20px 20px 0 20px; /* Remove bottom padding to let footer sit flush if needed, or keep it */
+    padding: 20px 20px 0 20px;
+    /* Remove bottom padding to let footer sit flush if needed, or keep it */
 }
 
 body.dark .auth-wrapper {
@@ -247,7 +277,8 @@ body.dark .auth-wrapper {
     border: 1px solid rgba(255, 255, 255, 0.8);
     transition: transform 0.3s ease;
     z-index: 10;
-    margin: auto; /* Centers the card vertically */
+    margin: auto;
+    /* Centers the card vertically */
 }
 
 body.dark .auth-card {
@@ -375,14 +406,30 @@ body.dark .role-option:hover {
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 @keyframes pulse {
-    0% { transform: scale(0.95); opacity: 0.8; }
-    50% { transform: scale(1.05); opacity: 1; }
-    100% { transform: scale(0.95); opacity: 0.8; }
+    0% {
+        transform: scale(0.95);
+        opacity: 0.8;
+    }
+
+    50% {
+        transform: scale(1.05);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(0.95);
+        opacity: 0.8;
+    }
 }
 
 /* --- Layout --- */
@@ -466,11 +513,13 @@ body.dark .role-option:hover {
 
 .layout-body {
     display: flex;
-    flex-direction: row; /* Explicit row */
+    flex-direction: row;
+    /* Explicit row */
     flex: 1;
     overflow: hidden;
     position: relative;
-    height: 100%; /* Ensure full height */
+    height: 100%;
+    /* Ensure full height */
 }
 
 /* Footer styling handled in component but layout ensures it sits at bottom */
@@ -478,15 +527,18 @@ body.dark .role-option:hover {
 .site-footer {
     text-align: center;
     padding: 1.25rem 1rem;
-    margin-top: auto; /* Push to bottom of flex container */
+    margin-top: auto;
+    /* Push to bottom of flex container */
     color: var(--text-secondary);
     font-size: 0.875rem;
     border-top: 1px solid var(--border-color);
     background: var(--panel);
     width: 100%;
     flex-shrink: 0;
-    position: relative; /* Ensure it flows */
-    z-index: 1; /* Low z-index just to be above background */
+    position: relative;
+    /* Ensure it flows */
+    z-index: 1;
+    /* Low z-index just to be above background */
 }
 
 /* Auth Page Footer Override */
@@ -513,7 +565,8 @@ body.dark .role-option:hover {
     display: flex;
     flex-direction: column;
     background: var(--background);
-    overflow-y: auto; /* Scroll is here now */
+    overflow-y: auto;
+    /* Scroll is here now */
     height: 100%;
     position: relative;
 }
@@ -528,7 +581,8 @@ body.dark .role-option:hover {
     align-items: center;
     z-index: 10;
     flex-shrink: 0;
-    position: sticky; /* Sticky header if desired, or can be static */
+    position: sticky;
+    /* Sticky header if desired, or can be static */
     top: 0;
 }
 
@@ -552,7 +606,8 @@ body.dark .role-option:hover {
 }
 
 .content {
-    padding: 1rem 2rem; /* Remove top/bottom padding for dashboard */
+    padding: 1rem 2rem;
+    /* Remove top/bottom padding for dashboard */
 }
 
 .dashboard-content {
@@ -562,7 +617,8 @@ body.dark .role-option:hover {
 /* --- Dashboard --- */
 .dashboard-stats {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(285px, 1fr)); /* Updated min-width as per request */
+    grid-template-columns: repeat(auto-fit, minmax(285px, 1fr));
+    /* Updated min-width as per request */
     gap: 1.5rem;
     margin-bottom: 2rem;
 }
@@ -678,14 +734,16 @@ a.quick-action-btn:hover {
     top: 1rem;
     right: 1rem;
     z-index: 9999;
-    pointer-events: none; /* Allow clicks to pass through empty container */
+    pointer-events: none;
+    /* Allow clicks to pass through empty container */
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
 }
 
-.toast-container > * {
-    pointer-events: auto; /* Re-enable clicks on actual toasts */
+.toast-container>* {
+    pointer-events: auto;
+    /* Re-enable clicks on actual toasts */
 }
 
 /* Validation Styles */
@@ -763,7 +821,8 @@ a.quick-action-btn:hover {
 }
 
 body.dark .table tr:hover td {
-    background: #1e293b; /* Darker background for dark mode hover */
+    background: #1e293b;
+    /* Darker background for dark mode hover */
 }
 
 .form-input {
@@ -779,17 +838,17 @@ body.dark .table tr:hover td {
 
 /* Fix for Chrome/Edge Autofill White Background */
 input:-webkit-autofill,
-input:-webkit-autofill:hover, 
-input:-webkit-autofill:focus, 
-input:-webkit-autofill:active{
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
     -webkit-box-shadow: 0 0 0 30px var(--bg-primary) inset !important;
     -webkit-text-fill-color: var(--text) !important;
     transition: background-color 5000s ease-in-out 0s;
 }
 
 body.dark input:-webkit-autofill,
-body.dark input:-webkit-autofill:hover, 
-body.dark input:-webkit-autofill:focus, 
+body.dark input:-webkit-autofill:hover,
+body.dark input:-webkit-autofill:focus,
 body.dark input:-webkit-autofill:active {
     -webkit-box-shadow: 0 0 0 30px #0f172a inset !important;
     -webkit-text-fill-color: white !important;
@@ -827,7 +886,8 @@ body.dark input:-webkit-autofill:active {
     text-align: center;
     color: var(--text-secondary);
     font-size: 0.875rem;
-    margin-top: auto; /* Ensures it stays at bottom if content is short, or pushes down if content is long */
+    margin-top: auto;
+    /* Ensures it stays at bottom if content is short, or pushes down if content is long */
     position: relative;
 }
 
@@ -952,10 +1012,12 @@ body.dark input:-webkit-autofill:active {
     gap: 1rem;
     color: var(--text-secondary);
 }
+
 /* Dashboard Stats Grid */
 .dashboard-stats {
     display: grid;
-    grid-template-columns: repeat(3, 1fr); /* Force 3 columns as requested */
+    grid-template-columns: repeat(3, 1fr);
+    /* Force 3 columns as requested */
     gap: 1.5rem;
     margin-bottom: 2rem;
 }
@@ -971,4 +1033,18 @@ body.dark input:-webkit-autofill:active {
     .dashboard-stats {
         grid-template-columns: 1fr;
     }
+}
+
+/* Filters Styling */
+.filters {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    min-width: 200px;
 }
