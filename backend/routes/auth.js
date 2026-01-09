@@ -244,4 +244,48 @@ router.get("/profile", authenticate(), async (req, res) => {
   }
 });
 
+// ------------------ UPDATE PROFILE ------------------
+router.put("/profile", authenticate(), async (req, res) => {
+  const { name, email, department, phone } = req.body;
+  if (!name || !email) {
+    return res.status(400).json({ message: "Name and Email are required" });
+  }
+
+  try {
+    await db.query(
+      "UPDATE users SET name=?, email=?, department=?, phone=? WHERE id=?",
+      [name, email, department || null, phone || null, req.user.id]
+    );
+    res.json({ message: "Profile updated successfully" });
+  } catch (err) {
+    console.error("Profile Update Error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ------------------ CHANGE PASSWORD ------------------
+router.put("/change-password", authenticate(), async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ message: "Both fields are required" });
+  }
+
+  try {
+    // Verify current password first
+    const [userRows] = await db.query("SELECT password FROM users WHERE id=?", [req.user.id]);
+    if (userRows.length === 0) return res.status(404).json({ message: "User not found" });
+
+    if (userRows[0].password !== currentPassword) {
+      return res.status(400).json({ message: "Current password is incorrect" });
+    }
+
+    // Update password
+    await db.query("UPDATE users SET password=? WHERE id=?", [newPassword, req.user.id]);
+    res.json({ message: "Password changed successfully" });
+  } catch (err) {
+    console.error("Password Change Error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 export default router;

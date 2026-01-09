@@ -59,7 +59,7 @@ const MENU_ITEMS = {
     { name: "Assets", path: ["/assets"], icon: "assets" },
     { name: "Orders", path: ["/purchase-orders"], icon: "orders" },
     { name: "Requests", path: ["/requests"], icon: "requests" },
-    { name: "Maintenance", path: ["/maintenance-dashboard"], icon: "maintenance" },
+
     { name: "Profile", path: ["/profile"], icon: "profile" },
   ],
   "Supervisor": [
@@ -77,8 +77,7 @@ const MENU_ITEMS = {
     { name: "Profile", path: ["/profile"], icon: "profile" },
   ],
   "Vendor": [
-    { name: "Dashboard", path: ["/dashboard"], icon: "dashboard" },
-    { name: "My Dashboard", path: ["/vendor-dashboard"], icon: "vendor" },
+    { name: "Dashboard", path: ["/vendor-dashboard"], icon: "dashboard" },
     { name: "Supply", path: ["/supply-assets"], icon: "assets" },
     { name: "Warranty", path: ["/warranty-docs"], icon: "file" },
     { name: "Products", path: ["/vendor-assets"], icon: "assets" },
@@ -86,8 +85,7 @@ const MENU_ITEMS = {
     { name: "Profile", path: ["/profile"], icon: "profile" },
   ],
   "Maintenance": [
-    { name: "Dashboard", path: ["/dashboard"], icon: "dashboard" },
-    { name: "Main. Dash", path: ["/maintenance-dashboard"], icon: "maintenance" },
+    { name: "Dashboard", path: ["/maintenance-dashboard"], icon: "dashboard" },
     { name: "Config", path: ["/new-configuration"], icon: "settings" },
     { name: "Update", path: ["/update-maintenance"], icon: "maintenance" },
     { name: "Tasks", path: ["/maintenance-tasks"], icon: "file" },

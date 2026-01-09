@@ -170,7 +170,18 @@ const Requests = () => {
               ? "Request Management"
               : "All Requests"}
         </h2>
-
+        {user?.role === "Employee" && (
+            <button 
+                className="btn btn-primary" 
+                onClick={() => {
+                    setEditingRequest(null)
+                    resetForm()
+                    setShowModal(true)
+                }}
+            >
+                + New Request
+            </button>
+        )}
       </div>
 
       <div className="filters">
