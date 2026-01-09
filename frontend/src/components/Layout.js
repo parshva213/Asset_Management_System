@@ -126,7 +126,7 @@ const Layout = () => {
       <header className="global-header">
         <div className="header-left">
             <img src={logo} alt="Logo" className="header-logo" onClick={toggleSidebar} style={{ cursor: 'pointer' }} title="Toggle Sidebar" />
-            <span className="brand-name">Asset Management System IT</span>
+            <span className="brand-name">IT Asset Management System</span>
         </div>
         
         <div className="header-center">
