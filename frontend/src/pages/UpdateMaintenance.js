@@ -21,29 +21,65 @@ const UpdateMaintenance = () => {
   }
 
   return (
-    <div className="page-container">
-      <h2>Update Maintenance Records</h2>
-      <p>Record maintenance activities like repairs, replacements, and checks.</p>
+    <div className="page-container" style={{ display: 'flex', justifyContent: 'center', padding: '2rem 0' }}>
+      <div className="card form-container" style={{ width: '100%' }}>
+        <h3>Update Maintenance Records</h3>
+        <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+          Record maintenance activities like repairs, replacements, and checks.
+        </p>
 
-      <form onSubmit={handleSubmit} className="form">
-        <label>
-          Asset ID:
-          <input type="text" name="assetId" value={form.assetId} onChange={handleChange} required />
-        </label>
-        <label>
-          Maintenance Type:
-          <input type="text" name="maintenanceType" value={form.maintenanceType} onChange={handleChange} required />
-        </label>
-        <label>
-          Maintenance Date:
-          <input type="date" name="maintenanceDate" value={form.maintenanceDate} onChange={handleChange} required />
-        </label>
-        <label>
-          Remarks:
-          <textarea name="remarks" value={form.remarks} onChange={handleChange}></textarea>
-        </label>
-        <button type="submit">Update</button>
-      </form>
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label className="form-label">Asset ID</label>
+            <input 
+              type="text" 
+              name="assetId" 
+              value={form.assetId} 
+              onChange={handleChange} 
+              className="form-input" 
+              required 
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Maintenance Type</label>
+            <input 
+              type="text" 
+              name="maintenanceType" 
+              value={form.maintenanceType} 
+              onChange={handleChange} 
+              className="form-input" 
+              required 
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Maintenance Date</label>
+            <input 
+              type="date" 
+              name="maintenanceDate" 
+              value={form.maintenanceDate} 
+              onChange={handleChange} 
+              className="form-input" 
+              required 
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Remarks</label>
+            <textarea 
+              name="remarks" 
+              value={form.remarks} 
+              onChange={handleChange}
+              className="form-input"
+            ></textarea>
+          </div>
+
+          <button type="submit" className="btn btn-primary" style={{ marginTop: '1rem' }}>
+            Update Record
+          </button>
+        </form>
+      </div>
     </div>
   )
 }

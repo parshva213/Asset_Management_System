@@ -21,6 +21,23 @@ router.get("/", verifyToken, async (req, res) => {
     }
 });
 
+// GET maintenance tasks (for tasks page)
+router.get("/tasks", verifyToken, async (req, res) => {
+    try {
+        const [rows] = await pool.query(`
+      SELECT m.*, a.name as asset_name
+      FROM maintenance_records m
+      JOIN assets a ON m.asset_id = a.id
+      WHERE m.status != 'Completed'
+      ORDER BY FIELD(m.priority, 'High', 'Medium', 'Low'), m.created_at ASC
+    `);
+        res.json(rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
 // POST create maintenance record (Supervisor/Admin)
 router.post("/", verifyToken, async (req, res) => {
     if (!["Super Admin", "Supervisor"].includes(req.user.role)) {

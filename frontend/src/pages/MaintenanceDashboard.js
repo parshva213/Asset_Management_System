@@ -46,11 +46,13 @@ const MaintenanceDashboard = () => {
 
   return (
     <div>
-      <h2 style={{ marginBottom: "10px" }}>Maintenance Dashboard</h2>
-      <p>Welcome {user?.name}, manage maintenance tasks and asset configurations.</p>
+      <div className="page-header">
+        <h2>Maintenance Dashboard</h2>
+        <p>Welcome {user?.name}, manage maintenance tasks and asset configurations.</p>
+      </div>
       
       {error && (
-        <div className="error-message" style={{ color: 'red', margin: '1rem 0', padding: '1rem', border: '1px solid red', borderRadius: '8px' }}>
+        <div className="alert alert-error">
             {error}
         </div>
       )}
@@ -70,46 +72,61 @@ const MaintenanceDashboard = () => {
         </div>
       </div>
 
-      <div className="card">
-        <h3>Pending Maintenance Tasks</h3>
-        <ul>
-          {pendingTasks.map((task) => (
-            <li key={task.id}>
-              {task.maintenance_type} on {task.asset_name} - Priority: {task.priority}
-            </li>
-          ))}
-        </ul>
-      </div>
+      <div className="dashboard-grid">
+        <div className="card">
+          <h3>Pending Maintenance Tasks</h3>
+          <ul className="list-group">
+            {pendingTasks.length > 0 ? pendingTasks.map((task) => (
+              <li key={task.id} className="list-group-item">
+                <span><strong>{task.maintenance_type}</strong> on {task.asset_name}</span>
+                <span className="badge badge-warning">Priority: {task.priority}</span>
+              </li>
+            )) : <li className="list-group-item">No pending tasks</li>}
+          </ul>
+        </div>
 
-      <div className="card">
-        <h3>Completed Tasks</h3>
-        <ul>
-          {completedTasks.map((task) => (
-            <li key={task.id}>
-              {task.maintenance_type} on {task.asset_name} - Completed on {task.completed_date}
-            </li>
-          ))}
-        </ul>
-      </div>
+        <div className="card">
+          <h3>Completed Tasks</h3>
+          <ul className="list-group">
+            {completedTasks.length > 0 ? completedTasks.map((task) => (
+              <li key={task.id} className="list-group-item">
+                <span><strong>{task.maintenance_type}</strong> on {task.asset_name}</span>
+                <span style={{ fontSize: '0.8rem' }}>{new Date(task.completed_date).toLocaleDateString()}</span>
+              </li>
+            )) : <li className="list-group-item">No completed tasks recently</li>}
+          </ul>
+        </div>
 
-      <div className="card">
-        <h3>Assets to Maintain</h3>
-        <ul>
-          {assetsToMaintain.map((asset) => (
-            <li key={asset.id}>
-              {asset.name} - Status: {asset.status} - Last Maintenance: {asset.last_maintenance}
-            </li>
-          ))}
-        </ul>
-      </div>
+        <div className="card">
+          <h3>Assets to Maintain</h3>
+          <ul className="list-group">
+            {assetsToMaintain.length > 0 ? assetsToMaintain.map((asset) => (
+              <li key={asset.id} className="list-group-item">
+                <span><strong>{asset.name}</strong></span>
+                <span>{asset.status}</span>
+              </li>
+            )) : <li className="list-group-item">All assets are in good condition</li>}
+          </ul>
+        </div>
 
-      <div className="card">
-        <h3>Quick Actions</h3>
-        <ul>
-          <li><Link to="/new-configuration">Configure New Asset</Link></li>
-          <li><Link to="/update-maintenance">Update Maintenance Record</Link></li>
-          <li><Link to="/maintenance-tasks">View All Tasks</Link></li>
-        </ul>
+        <div className="card full-width-col">
+          <h3>Quick Actions</h3>
+          <div className="action-grid">
+             <Link to="/new-configuration" className="action-card-btn">
+                <span>Configure New Asset</span>
+                <span className="action-arrow">→</span>
+             </Link>
+             <Link to="/update-maintenance" className="action-card-btn">
+                <span>Update Maintenance Record</span>
+                <span className="action-arrow">→</span>
+             </Link>
+             <Link to="/maintenance-tasks" className="action-card-btn">
+                <span>View All Tasks</span>
+                <span className="action-arrow">→</span>
+             </Link>
+             {/* Adding dummy actions to fill the row like the image if desired, or just these 3 */}
+          </div>
+        </div>
       </div>
     </div>
   )
