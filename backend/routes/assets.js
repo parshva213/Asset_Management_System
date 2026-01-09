@@ -89,14 +89,13 @@ router.put("/:id", authenticateToken, async (req, res) => {
     location_id,
     asset_type,
     purchase_date,
-    warranty_expiry,
-    warranty_number
+    warranty_expiry
   } = req.body;
 
   try {
     await pool.query(
-      `UPDATE assets SET name=?, description=?, serial_number=?, category_id=?, location_id=?, asset_type=?, purchase_date=?, warranty_expiry=?, warranty_number=? WHERE id=?`,
-      [name, description, serial_number, category_id, location_id, asset_type, purchase_date, warranty_expiry, warranty_number, req.params.id]
+      `UPDATE assets SET name=?, description=?, serial_number=?, category_id=?, location_id=?, asset_type=?, purchase_date=?, warranty_expiry=? WHERE id=?`,
+      [name, description, serial_number, category_id, location_id, asset_type, purchase_date, warranty_expiry, req.params.id]
     );
     res.json({ message: "Asset updated" });
   } catch (err) {

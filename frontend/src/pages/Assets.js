@@ -176,7 +176,7 @@ const Assets = () => {
               <th>Category</th>
               <th>Location</th>
               <th>Purchase Date</th>
-              <th>Actions</th>
+              {(user?.role === "Super Admin" || user?.role === "IT Supervisor") && <th>Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -189,14 +189,14 @@ const Assets = () => {
                 <td>{asset.category_name || "N/A"}</td>
                 <td>{asset.location_name || "N/A"}</td>
                 <td>{formatDate(asset.purchase_date) || "N/A"}</td>
-                <td>
-                  {(user?.role === "Super Admin" || user?.role === "IT Supervisor") && (
+                {(user?.role === "Super Admin" || user?.role === "IT Supervisor") && (
+                  <td>
                     <div className="flex gap-2">
                       <button onClick={() => handleEdit(asset)} className="btn btn-secondary">Edit</button>
                       <button onClick={() => handleDelete(asset.id)} className="btn btn-danger">Delete</button>
                     </div>
-                  )}
-                </td>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

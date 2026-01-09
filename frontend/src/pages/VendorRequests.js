@@ -10,7 +10,7 @@ const VendorRequests = () => {
   useEffect(() => {
     const fetchRequests = async () => {
       try {
-        const res = await api.get("/vendor/requests")
+        const res = await api.get("/purchase-orders")
         setRequests(res.data)
       } catch (err) {
         console.error(err)
@@ -22,10 +22,10 @@ const VendorRequests = () => {
   return (
     <div>
       <h2>Replacement/Upgrade Requests</h2>
-      <ul>
+      <ul className="request-list">
         {requests.map((req) => (
-          <li key={req.id}>
-            {req.request_type} - {req.status} (Asset: {req.asset_id})
+          <li key={req.id} className="card mb-2">
+            <strong>Order #{req.id}</strong>: {req.asset_name} (Qty: {req.quantity}) - <span className={`badge badge-${req.status === 'Completed' ? 'high' : 'medium'}`}>{req.status}</span>
           </li>
         ))}
       </ul>

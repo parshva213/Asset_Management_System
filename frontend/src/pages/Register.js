@@ -5,6 +5,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom"
 import api from "../api"
 import ThemeToggle from "../components/ThemeToggle"
 import Footer from "../components/Footer"
+import logo from "../img/logo.png"
 
 const Register = () => {
   const navigate = useNavigate()
@@ -71,27 +72,13 @@ const Register = () => {
   }
 
   return (
-    <div className="auth-container" style={{ position: 'relative' }}>
-      <div style={{ position: 'absolute', top: '1rem', right: '1rem' }}>
+    <div className="auth-wrapper">
+      <div className="theme-toggle-wrapper">
           <ThemeToggle />
       </div>
       <div className="auth-card">
         {/* AMS Logo */}
-        <div style={{
-            width: '80px',
-            height: '80px',
-            borderRadius: '50%',
-            background: 'linear-gradient(to right, #818cf8, #c7d2fe)',
-            color: 'white',
-            fontSize: '2rem',
-            fontWeight: 'bold',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 1.5rem auto'
-        }}>
-            A
-        </div>
+        <img src={logo} alt="AMS Logo" className="auth-logo" />
 
         <h2 className="auth-title">Register as {role}</h2>
 
@@ -150,7 +137,7 @@ const Register = () => {
           </div>
 
           {/* Optional fields based on role could go here, e.g. Department for Employees */}
-          {['Employee', 'Supervisor', 'Maintenance Staff'].includes(role) && (
+          {['Employee', 'Supervisor', 'Maintenance Staff', 'Super Admin'].includes(role) && (
              <div className="form-group input-group">
                 <label className="form-label">Department (Optional)</label>
                 <input
@@ -179,7 +166,7 @@ const Register = () => {
       </div>
       
        {/* Footer */}
-       <div style={{ position: 'absolute', bottom: 0, width: '100%' }}>
+       <div className="auth-footer-wrapper">
           <Footer />
        </div>
     </div>

@@ -102,6 +102,7 @@ const Locations = () => {
                 <tr>
                   <th>Name</th>
                   <th>Address</th>
+                  <th>Rooms</th>
                   <th>Description</th>
                   <th>Created At</th>
                   <th>Actions</th>
@@ -112,6 +113,7 @@ const Locations = () => {
                   <tr key={location.id}>
                     <td>{location.name}</td>
                     <td>{location.address || "N/A"}</td>
+                    <td>{location.room_count}</td>
                     <td>{location.description || "N/A"}</td>
                     <td>{new Date(location.created_at).toLocaleDateString()}</td>
                     <td>

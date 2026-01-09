@@ -6,9 +6,7 @@ import { useTheme } from "./../contexts/ThemeContext"
 import { useMemo, useState } from "react"
 import Loading from "./Loading"
 import Footer from "./Footer"
-import logo from "../img/logo.png"
-
-import ThemeToggle from "./ThemeToggle"
+import Header from "./Header"
 
 // Basic SVG Icon Components
 const ICONS = {
@@ -63,7 +61,7 @@ const MENU_ITEMS = {
     { name: "Profile", path: ["/profile"], icon: "profile" },
   ],
   "Supervisor": [
-    { name: "Dashboard", path: ["/dashboard"], icon: "dashboard" },
+    { name: "Dashboard", path: ["/dashboard", "/supervisor-dashboard"], icon: "dashboard" },
     { name: "Locations", path: ["/locations"], icon: "locations" },
     { name: "Assets", path: ["/assets"], icon: "assets" },
     { name: "Orders", path: ["/purchase-orders"], icon: "orders" },
@@ -71,7 +69,7 @@ const MENU_ITEMS = {
     { name: "Profile", path: ["/profile"], icon: "profile" },
   ],
   "Employee": [
-    { name: "Dashboard", path: ["/dashboard"], icon: "dashboard" },
+    { name: "Dashboard", path: ["/dashboard", "/employee-dashboard"], icon: "dashboard" },
     { name: "Assets", path: ["/assets"], icon: "assets" },
     { name: "Requests", path: ["/requests"], icon: "requests" },
     { name: "Profile", path: ["/profile"], icon: "profile" },
@@ -120,32 +118,7 @@ const Layout = () => {
 
   return (
     <div className={`layout-container ${theme}`}>
-      {/* Global Header */}
-      <header className="global-header">
-        <div className="header-left">
-            <img src={logo} alt="Logo" className="header-logo" onClick={toggleSidebar} style={{ cursor: 'pointer' }} title="Toggle Sidebar" />
-            <span className="brand-name">IT Asset Management System</span>
-        </div>
-        
-        <div className="header-center">
-            {/* Blank as requested */}
-        </div>
-
-        <div className="header-right">
-             <div className="user-profile">
-                <span className="user-name">{user.name}</span>
-                <span className="user-role">({user.role})</span>
-             </div>
-             <ThemeToggle />
-             <button 
-                onClick={logout} 
-                className="btn btn-danger" 
-                style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
-             >
-                Logout
-             </button>
-        </div>
-      </header>
+      <Header user={user} logout={logout} toggleSidebar={toggleSidebar} />
 
       <div className="layout-body">
         {/* Sidebar */}

@@ -6,7 +6,11 @@ const router = express.Router();
 
 router.get("/", verifyToken, async (req, res) => {
   try {
-    const [rows] = await db.query("SELECT * FROM locations ORDER BY name")
+    const [rows] = await db.query(`
+      SELECT l.*, (SELECT COUNT(*) FROM rooms r WHERE r.location_id = l.id) as room_count
+      FROM locations l
+      ORDER BY l.name
+    `)
     res.json(rows)
   } catch (error) {
     console.error("Error fetching locations:", error)

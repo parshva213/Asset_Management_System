@@ -7,14 +7,10 @@ import { Link } from "react-router-dom"
 const MaintenanceDashboard = () => {
   const { user } = useAuth()
   const [pendingTasks, setPendingTasks] = useState([])
-  const [completedTasks, setCompletedTasks] = useState([])
-  const [assetsToMaintain, setAssetsToMaintain] = useState([])
-  const [stats, setStats] = useState({ pending: 0, completed: 0, totalAssets: 0 })
+  const [stats, setStats] = useState({ pending: 0, completed: 0, totalAssets: 0, configCount: 0 })
   const [error, setError] = useState(null)
   
-  // Dashboard Tabs State
-  const [activeTab, setActiveTab] = useState('pending')
-
+  // Dashboard State
   useEffect(() => {
     fetchDashboardData()
   }, [user])
@@ -25,12 +21,11 @@ const MaintenanceDashboard = () => {
       const res = await api.get("/maintenance/dashboard")
       const data = res.data
       setPendingTasks(data.pendingTasks || [])
-      setCompletedTasks(data.completedTasks || [])
-      setAssetsToMaintain(data.assetsToMaintain || [])
       setStats({
         pending: data.pendingCount || 0,
         completed: data.completedCount || 0,
         totalAssets: data.totalAssets || 0,
+        configCount: data.configCount || 0,
       })
     } catch (err) {
       console.error(err)
@@ -39,7 +34,7 @@ const MaintenanceDashboard = () => {
   }
 
   return (
-    <div className="dashboard-layout">
+    <div className="dashboard-layout maintenance-dashboard">
         {error && (
             <div className="alert alert-error" style={{marginBottom: '0'}}>
                 {error}
@@ -49,7 +44,7 @@ const MaintenanceDashboard = () => {
         <div className="dashboard-top-row">
             {/* Profile Card */}
             <div className="profile-card">
-                <div className="profile-header">
+                <div className="card-header">
                     <img 
                         src={`https://ui-avatars.com/api/?name=${user?.name}&background=6366f1&color=fff`} 
                         alt="Profile" 
@@ -57,141 +52,93 @@ const MaintenanceDashboard = () => {
                     />
                     <div className="profile-info">
                         <h3>Hi, {user?.name} 👋</h3>
-                        <span style={{color: 'var(--success)', fontSize: '0.8rem', fontWeight: '500'}}>Online</span>
+                       <span className="badge badge-high">Maintenance</span>
                     </div>
                 </div>
-                <div className="profile-details">
+                <div className="card-body">
                     <div className="profile-detail-item">
                         <span>📧</span> {user?.email}
                     </div>
                     <div className="profile-detail-item">
                         <span>🏷️</span> {user?.role} - {user?.department || 'IT Dept'}
                     </div>
-                    <Link to="/profile" style={{marginTop: '1rem', color: 'var(--primary)', fontWeight: '600', textDecoration: 'none'}}>
+                    <div className="profile-detail-item">
+                        <span>📞</span> {user?.phone || 'Not set'}
+                    </div>
+                    <div className="profile-detail-item">
+                        <span>📅</span> Joined {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
+                    </div>
+                </div>
+                <div className="card-footer">
+                    <Link to="/profile">
                         View full details →
                     </Link>
                 </div>
             </div>
 
             {/* Stats Grid */}
-            <div className="stats-grid-4">
+            <div className="stats-grid-2">
                 <div className="stat-widget">
                     <div>
                         <div className="stat-icon-wrapper" style={{background: '#f43f5e'}}>
                             📋
                         </div>
                         <div className="stat-title">Total Workorders</div>
-                        <div className="stat-value">{stats.pending + stats.completed}</div>
-                    </div>
-                </div>
-                <div className="stat-widget">
-                    <div>
-                        <div className="stat-icon-wrapper" style={{background: '#10b981'}}>
-                            cx
+                        <div className="stat-value">
+                            {(stats.pending + stats.completed) >= 10 ? `${Math.floor((stats.pending + stats.completed) / 10) * 10}+` : (stats.pending + stats.completed)}
                         </div>
-                        <div className="stat-title">Pending Workorders</div>
-                        <div className="stat-value">{stats.pending}</div>
+                    </div>
+                    <div className="card-footer">
+                         <Link to="/maintenance-tasks">
+                            View full details →
+                        </Link>
                     </div>
                 </div>
+               
                 <div className="stat-widget">
                     <div>
                         <div className="stat-icon-wrapper" style={{background: '#f59e0b'}}>
                             ⚡
                         </div>
                         <div className="stat-title">High Priority</div>
-                        <div className="stat-value">{pendingTasks.filter(t => t.priority === 'High').length}</div>
+                        <div className="stat-value">
+                            {pendingTasks.filter(t => t.priority === 'High').length >= 10 ? `${Math.floor(pendingTasks.filter(t => t.priority === 'High').length / 10) * 10}+` : pendingTasks.filter(t => t.priority === 'High').length}
+                        </div>
+                    </div>
+                </div>
+                
+                <div className="stat-widget">
+                    <div>
+                        <div className="stat-icon-wrapper" style={{background: '#8b5cf6'}}>
+                            ⚙️
+                        </div>
+                        <div className="stat-title">Config Management</div>
+                        <div className="stat-value">{stats.configCount >= 10 ? `${Math.floor(stats.configCount / 10) * 10}+` : stats.configCount}</div>
+                    </div>
+                    <div className="card-footer">
+                         <Link to="/new-configuration">
+                            Manage Config →
+                        </Link>
                     </div>
                 </div>
                 <div className="stat-widget">
                     <div>
-                        <div className="stat-icon-wrapper" style={{background: '#6366f1'}}>
-                            ⚠️
+                        <div className="stat-icon-wrapper" style={{background: '#06b6d4'}}>
+                            🔧
                         </div>
-                        <div className="stat-title">Assets Under Maint.</div>
-                        <div className="stat-value">{stats.totalAssets}</div>
+                        <div className="stat-title">Update Tasks</div>
+                        <div className="stat-value">{stats.pending >= 10 ? `${Math.floor(stats.pending / 10) * 10}+` : stats.pending}</div>
+                    </div>
+                    <div className="card-footer">
+                         <Link to="/update-maintenance">
+                            Update Now →
+                        </Link>
                     </div>
                 </div>
             </div>
         </div>
-
-        {/* Row 2: Work Orders Table */}
-        <div className="table-container">
-            <div className="table-header-row">
-                <div className="tabs">
-                    <button 
-                        className={`tab-btn ${activeTab === 'pending' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('pending')}
-                    >
-                        Pending WO
-                    </button>
-                    <button 
-                        className={`tab-btn ${activeTab === 'all' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('all')}
-                    >
-                        All Work orders
-                    </button>
-                </div>
-                <div style={{display: 'flex', gap: '1rem'}}>
-                    <input type="text" placeholder="Search" className="form-input" style={{padding: '0.4rem 1rem', width: '200px'}} />
-                </div>
-            </div>
-            
-            <table className="table" style={{background: 'transparent', boxShadow: 'none', border: 'none'}}>
-                <thead>
-                    <tr>
-                        <th style={{background: 'transparent', color: 'var(--text-secondary)'}}>Service ID</th>
-                        <th style={{background: 'transparent', color: 'var(--text-secondary)'}}>Asset Name</th>
-                        <th style={{background: 'transparent', color: 'var(--text-secondary)'}}>Type</th>
-                        <th style={{background: 'transparent', color: 'var(--text-secondary)'}}>Priority</th>
-                        <th style={{background: 'transparent', color: 'var(--text-secondary)'}}>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {(activeTab === 'pending' ? pendingTasks : [...pendingTasks, ...completedTasks]).map((task, idx) => (
-                        <tr key={task.id}>
-                            <td>Service ID - {task.id}</td>
-                            <td>{task.asset_name}</td>
-                            <td>{task.maintenance_type}</td>
-                            <td>
-                                <span className={`badge ${task.priority === 'High' ? 'badge-high' : 'badge-medium'}`}>
-                                    {task.priority || 'Medium'}
-                                </span>
-                            </td>
-                            <td>{task.status}</td>
-                        </tr>
-                    ))}
-                    {pendingTasks.length === 0 && activeTab === 'pending' && (
-                        <tr><td colSpan="5" style={{textAlign: 'center', padding: '2rem'}}>No pending work orders</td></tr>
-                    )}
-                </tbody>
-            </table>
-        </div>
-
-        {/* Row 3: Recent Sections */}
-        <div className="dashboard-top-row">
-            <div className="card">
-                <h3>Recent Assigned Tasks</h3>
-                <ul className="list-group">
-                    {assetsToMaintain.slice(0, 3).map(asset => (
-                        <li key={asset.id} className="list-group-item">
-                            <div>
-                                <strong>{asset.name}</strong>
-                                <div style={{fontSize:'0.8rem', color:'var(--text-secondary)'}}>Status: {asset.status}</div>
-                            </div>
-                            <span className="badge badge-low">Update</span>
-                        </li>
-                    ))}
-                </ul>
-            </div>
-            <div className="card">
-                 <h3>Recent Checklists</h3>
-                 <div style={{color: 'var(--text-secondary)', padding: '1rem', textAlign: 'center'}}>
-                    No checklists pending
-                 </div>
-            </div>
-        </div>
     </div>
-  )
+    )
 }
 
 export default MaintenanceDashboard

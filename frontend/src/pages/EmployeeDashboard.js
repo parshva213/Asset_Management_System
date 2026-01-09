@@ -10,47 +10,26 @@ const EmployeeDashboard = () => {
         assignedAssets: 0,
         pendingRequests: 0,
         approvedRequests: 0,
+        totalRequests: 0,
     })
-    const [myAssets, setMyAssets] = useState([])
-    const [myRequests, setMyRequests] = useState([])
-    const [activeTab, setActiveTab] = useState('assets')
     const [loading, setLoading] = useState(true)
 
     const fetchDashboardData = useCallback(async () => {
         try {
-            const [dashboardRes, assetsRes, requestsRes] = await Promise.allSettled([
-                api.get("/dashboard"),
-                api.get("/assets"), // Check if backend sends only 'my' assets or all
-                api.get("/requests") // Check if backend sends only 'my' requests
-            ])
-
-            if (dashboardRes.status === 'fulfilled') {
-                const data = dashboardRes.value.data
-                setStats({
-                    assignedAssets: data.assignedAssets || 0,
-                    pendingRequests: data.pendingRequests || 0,
-                    approvedRequests: data.approvedRequests || 0,
-                })
-            }
-
-            if (assetsRes.status === 'fulfilled' && Array.isArray(assetsRes.value.data)) {
-                 // Client-side filter if backend sends all (fallback)
-                 // Assuming user object has 'id' or 'email' matching assignment
-                 setMyAssets(assetsRes.value.data.filter(a => a.assigned_to === user?.name || a.assigned_to_id === user?.id).slice(0, 5))
-            }
-
-            if (requestsRes.status === 'fulfilled' && Array.isArray(requestsRes.value.data)) {
-                 // Client-side filter
-                 setMyRequests(requestsRes.value.data.filter(r => r.user_id === user?.id || r.requested_by === user?.name).slice(0, 5))
-            }
-
+            const dashboardRes = await api.get("/dashboard")
+            setStats({
+                assignedAssets: dashboardRes.data.assignedAssets || 0,
+                pendingRequests: dashboardRes.data.pendingRequests || 0,
+                approvedRequests: dashboardRes.data.approvedRequests || 0,
+                totalRequests: dashboardRes.data.totalRequests || 0,
+            })
         } catch (error) {
             console.error("Error fetching dashboard data:", error)
             if (error.response?.status === 403) logout()
         } finally {
             setLoading(false)
         }
-    }, [logout, user])
+    }, [logout])
 
     useEffect(() => {
         if(user) fetchDashboardData()
@@ -61,11 +40,11 @@ const EmployeeDashboard = () => {
     }
 
     return (
-        <div className="dashboard-layout">
+        <div className="dashboard-layout employee-dashboard">
             <div className="dashboard-top-row">
                 {/* Profile Card */}
                 <div className="profile-card">
-                    <div className="profile-header">
+                    <div className="card-header">
                         <img
                             src={`https://ui-avatars.com/api/?name=${user?.name}&background=6366f1&color=fff`}
                             alt="Profile"
@@ -73,31 +52,44 @@ const EmployeeDashboard = () => {
                         />
                         <div className="profile-info">
                             <h3>Hi, {user?.name} 👋</h3>
-                            <span style={{ color: 'var(--success)', fontSize: '0.8rem', fontWeight: '500' }}>Employee</span>
+                           <span className="badge badge-high">Employee</span>
                         </div>
                     </div>
-                    <div className="profile-details">
+                    <div className="card-body">
                         <div className="profile-detail-item">
                             <span>📧</span> {user?.email}
                         </div>
                         <div className="profile-detail-item">
                             <span>🏢</span> {user?.department || 'General Staff'}
                         </div>
-                         <Link to="/profile" style={{ marginTop: '1rem', color: 'var(--primary)', fontWeight: '600', textDecoration: 'none' }}>
+                         <div className="profile-detail-item">
+                            <span>📞</span> {user?.phone || 'Not set'}
+                        </div>
+                        <div className="profile-detail-item">
+                            <span>📅</span> Joined {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
+                        </div>
+                    </div>
+                     <div className="card-footer">
+                         <Link to="/profile">
                             View full details →
                         </Link>
                     </div>
                 </div>
 
                 {/* Stats Grid */}
-                <div className="stats-grid-4">
+                <div className="stats-grid-2">
                     <div className="stat-widget">
                         <div>
                             <div className="stat-icon-wrapper" style={{ background: '#6366f1' }}>
                                 💻
                             </div>
                             <div className="stat-title">My Assets</div>
-                            <div className="stat-value">{stats.assignedAssets}</div>
+                            <div className="stat-value">{stats.assignedAssets >= 10 ? `${Math.floor(stats.assignedAssets / 10) * 10}+` : stats.assignedAssets}</div>
+                        </div>
+                         <div className="card-footer">
+                            <Link to="/assets">
+                                View full details →
+                            </Link>
                         </div>
                     </div>
                     <div className="stat-widget">
@@ -106,7 +98,12 @@ const EmployeeDashboard = () => {
                                 ⏳
                             </div>
                             <div className="stat-title">Pending Req.</div>
-                            <div className="stat-value">{stats.pendingRequests}</div>
+                            <div className="stat-value">{stats.pendingRequests >= 10 ? `${Math.floor(stats.pendingRequests / 10) * 10}+` : stats.pendingRequests}</div>
+                        </div>
+                        <div className="card-footer">
+                            <Link to="/requests">
+                                View full details →
+                            </Link>
                         </div>
                     </div>
                     <div className="stat-widget">
@@ -115,104 +112,27 @@ const EmployeeDashboard = () => {
                                 ✅
                             </div>
                             <div className="stat-title">Approved</div>
-                            <div className="stat-value">{stats.approvedRequests}</div>
+                            <div className="stat-value">{stats.approvedRequests >= 10 ? `${Math.floor(stats.approvedRequests / 10) * 10}+` : stats.approvedRequests}</div>
+                        </div>
+                         <div className="card-footer">
+                            <Link to="/requests">
+                                View full details →
+                            </Link>
                         </div>
                     </div>
-                     <div className="stat-widget">
+                    <div className="stat-widget">
                         <div>
-                            <div className="stat-icon-wrapper" style={{ background: '#3b82f6' }}>
-                                🔔
+                            <div className="stat-icon-wrapper" style={{ background: '#8b5cf6' }}>
+                                 ✨
                             </div>
-                            <div className="stat-title">Notifications</div>
-                            <div className="stat-value">0</div>
+                            <div className="stat-title">New Request</div>
+                            <div className="stat-value">{stats.totalRequests >= 10 ? `${Math.floor(stats.totalRequests / 10) * 10}+` : stats.totalRequests}</div>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Tables Section */}
-            <div className="table-container">
-                <div className="table-header-row">
-                    <div className="tabs">
-                        <button 
-                            className={`tab-btn ${activeTab === 'assets' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('assets')}
-                        >
-                            My Assets
-                        </button>
-                        <button 
-                            className={`tab-btn ${activeTab === 'requests' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('requests')}
-                        >
-                            My Requests
-                        </button>
-                    </div>
-                </div>
-                
-                <div style={{overflowX: 'auto'}}>
-                    <table className="table">
-                        <thead>
-                            <tr>
-                                {activeTab === 'assets' ? (
-                                    <>
-                                        <th>Asset Name</th>
-                                        <th>Model</th>
-                                        <th>Serial #</th>
-                                        <th>Assigned Date</th>
-                                    </>
-                                ) : (
-                                    <>
-                                        <th>Asset</th>
-                                        <th>Request Date</th>
-                                        <th>Status</th>
-                                    </>
-                                )}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {activeTab === 'assets' && myAssets.map((a) => (
-                                <tr key={a.id}>
-                                    <td>{a.name}</td>
-                                    <td>{a.model}</td>
-                                    <td>{a.serial_number}</td>
-                                    <td>{a.assigned_date ? new Date(a.assigned_date).toLocaleDateString() : 'N/A'}</td>
-                                </tr>
-                            ))}
-                            {activeTab === 'requests' && myRequests.map((r) => (
-                                <tr key={r.id}>
-                                    <td>{r.asset_name}</td>
-                                    <td>{new Date(r.request_date).toLocaleDateString()}</td>
-                                    <td>
-                                        <span className={`badge ${r.status === 'Approved' ? 'badge-high' : 'badge-medium'}`}>
-                                            {r.status}
-                                        </span>
-                                    </td>
-                                </tr>
-                            ))}
-                             {activeTab === 'assets' && myAssets.length === 0 && <tr><td colSpan="4" className="text-center">No assets assigned.</td></tr>}
-                             {activeTab === 'requests' && myRequests.length === 0 && <tr><td colSpan="3" className="text-center">No requests found.</td></tr>}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-             {/* Quick Actions */}
-            <div className="dashboard-top-row">
-                <div className="card full-width-col" style={{ gridColumn: '1 / -1' }}>
-                    <h3>Quick Actions</h3>
-                    <div className="action-grid">
-                        <Link to="/assets" className="action-card-btn">
-                            <span>View My Assets</span>
-                            <span className="action-arrow">→</span>
-                        </Link>
-                        <Link to="/requests" className="action-card-btn">
-                            <span>New Request</span>
-                            <span className="action-arrow">→</span>
-                        </Link>
-                         <Link to="/requests" className="action-card-btn">
-                            <span>Track Requests</span>
-                            <span className="action-arrow">→</span>
-                        </Link>
+                        <div className="card-footer">
+                             <Link to="/requests">
+                                Create New →
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </div>

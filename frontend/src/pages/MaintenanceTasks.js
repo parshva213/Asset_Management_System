@@ -69,24 +69,57 @@ const MaintenanceTasks = () => {
         </div>
       </div>
 
-      <div className="card full-width-col">
-        <h3>Active Tasks</h3>
-        <ul className="list-group">
-          {tasks.length > 0 ? tasks.map((task) => (
-            <li key={task.id} className="list-group-item">
-              <div>
-                <strong>{task.maintenance_type}</strong> on {task.asset_name}
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Status: {task.status} | Priority: {task.priority}</div>
-              </div>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                {task.status !== 'In Progress' && (
-                    <button onClick={() => updateTask(task.id, "In Progress")} className="btn btn-secondary" style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem' }}>Start</button>
-                )}
-                <button onClick={() => updateTask(task.id, "Completed")} className="btn btn-primary" style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem' }}>Complete</button>
-              </div>
-            </li>
-          )) : <li className="list-group-item">No active tasks found</li>}
-        </ul>
+      <div className="table-container">
+        {tasks.length > 0 ? (
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Service ID</th>
+                <th>Asset Name</th>
+                <th>Maintenance Type</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tasks.map((task) => (
+                <tr key={task.id}>
+                  <td>#{task.id}</td>
+                  <td>{task.asset_name}</td>
+                  <td>{task.maintenance_type}</td>
+                  <td>
+                     <span className={`badge ${task.priority === 'High' ? 'badge-high' : 'badge-medium'}`}>
+                        {task.priority || 'Medium'}
+                     </span>
+                  </td>
+                  <td>
+                    <span className={`badge ${task.status === 'Completed' ? 'badge-high' : 'badge-low'}`}>
+                        {task.status}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="flex gap-2">
+                        {task.status !== 'In Progress' && task.status !== 'Completed' && (
+                            <button onClick={() => updateTask(task.id, "In Progress")} className="btn btn-secondary btn-sm">Start</button>
+                        )}
+                        {task.status !== 'Completed' && (
+                             <button onClick={() => updateTask(task.id, "Completed")} className="btn btn-primary btn-sm">Complete</button>
+                        )}
+                        {task.status === 'Completed' && (
+                            <span className="text-muted">-</span>
+                        )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <div className="empty-state">
+            <p>No active tasks found</p>
+          </div>
+        )}
       </div>
     </div>
   )

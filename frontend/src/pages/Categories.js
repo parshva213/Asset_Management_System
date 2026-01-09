@@ -119,7 +119,7 @@ const Categories = () => {
                             <th>Name</th>
                             <th>Description</th>
                             <th>Created At</th>
-                            <th>Actions</th>
+                            {user?.role === "Super Admin" && <th>Actions</th>}
                         </tr>
                     </thead>
                     <tbody>
@@ -128,8 +128,8 @@ const Categories = () => {
                                 <td>{category.name}</td>
                                 <td>{category.description || "N/A"}</td>
                                 <td>{category.created_at ? new Date(category.created_at).toLocaleDateString() : "-"}</td>
-                                <td>
-                                    {user?.role === "Super Admin" && (
+                                {user?.role === "Super Admin" && (
+                                    <td>
                                         <div className="flex gap-2">
                                             <Button variant="secondary" onClick={() => handleEdit(category)}>
                                                 Edit
@@ -138,8 +138,8 @@ const Categories = () => {
                                                 Delete
                                             </Button>
                                         </div>
-                                    )}
-                                </td>
+                                    </td>
+                                )}
                             </tr>
                         ))}
                     </tbody>

@@ -3,6 +3,8 @@
 import { useNavigate } from "react-router-dom"
 
 import ThemeToggle from "../components/ThemeToggle"
+import Footer from "../components/Footer"
+import logo from "../img/logo.png"
 
 const RoleSelection = () => {
   const navigate = useNavigate()
@@ -20,13 +22,15 @@ const RoleSelection = () => {
   }
 
   return (
-    <div className="role-selection-container" style={{ position: 'relative' }}>
-        <div style={{ position: 'absolute', top: '1rem', right: '1rem' }}>
+    <div className="auth-wrapper">
+        <div className="theme-toggle-wrapper">
             <ThemeToggle />
         </div>
       <div className="role-selection-card">
+        {/* AMS Logo */}
+        <img src={logo} alt="AMS Logo" className="auth-logo" />
         <h2 className="auth-title">Select Your Role</h2>
-        <p style={{ textAlign: "center", color: "#666", marginBottom: "20px" }}>
+        <p style={{ textAlign: "center", color: "var(--text-secondary)", marginBottom: "20px" }}>
           Choose the role that best describes your position in the organization
         </p>
 
@@ -44,6 +48,9 @@ const RoleSelection = () => {
             Already have an account? <a href="/login">Login here</a>
           </p>
         </div>
+      </div>
+      <div className="auth-footer-wrapper">
+          <Footer />
       </div>
     </div>
   )

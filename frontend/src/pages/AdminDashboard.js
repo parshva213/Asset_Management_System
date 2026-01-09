@@ -12,20 +12,17 @@ const AdminDashboard = () => {
         availableAssets: 0,
         pendingRequests: 0,
         totalUsers: 0,
-        departmentUsers: 0,
+        totalCategories: 0,
+        totalLocations: 0,
+        totalRooms: 0,
     })
-    const [recentUsers, setRecentUsers] = useState([])
-    const [recentRequests, setRecentRequests] = useState([])
-    const [activeTab, setActiveTab] = useState('users')
     const [loading, setLoading] = useState(true)
 
     const fetchDashboardData = useCallback(async () => {
         try {
             // Parallel fetch for efficiency
-            const [dashboardRes, usersRes, requestsRes] = await Promise.allSettled([
-                api.get("/dashboard"),
-                api.get("/users?limit=5"), // Attempting to limit if supported
-                api.get("/requests?status=Pending&limit=5")
+            const [dashboardRes] = await Promise.allSettled([
+                api.get("/admin/dashboard")
             ])
             
             // Handle Dashboard Stats
@@ -37,21 +34,13 @@ const AdminDashboard = () => {
                     availableAssets: data.availableAssets || 0,
                     pendingRequests: data.pendingRequests || 0,
                     totalUsers: data.totalUsers || 0,
-                    departmentUsers: data.departmentUsers || 0,
+                    totalCategories: data.totalCategories || 0,
+                    totalLocations: data.totalLocations || 0,
+                    totalRooms: data.totalRooms || 0,
                 })
             }
 
-            // Handle Lists (Default to empty if failed or not arrays)
-            if (usersRes.status === 'fulfilled' && Array.isArray(usersRes.value.data)) {
-                setRecentUsers(usersRes.value.data.slice(0, 5))
-            } else if (usersRes.status === 'fulfilled' && usersRes.value.data.users) {
-                 // Handle if response is { users: [...] }
-                setRecentUsers(usersRes.value.data.users.slice(0, 5))
-            }
 
-            if (requestsRes.status === 'fulfilled' && Array.isArray(requestsRes.value.data)) {
-                setRecentRequests(requestsRes.value.data.filter(r => r.status === 'Pending').slice(0, 5))
-            }
             
         } catch (error) {
             console.error("Error fetching dashboard data:", error)
@@ -70,11 +59,11 @@ const AdminDashboard = () => {
     }
 
     return (
-        <div className="dashboard-layout">
+        <div className="dashboard-layout admin-dashboard">
             <div className="dashboard-top-row">
                 {/* Profile Card */}
                 <div className="profile-card">
-                    <div className="profile-header">
+                    <div className="card-header">
                         <img
                             src={`https://ui-avatars.com/api/?name=${user?.name}&background=6366f1&color=fff`}
                             alt="Profile"
@@ -82,153 +71,120 @@ const AdminDashboard = () => {
                         />
                         <div className="profile-info">
                             <h3>Hi, {user?.name} 👋</h3>
-                            <span style={{ color: 'var(--success)', fontSize: '0.8rem', fontWeight: '500' }}>Administrative Access</span>
+                           <span className="badge badge-high">Admin</span>
                         </div>
                     </div>
-                    <div className="profile-details">
+                    <div className="card-body">
                         <div className="profile-detail-item">
                             <span>📧</span> {user?.email}
                         </div>
                         <div className="profile-detail-item">
                             <span>🛡️</span> {user?.role}
                         </div>
-                        <Link to="/profile" style={{ marginTop: '1rem', color: 'var(--primary)', fontWeight: '600', textDecoration: 'none' }}>
+                        <div className="profile-detail-item">
+                            <span>📞</span> {user?.phone || 'Not set'}
+                        </div>
+                        <div className="profile-detail-item">
+                            <span>📅</span> Joined {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
+                        </div>
+                    </div>
+                    <div className="card-footer">
+                        <Link to="/profile">
                             View full details →
                         </Link>
                     </div>
                 </div>
 
                 {/* Stats Grid */}
-                <div className="stats-grid-4">
+                <div className="stats-grid-3">
                     <div className="stat-widget">
-                        <div>
-                            <div className="stat-icon-wrapper" style={{ background: '#6366f1' }}>
-                                📦
-                            </div>
-                            <div className="stat-title">Total Assets</div>
-                            <div className="stat-value">{stats.totalAssets}</div>
+                    <div>
+                        <div className="stat-icon-wrapper" style={{background: '#6366f1'}}>
+                            📦
                         </div>
+                        <div className="stat-title">Total Assets</div>
+                        <div className="stat-value">{stats.totalAssets >= 10 ? `${Math.floor(stats.totalAssets / 10) * 10}+` : stats.totalAssets}</div>
                     </div>
-                    <div className="stat-widget">
-                        <div>
-                            <div className="stat-icon-wrapper" style={{ background: '#10b981' }}>
-                                ✅
-                            </div>
-                            <div className="stat-title">Assigned</div>
-                            <div className="stat-value">{stats.assignedAssets}</div>
-                        </div>
-                    </div>
-                    <div className="stat-widget">
-                        <div>
-                            <div className="stat-icon-wrapper" style={{ background: '#f59e0b' }}>
-                                📑
-                            </div>
-                            <div className="stat-title">Pending Req.</div>
-                            <div className="stat-value">{stats.pendingRequests}</div>
-                        </div>
-                    </div>
-                    <div className="stat-widget">
-                        <div>
-                            <div className="stat-icon-wrapper" style={{ background: '#f43f5e' }}>
-                                👥
-                            </div>
-                            <div className="stat-title">Total Users</div>
-                            <div className="stat-value">{stats.totalUsers}</div>
-                        </div>
+                    <div className="card-footer">
+                        <Link to="/assets">
+                            View full details →
+                        </Link>
                     </div>
                 </div>
-            </div>
-
-            {/* Tables Section */}
-            <div className="table-container">
-                <div className="table-header-row">
-                    <div className="tabs">
-                        <button 
-                            className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('users')}
-                        >
-                            Recent Users
-                        </button>
-                        <button 
-                            className={`tab-btn ${activeTab === 'requests' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('requests')}
-                        >
-                            Pending Requests
-                        </button>
+                <div className="stat-widget">
+                    <div>
+                        <div className="stat-icon-wrapper" style={{background: '#10b981'}}>
+                            ✅
+                        </div>
+                        <div className="stat-title">Assigned</div>
+                        <div className="stat-value">{stats.assignedAssets}</div>
                     </div>
                 </div>
-                
-                <div style={{overflowX: 'auto'}}>
-                    <table className="table">
-                        <thead>
-                            <tr>
-                                {activeTab === 'users' ? (
-                                    <>
-                                        <th>Name</th>
-                                        <th>Email</th>
-                                        <th>Role</th>
-                                        <th>Status</th>
-                                    </>
-                                ) : (
-                                    <>
-                                        <th>Asset</th>
-                                        <th>Requested By</th>
-                                        <th>Date</th>
-                                        <th>Status</th>
-                                    </>
-                                )}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {activeTab === 'users' && recentUsers.map((u) => (
-                                <tr key={u.id}>
-                                    <td>{u.name}</td>
-                                    <td>{u.email}</td>
-                                    <td><span className="badge badge-medium">{u.role}</span></td>
-                                    <td><span className="badge badge-high">{u.status || 'Active'}</span></td>
-                                </tr>
-                            ))}
-                            {activeTab === 'requests' && recentRequests.map((r) => (
-                                <tr key={r.id}>
-                                    <td>{r.asset_name}</td>
-                                    <td>{r.user_name}</td>
-                                    <td>{new Date(r.request_date).toLocaleDateString()}</td>
-                                    <td><span className="badge badge-medium">Pending</span></td>
-                                </tr>
-                            ))}
-                             {activeTab === 'users' && recentUsers.length === 0 && <tr><td colSpan="4" className="text-center">No recent new users.</td></tr>}
-                             {activeTab === 'requests' && recentRequests.length === 0 && <tr><td colSpan="4" className="text-center">No pending requests.</td></tr>}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="dashboard-top-row">
-                <div className="card full-width-col" style={{ gridColumn: '1 / -1' }}>
-                    <h3>Quick Actions</h3>
-                    <div className="action-grid">
-                        <Link to="/employees" className="action-card-btn">
-                            <span>Manage Users</span>
-                            <span className="action-arrow">→</span>
-                        </Link>
-                        <Link to="/assets" className="action-card-btn">
-                            <span>Manage Assets</span>
-                            <span className="action-arrow">→</span>
-                        </Link>
-                        <Link to="/requests" className="action-card-btn">
-                            <span>View All Requests</span>
-                            <span className="action-arrow">→</span>
-                        </Link>
-                        <Link to="/categories" className="action-card-btn">
-                            <span>Categories</span>
-                            <span className="action-arrow">→</span>
-                        </Link>
-                         <Link to="/locations" className="action-card-btn">
-                            <span>Locations</span>
-                            <span className="action-arrow">→</span>
+                <div className="stat-widget">
+                    <div>
+                        <div className="stat-icon-wrapper" style={{background: '#f59e0b'}}>
+                            📝
+                        </div>
+                        <div className="stat-title">Pending Req.</div>
+                        <div className="stat-value">{stats.pendingRequests}</div>
+                    </div>
+                    <div className="card-footer">
+                        <Link to="/requests">
+                            View full details →
                         </Link>
                     </div>
+                </div>
+                <div className="stat-widget">
+                    <div>
+                        <div className="stat-icon-wrapper" style={{background: '#ec4899'}}>
+                            👥
+                        </div>
+                        <div className="stat-title">Total Users</div>
+                        <div className="stat-value">{stats.totalUsers >= 10 ? `${Math.floor(stats.totalUsers / 10) * 10}+` : stats.totalUsers}</div>
+                    </div>
+                    <div className="card-footer">
+                         <Link to="/employees">
+                            View full details →
+                        </Link>
+                    </div>
+                </div>
+                <div className="stat-widget">
+                    <div>
+                        <div className="stat-icon-wrapper" style={{background: '#8b5cf6'}}>
+                            🏷️
+                        </div>
+                        <div className="stat-title">Categories</div>
+                        <div className="stat-value">{stats.totalCategories || 0}</div>
+                    </div>
+                    <div className="card-footer">
+                         <Link to="/categories">
+                            View full details →
+                        </Link>
+                    </div>
+                </div>
+                <div className="stat-widget split-stats">
+                    <div>
+                        <div className="stat-icon-wrapper" style={{background: '#06b6d4'}}>
+                            📍
+                        </div>
+                        <div className="split-container">
+                            <div className="split-item">
+                                <div className="stat-title">Locations</div>
+                                <div className="stat-value">{stats.totalLocations}</div>
+                            </div>
+                            <div className="split-divider"></div>
+                            <div className="split-item">
+                                <div className="stat-title">Rooms</div>
+                                <div className="stat-value">{stats.totalRooms}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="card-footer">
+                         <Link to="/locations">
+                            View full details →
+                        </Link>
+                    </div>
+                </div>
                 </div>
             </div>
         </div>
