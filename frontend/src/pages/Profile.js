@@ -17,7 +17,6 @@ const Profile = () => {
   })
   const [message, setMessage] = useState("")
   const [loading, setLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState("profile")
 
   useEffect(() => {
     if (user) {
@@ -80,43 +79,19 @@ const Profile = () => {
 
   return (
     <div className="dashboard-layout">
-        <div className="dashboard-top-row">
-            {/* Using full width column for uniformity */}
-            <div className="card full-width-col" style={{ gridColumn: '1 / -1' }}>
-                <h2 style={{ marginBottom: "20px" }}>Profile Management</h2>
-
-                <div className="table-header-row" style={{marginBottom: '20px'}}>
-                    <div className="tabs">
-                        <button
-                        className={`tab-btn ${activeTab === "profile" ? "active" : ""}`}
-                        onClick={() => {
-                            setActiveTab("profile")
-                            setMessage("")
-                        }}
-                        >
-                        Profile Information
-                        </button>
-                        <button
-                        className={`tab-btn ${activeTab === "password" ? "active" : ""}`}
-                        onClick={() => {
-                            setActiveTab("password")
-                            setMessage("")
-                        }}
-                        >
-                        Change Password
-                        </button>
-                    </div>
-                </div>
-
-                {message && (
-                    <div className={`alert ${message.includes("success") ? "alert-success" : "alert-error"}`} style={{marginBottom: '20px'}}>
-                        {message}
-                    </div>
-                )}
-
-                {activeTab === "profile" && (
-                    <form onSubmit={handleProfileSubmit} style={{ maxWidth: '600px' }}>
-                        <div className="form-group">
+        <h2 style={{ marginBottom: "5px" }}>Profile Management</h2>
+        
+        {message && (
+            <div className={`alert ${message.includes("success") ? "alert-success" : "alert-error"}`} style={{marginBottom: '10px'}}>
+                {message}
+            </div>
+        )}
+        <div className="dashboard-grid" style={{ margin: '0' }}>
+            {/* Profile Information Card */}
+            <div className="card">
+                <h3>Profile Information</h3>
+                <form onSubmit={handleProfileSubmit} style={{ marginTop: '0.4rem' }}>
+                    <div className="form-group">
                         <label className="form-label">Full Name</label>
                         <input
                             type="text"
@@ -127,8 +102,8 @@ const Profile = () => {
                             required
                             disabled={profileData.name.includes('$')}
                         />
-                        </div>
-                        <div className="form-group">
+                    </div>
+                    <div className="form-group">
                         <label className="form-label">Email</label>
                         <input
                             type="email"
@@ -139,8 +114,8 @@ const Profile = () => {
                             required
                             disabled={profileData.name.includes('$')}
                         />
-                        </div>
-                        <div className="form-group">
+                    </div>
+                    <div className="form-group">
                         <label className="form-label">Department</label>
                         <input
                             type="text"
@@ -150,62 +125,60 @@ const Profile = () => {
                             onChange={handleProfileChange}
                             disabled={profileData.name.includes('$')}
                         />
-                        </div>
-                        <div className="form-group">
-                        <label className="form-label">Role</label>
-                        <input type="text" className="form-input" value={user?.role || ""} disabled />
-                        <small style={{ color: "#666", fontSize: "12px" }}>Role cannot be changed</small>
-                        </div>
-                        {!profileData.name.includes('$') && (
-                            <button type="submit" className="btn btn-primary" disabled={loading}>
+                    </div>
+                    {!profileData.name.includes('$') && (
+                        <button type="submit" className="btn btn-primary" disabled={loading} style={{ width: '100%' }}>
                             {loading ? "Updating..." : "Update Profile"}
-                            </button>
-                        )}
-                    </form>
-                )}
+                        </button>
+                    )}
+                </form>
+            </div>
 
-                {activeTab === "password" && !profileData.name.includes('$') && (
-                    <form onSubmit={handlePasswordSubmit} style={{ maxWidth: '600px' }}>
+            {/* Change Password Card */}
+            {!profileData.name.includes('$') && (
+                <div className="card">
+                    <h3>Change Password</h3>
+                    <form onSubmit={handlePasswordSubmit} style={{ marginTop: '0.4rem' }}>
                         <div className="form-group">
-                        <label className="form-label">Current Password</label>
-                        <input
-                            type="password"
-                            name="currentPassword"
-                            className="form-input"
-                            value={passwordData.currentPassword}
-                            onChange={handlePasswordChange}
-                            required
-                        />
+                            <label className="form-label">Current Password</label>
+                            <input
+                                type="password"
+                                name="currentPassword"
+                                className="form-input"
+                                value={passwordData.currentPassword}
+                                onChange={handlePasswordChange}
+                                required
+                            />
                         </div>
                         <div className="form-group">
-                        <label className="form-label">New Password</label>
-                        <input
-                            type="password"
-                            name="newPassword"
-                            className="form-input"
-                            value={passwordData.newPassword}
-                            onChange={handlePasswordChange}
-                            required
-                        />
-                        <small style={{ color: "var(--text-secondary)", fontSize: "12px" }}>Password must be at least 6 characters long</small>
+                            <label className="form-label">New Password</label>
+                            <input
+                                type="password"
+                                name="newPassword"
+                                className="form-input"
+                                value={passwordData.newPassword}
+                                onChange={handlePasswordChange}
+                                required
+                            />
+                            <small style={{ color: "var(--text-secondary)", fontSize: "12px" }}>Password must be at least 6 characters long</small>
                         </div>
                         <div className="form-group">
-                        <label className="form-label">Confirm New Password</label>
-                        <input
-                            type="password"
-                            name="confirmPassword"
-                            className="form-input"
-                            value={passwordData.confirmPassword}
-                            onChange={handlePasswordChange}
-                            required
-                        />
+                            <label className="form-label">Confirm New Password</label>
+                            <input
+                                type="password"
+                                name="confirmPassword"
+                                className="form-input"
+                                value={passwordData.confirmPassword}
+                                onChange={handlePasswordChange}
+                                required
+                            />
                         </div>
-                        <button type="submit" className="btn btn-primary" disabled={loading}>
-                        {loading ? "Changing..." : "Change Password"}
+                        <button type="submit" className="btn btn-primary" disabled={loading} style={{ width: '100%' }}>
+                            {loading ? "Changing..." : "Change Password"}
                         </button>
                     </form>
-                )}
-            </div>
+                </div>
+            )}
         </div>
     </div>
   )
