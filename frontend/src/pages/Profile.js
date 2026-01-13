@@ -15,8 +15,10 @@ const Profile = () => {
     newPassword: "",
     confirmPassword: "",
   })
-  const [message, setMessage] = useState("")
-  const [loading, setLoading] = useState(false)
+  const [profileMessage, setProfileMessage] = useState("")
+  const [passwordMessage, setPasswordMessage] = useState("")
+  const [profileLoading, setProfileLoading] = useState(false)
+  const [passwordLoading, setPasswordLoading] = useState(false)
 
   useEffect(() => {
     if (user) {
@@ -30,33 +32,36 @@ const Profile = () => {
 
   const handleProfileSubmit = async (e) => {
     e.preventDefault()
-    setLoading(true)
-    setMessage("")
+    setProfileLoading(true)
+    setProfileMessage("")
 
     const result = await updateProfile(profileData)
-    setMessage(result.message)
-    setLoading(false)
+    setProfileMessage(result.message)
+    setProfileLoading(false)
+
+    // Clear message after 3 seconds
+    setTimeout(() => setProfileMessage(""), 3000)
   }
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault()
-    setLoading(true)
-    setMessage("")
+    setPasswordLoading(true)
+    setPasswordMessage("")
 
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setMessage("New passwords do not match")
-      setLoading(false)
+      setPasswordMessage("New passwords do not match")
+      setPasswordLoading(false)
       return
     }
 
     if (passwordData.newPassword.length < 6) {
-      setMessage("New password must be at least 6 characters long")
-      setLoading(false)
+      setPasswordMessage("New password must be at least 6 characters long")
+      setPasswordLoading(false)
       return
     }
 
     const result = await changePassword(passwordData.currentPassword, passwordData.newPassword)
-    setMessage(result.message)
+    setPasswordMessage(result.message)
 
     if (result.success) {
       setPasswordData({
@@ -66,7 +71,10 @@ const Profile = () => {
       })
     }
 
-    setLoading(false)
+    setPasswordLoading(false)
+
+    // Clear message after 3 seconds
+    setTimeout(() => setPasswordMessage(""), 3000)
   }
 
   const handleProfileChange = (e) => {
@@ -77,109 +85,144 @@ const Profile = () => {
     setPasswordData({ ...passwordData, [e.target.name]: e.target.value })
   }
 
-  return (
-    <div className="dashboard-layout">
-        <h2 style={{ marginBottom: "5px" }}>Profile Management</h2>
-        
-        {message && (
-            <div className={`alert ${message.includes("success") ? "alert-success" : "alert-error"}`} style={{marginBottom: '10px'}}>
-                {message}
-            </div>
-        )}
-        <div className="dashboard-grid" style={{ margin: '0' }}>
-            {/* Profile Information Card */}
-            <div className="card">
-                <h3>Profile Information</h3>
-                <form onSubmit={handleProfileSubmit} style={{ marginTop: '0.4rem' }}>
-                    <div className="form-group">
-                        <label className="form-label">Full Name</label>
-                        <input
-                            type="text"
-                            name="name"
-                            className="form-input"
-                            value={profileData.name.replace('$', '')}
-                            onChange={handleProfileChange}
-                            required
-                            disabled={profileData.name.includes('$')}
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label className="form-label">Email</label>
-                        <input
-                            type="email"
-                            name="email"
-                            className="form-input"
-                            value={profileData.email}
-                            onChange={handleProfileChange}
-                            required
-                            disabled={profileData.name.includes('$')}
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label className="form-label">Department</label>
-                        <input
-                            type="text"
-                            name="department"
-                            className="form-input"
-                            value={profileData.department}
-                            onChange={handleProfileChange}
-                            disabled={profileData.name.includes('$')}
-                        />
-                    </div>
-                    {!profileData.name.includes('$') && (
-                        <button type="submit" className="btn btn-primary" disabled={loading} style={{ width: '100%' }}>
-                            {loading ? "Updating..." : "Update Profile"}
-                        </button>
-                    )}
-                </form>
-            </div>
+  const isReadOnly = profileData.name.includes('$')
 
-            {/* Change Password Card */}
-            {!profileData.name.includes('$') && (
-                <div className="card">
-                    <h3>Change Password</h3>
-                    <form onSubmit={handlePasswordSubmit} style={{ marginTop: '0.4rem' }}>
-                        <div className="form-group">
-                            <label className="form-label">Current Password</label>
-                            <input
-                                type="password"
-                                name="currentPassword"
-                                className="form-input"
-                                value={passwordData.currentPassword}
-                                onChange={handlePasswordChange}
-                                required
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">New Password</label>
-                            <input
-                                type="password"
-                                name="newPassword"
-                                className="form-input"
-                                value={passwordData.newPassword}
-                                onChange={handlePasswordChange}
-                                required
-                            />
-                            <small style={{ color: "var(--text-secondary)", fontSize: "12px" }}>Password must be at least 6 characters long</small>
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">Confirm New Password</label>
-                            <input
-                                type="password"
-                                name="confirmPassword"
-                                className="form-input"
-                                value={passwordData.confirmPassword}
-                                onChange={handlePasswordChange}
-                                required
-                            />
-                        </div>
-                        <button type="submit" className="btn btn-primary" disabled={loading} style={{ width: '100%' }}>
-                            {loading ? "Changing..." : "Change Password"}
-                        </button>
-                    </form>
-                </div>
+  return (
+    <div className="dashboard-layout profile-page">
+      <div className="page-header">
+        <h2>Profile Management</h2>
+      </div>
+
+      <div className="dashboard-grid profile-grid">
+        {/* Profile Information Card */}
+        <div className="card profile-card">
+          <div className="card-header">
+            <h3>Profile Information</h3>
+          </div>
+          <div className="card-body">
+            {profileMessage && (
+              <div className={`alert ${profileMessage.includes("success") ? "alert-success" : "alert-error"}`} style={{ marginBottom: '1rem' }}>
+                {profileMessage}
+              </div>
             )}
+            <form onSubmit={handleProfileSubmit}>
+              <div className="form-group">
+                <label className="form-label">Full Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  className="form-input"
+                  value={profileData.name.replace('$', '')}
+                  onChange={handleProfileChange}
+                  required
+                  disabled={isReadOnly}
+                  placeholder="Enter your full name"
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Email</label>
+                <input
+                  type="email"
+                  name="email"
+                  className="form-input"
+                  value={profileData.email}
+                  onChange={handleProfileChange}
+                  required
+                  disabled={isReadOnly}
+                  placeholder="Enter your email"
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Department</label>
+                <input
+                  type="text"
+                  name="department"
+                  className="form-input"
+                  value={profileData.department}
+                  onChange={handleProfileChange}
+                  disabled={isReadOnly}
+                  placeholder="Enter your department"
+                />
+              </div>
+              {!isReadOnly && (
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={profileLoading}
+                  style={{ width: '100%', marginTop: '0.5rem' }}
+                >
+                  {profileLoading ? "Updating..." : "Update Profile"}
+                </button>
+              )}
+            </form>
+          </div>
         </div>
+
+        {/* Change Password Card */}
+        {!isReadOnly && (
+          <div className="card password-card">
+            <div className="card-header">
+              <h3>Change Password</h3>
+            </div>
+            <div className="card-body">
+              {passwordMessage && (
+                <div className={`alert ${passwordMessage.includes("success") ? "alert-success" : "alert-error"}`} style={{ marginBottom: '1rem' }}>
+                  {passwordMessage}
+                </div>
+              )}
+              <form onSubmit={handlePasswordSubmit}>
+                <div className="form-group">
+                  <label className="form-label">Current Password</label>
+                  <input
+                    type="password"
+                    name="currentPassword"
+                    className="form-input"
+                    value={passwordData.currentPassword}
+                    onChange={handlePasswordChange}
+                    required
+                    placeholder="Enter current password"
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">New Password</label>
+                  <input
+                    type="password"
+                    name="newPassword"
+                    className="form-input"
+                    value={passwordData.newPassword}
+                    onChange={handlePasswordChange}
+                    required
+                    placeholder="Enter new password"
+                  />
+                  <small style={{ color: "var(--text-secondary)", fontSize: "0.75rem", marginTop: "0.25rem", display: "block" }}>
+                    Password must be at least 6 characters long
+                  </small>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Confirm New Password</label>
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    className="form-input"
+                    value={passwordData.confirmPassword}
+                    onChange={handlePasswordChange}
+                    required
+                    placeholder="Confirm new password"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={passwordLoading}
+                  style={{ width: '100%', marginTop: '0.5rem' }}
+                >
+                  {passwordLoading ? "Changing..." : "Change Password"}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

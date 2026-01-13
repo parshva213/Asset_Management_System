@@ -1,133 +1,12 @@
-// import express from "express";
-// import mysql from "mysql2/promise";
-// import jwt from "jsonwebtoken";
-
-// const router = express.Router();
-
-// const pool = mysql.createPool({
-//   host: process.env.DB_HOST,
-//   port: process.env.DB_PORT,
-//   user: process.env.DB_USER,
-//   password: process.env.DB_PASSWORD,
-//   database: process.env.DB_NAME,
-// });
-
-// const JWT_SECRET = process.env.JWT_SECRET || "secret";
-
-// // ------------------ JWT AUTH ------------------
-// export const authenticate = (roles = []) => {
-//   return async (req, res, next) => {
-//     const token = req.headers["authorization"]?.split(" ")[1];
-//     if (!token) return res.status(401).json({ error: "Unauthorized" });
-
-//     try {
-//       const decoded = jwt.verify(token, JWT_SECRET);
-//       req.user = decoded;
-
-//       if (roles.length && !roles.includes(decoded.role)) {
-//         return res.status(403).json({ error: "Forbidden" });
-//       }
-
-//       next();
-//     } catch (err) {
-//       return res.status(403).json({ error: "Invalid token" });
-//     }
-//   };
-// };
-
-// // ------------------ REGISTER ------------------
-// router.post("/register", async (req, res) => {
-//   const { name, email, password, role_id, department } = req.body;
-//   if (!name || !email || !password || !role_id)
-//     return res.status(400).json({ message: "All fields are required" });
-
-//   try {
-//     const [exists] = await pool.query("SELECT * FROM users WHERE email=?", [email]);
-//     if (exists.length > 0) return res.status(400).json({ message: "Email already exists" });
-
-//     const [result] = await pool.query(
-//       "INSERT INTO users (name, email, password, role_id, department) VALUES (?, ?, ?, ?, ?)",
-//       [name, email, password, role_id, department || null]
-//     );
-
-//     // Get role name from roles table
-//     const [roleRow] = await pool.query("SELECT name FROM roles WHERE id=?", [role_id]);
-//     const roleName = roleRow[0].name;
-
-//     const user = { id: result.insertId, name, email, role: roleName, department };
-//     const token = jwt.sign(user, JWT_SECRET, { expiresIn: "1d" });
-
-//     res.json({ message: "User registered", user, token });
-//   } catch (err) {
-//     console.log(err);
-//     res.status(500).json({ message: "Server error" });
-//   }
-// });
-
-// // ------------------ LOGIN ------------------
-// router.post("/login", async (req, res) => {
-//   const { email, password } = req.body;
-
-//   try {
-//     const [rows] = await pool.query(
-//       `SELECT u.id, u.name, u.email, u.password, r.name AS role
-//        FROM users u
-//        JOIN roles r ON u.role_id = r.id
-//        WHERE u.email=? AND u.password=?`,
-//       [email, password]
-//     );
-
-//     if (rows.length === 0) return res.status(401).json({ message: "Invalid credentials" });
-
-//     const user = rows[0];
-//     const token = jwt.sign(
-//       { id: user.id, name: user.name, email: user.email, role: user.role },
-//       JWT_SECRET,
-//       { expiresIn: "1d" }
-//     );
-
-//     res.json({ message: "Login successful", user, token });
-//   } catch (err) {
-//     console.log(err);
-//     res.status(500).json({ message: "Server error" });
-//   }
-// });
-
-// // ------------------ PROFILE ------------------
-// router.get("/profile", authenticate(), async (req, res) => {
-//   try {
-//     const [rows] = await pool.query(
-//       `SELECT u.id, u.name, u.email, r.name AS role, u.department
-//        FROM users u
-//        JOIN roles r ON u.role_id = r.id
-//        WHERE u.id=?`,
-//       [req.user.id]
-//     );
-//     if (rows.length === 0) return res.status(404).json({ message: "User not found" });
-
-//     res.json({ user: rows[0] });
-//   } catch (err) {
-//     console.log(err);
-//     res.status(500).json({ message: "Server error" });
-//   }
-// });
-
-// export default router;
-
-
-
-
-
-
 import express from "express";
 import db from "../config/database.js";
 import jwt from "jsonwebtoken";
+import { generateKey } from "../utils/keyGenerator.js";
 
 const router = express.Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || "secret";
 
-// ------------------ JWT AUTH ------------------
 export const authenticate = (roles = []) => {
   return async (req, res, next) => {
     const token = req.headers["authorization"]?.split(" ")[1];
@@ -137,7 +16,7 @@ export const authenticate = (roles = []) => {
       const decoded = jwt.verify(token, JWT_SECRET);
       req.user = decoded;
 
-      if (roles.length && !roles.includes(decoded.role)) {
+      if (roles.length && !roles.some(role => role.toLowerCase() === (req.user.role || "").toLowerCase())) {
         return res.status(403).json({ error: "Forbidden" });
       }
 
@@ -148,38 +27,42 @@ export const authenticate = (roles = []) => {
   };
 };
 
-// ------------------ REGISTER ------------------
 router.post("/register", async (req, res) => {
   const { name, email, password, role, department, phone } = req.body;
   if (!name || !email || !password || !role)
     return res.status(400).json({ message: "All fields are required" });
 
   try {
-    // Check if email already exists
     const [existsResult] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
     if (existsResult.length > 0) return res.status(400).json({ message: "Email already exists" });
 
-    // Normalize role input
-    const normalizedRole = role === "Admin" ? "Super Admin" : role;
+    let normalizedRole = role;
+    if (role === "IT Supervisor") normalizedRole = "Supervisor";
+    if (role === "Maintenance Staff") normalizedRole = "Maintenance";
 
-    // Validate role exists in roles table (Using roles table is optional if roles are simple strings, 
-    // but based on context, let's keep validation if roles table exists, otherwise skip or check enum)
-    // Assuming roles table exists as per previous code context:
     const [roleResult] = await db.query("SELECT name FROM roles WHERE name = ?", [normalizedRole]);
     if (roleResult.length === 0) {
-      // Fallback if roles table usage is inconsistent - forcing valid role manually or inserting.
-      // But let's assume roles table might NOT be fully used given server.js logic.
-      // server.js doesn't check roles table. It inserts directly string.
-      // Let's align with server.js approach which is simpler and less error-prone here.
     }
 
-    // Insert user directly with role name
+    const unpk = req.body.unpk || generateKey(5);
+    const organization_id = req.body.orgId || null;
+
     const [result] = await db.query(
-      "INSERT INTO users (name, email, password, role, department, phone) VALUES (?, ?, ?, ?, ?, ?)",
-      [name, email, password, normalizedRole, department || null, phone || null]
+      "INSERT INTO users (name, email, password, role, department, phone, unpk, organization_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [name, email, password, normalizedRole, department || null, phone || null, unpk, organization_id]
     );
 
-    const user = { id: result.insertId, name, email, role: normalizedRole, department: department || null, phone: phone || null };
+    const userId = result.insertId;
+
+    if (organization_id && req.body.regKey) {
+      await db.query(
+        "INSERT INTO key_vault (organization_id, key_value, user_id) VALUES (?, ?, ?)",
+        [organization_id, req.body.regKey, userId]
+      );
+      console.log(`Recorded key usage in key_vault for org ${organization_id}`);
+    }
+
+    const user = { id: userId, name, email, role: normalizedRole, department: department || null, phone: phone || null, unpk, organization_id };
     const token = jwt.sign(user, JWT_SECRET, { expiresIn: "1d" });
 
     res.json({ message: "User registered", user, token });
@@ -189,12 +72,10 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// ------------------ LOGIN ------------------
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Check if user exists first
     const [userResult] = await db.query(
       `SELECT id, name, email, password, role, department
        FROM users
@@ -203,14 +84,13 @@ router.post("/login", async (req, res) => {
     );
 
     if (userResult.length === 0) {
-        return res.status(404).json({ message: "Account is not registered" });
+      return res.status(404).json({ message: "Account is not registered" });
     }
 
     const user = userResult[0];
 
-    // Check password
     if (user.password !== password) {
-        return res.status(401).json({ message: "Password does not match" });
+      return res.status(401).json({ message: "Password does not match" });
     }
 
     const token = jwt.sign(
@@ -226,7 +106,6 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// ------------------ PROFILE ------------------
 router.get("/profile", authenticate(), async (req, res) => {
   try {
     const [result] = await db.query(
@@ -244,7 +123,6 @@ router.get("/profile", authenticate(), async (req, res) => {
   }
 });
 
-// ------------------ UPDATE PROFILE ------------------
 router.put("/profile", authenticate(), async (req, res) => {
   const { name, email, department, phone } = req.body;
   if (!name || !email) {
@@ -263,7 +141,6 @@ router.put("/profile", authenticate(), async (req, res) => {
   }
 });
 
-// ------------------ CHANGE PASSWORD ------------------
 router.put("/change-password", authenticate(), async (req, res) => {
   const { currentPassword, newPassword } = req.body;
   if (!currentPassword || !newPassword) {
@@ -271,7 +148,6 @@ router.put("/change-password", authenticate(), async (req, res) => {
   }
 
   try {
-    // Verify current password first
     const [userRows] = await db.query("SELECT password FROM users WHERE id=?", [req.user.id]);
     if (userRows.length === 0) return res.status(404).json({ message: "User not found" });
 
@@ -279,11 +155,119 @@ router.put("/change-password", authenticate(), async (req, res) => {
       return res.status(400).json({ message: "Current password is incorrect" });
     }
 
-    // Update password
     await db.query("UPDATE users SET password=? WHERE id=?", [newPassword, req.user.id]);
     res.json({ message: "Password changed successfully" });
   } catch (err) {
     console.error("Password Change Error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.post("/verify-registration-key", async (req, res) => {
+  const { key } = req.body;
+  console.log(`Verifying key: ${key}`);
+  if (!key) return res.status(400).json({ message: "Key is required" });
+
+  try {
+    const [orgResult] = await db.query(
+      "SELECT id, name, member FROM organizations WHERE orgpk = ?",
+      [key]
+    );
+    if (orgResult.length > 0) {
+      const org = orgResult[0];
+      console.log(`Key recognized as orgpk for: ${org.name}. Limit: ${org.member}`);
+
+      const [vaultResult] = await db.query(
+        "SELECT COUNT(*) as count FROM key_vault WHERE organization_id = ?",
+        [org.id]
+      );
+      const usedCount = vaultResult[0].count;
+      console.log(`Checking quota: ${usedCount} used of ${org.member} allowed`);
+
+      if (org.member && usedCount >= parseInt(org.member)) {
+        return res.status(400).json({ message: "Limet comes to the end" });
+      }
+
+      console.log(`[VERIFY] Organization key verified. Assigning Super Admin role for org: ${org.name}`);
+      return res.json({
+        type: "organization",
+        orgId: org.id,
+        orgName: org.name,
+        allowedRoles: ["Super Admin"]
+      });
+    }
+
+    const [vOrgResult] = await db.query(
+      "SELECT id, name, member FROM organizations WHERE v_opk = ?",
+      [key]
+    );
+    if (vOrgResult.length > 0) {
+      const org = vOrgResult[0];
+      console.log(`Key recognized as v_opk for: ${org.name}. Limit: ${org.member}`);
+
+      const [vaultResult] = await db.query(
+        "SELECT COUNT(*) as count FROM key_vault WHERE organization_id = ?",
+        [org.id]
+      );
+      const usedCount = vaultResult[0].count;
+      console.log(`Checking quota: ${usedCount} used of ${org.member} allowed`);
+
+      if (org.member && usedCount >= parseInt(org.member)) {
+        return res.status(400).json({ message: "Limet comes to the end" });
+      }
+
+      console.log(`Key recognized as v_opk for: ${org.name}`);
+      return res.json({
+        type: "vendor",
+        orgId: org.id,
+        orgName: org.name,
+        allowedRoles: ["Vendor"]
+      });
+    }
+
+    const [userResult] = await db.query(
+      "SELECT u.id, u.name, u.role, u.organization_id, o.name as orgName " +
+      "FROM users u LEFT JOIN organizations o ON u.organization_id = o.id " +
+      "WHERE u.unpk = ?",
+      [key]
+    );
+    if (userResult.length > 0) {
+      const user = userResult[0];
+      console.log(`Key recognized as UNPK for user: ${user.name} (${user.role}). Org: ${user.orgName || 'None'}`);
+
+      if (user.role === "Super Admin") {
+        return res.json({
+          type: "admin_referral",
+          referrerName: user.name,
+          allowedRoles: ["IT Supervisor", "Maintenance Staff"],
+          orgId: user.organization_id,
+          orgName: user.orgName
+        });
+      }
+
+      if (user.role === "IT Supervisor" || user.role === "Supervisor") {
+        return res.json({
+          type: "supervisor_referral",
+          referrerName: user.name,
+          allowedRoles: ["Employee"],
+          orgId: user.organization_id,
+          orgName: user.orgName
+        });
+      }
+
+      return res.json({
+        type: "user_referral",
+        referrerName: user.name,
+        allowedRoles: ["Employee"],
+        orgId: user.organization_id,
+        orgName: user.orgName
+      });
+    }
+
+    console.log(`Key ${key} not found in any registration category`);
+    res.status(400).json({ message: "Invalid registration key" });
+  } catch (err) {
+    console.error("Key Verification Error:", err);
     res.status(500).json({ message: "Server error" });
   }
 });

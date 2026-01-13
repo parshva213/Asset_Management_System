@@ -28,6 +28,9 @@ const Dashboard = () => {
         case "Maintenance":
           navigate("/maintenance-dashboard", { replace: true })
           break
+        case "Software Developer":
+          navigate("/sd-dashboard", { replace: true })
+          break
         default:
           navigate("/login", { replace: true })
       }

@@ -6,6 +6,7 @@ import api from "../api"
 import ThemeToggle from "../components/ThemeToggle"
 import Footer from "../components/Footer"
 import logo from "../img/logo.png"
+import { generateKey } from "../utils/helpers"
 
 const Register = () => {
   const navigate = useNavigate()
@@ -16,7 +17,8 @@ const Register = () => {
     password: "",
     confirmPassword: "",
     department: "",
-    phone: ""
+    phone: "",
+    unpk: generateKey(5)
   })
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState("")
@@ -56,7 +58,10 @@ const Register = () => {
         password: formData.password,
         role: role, // Role Name e.g. "Super Admin"
         department: formData.department,
-        phone: formData.phone
+        phone: formData.phone,
+        unpk: formData.unpk,
+        orgId: location.state?.orgId,
+        regKey: location.state?.regKey
       })
 
       setMessage("Registration successful! Redirecting to login...")
@@ -81,6 +86,11 @@ const Register = () => {
         <img src={logo} alt="AMS Logo" className="auth-logo" />
 
         <h2 className="auth-title">Register as {role}</h2>
+        {location.state?.orgName && (
+          <p style={{ textAlign: 'center', color: 'var(--text-secondary)', marginBottom: '1.5rem', marginTop: '-1rem' }}>
+            Joining: <strong>{location.state.orgName}</strong>
+          </p>
+        )}
 
         {message && (
           <div className={`alert ${message.includes("successful") ? "alert-success" : "alert-error"}`}>{message}</div>
@@ -137,7 +147,7 @@ const Register = () => {
           </div>
 
           {/* Optional fields based on role could go here, e.g. Department for Employees */}
-          {['Employee', 'Supervisor', 'Maintenance Staff', 'Super Admin'].includes(role) && (
+          {['Employee', 'Supervisor', 'Maintenance Staff', 'Super Admin', 'IT Supervisor', 'Admin'].includes(role) && (
              <div className="form-group input-group">
                 <label className="form-label">Department (Optional)</label>
                 <input
@@ -149,6 +159,36 @@ const Register = () => {
                 />
             </div>
           )}
+
+          {role === 'Vendor' && (
+             <div className="form-group input-group">
+                <label className="form-label">Company Name</label>
+                <input
+                type="text"
+                name="department" // Reusing department field for company name for vendors
+                className="form-input"
+                value={formData.department}
+                onChange={handleChange}
+                required
+                placeholder="Enter your company name"
+                />
+            </div>
+          )}
+          
+          <div className="form-group input-group">
+            <label className="form-label">UNPK</label>
+            <input
+                type="text"
+                name="unpk"
+                className="form-input"
+                value={formData.unpk}
+                onChange={handleChange}
+                placeholder="Unique key"
+                maxLength={5}
+                readOnly
+                style={{ backgroundColor: 'var(--bg-secondary)', cursor: 'not-allowed' }}
+            />
+          </div>
 
           <button type="submit" className="btn btn-primary" style={{ width: "100%", marginTop: '1rem' }} disabled={loading}>
             {loading ? "Registering..." : "Register"}

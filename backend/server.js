@@ -1,3 +1,4 @@
+// DIAGNOSTIC RESTART: 404 CHECK
 // import express from "express";
 // import mysql from "mysql2/promise";
 // import jwt from "jsonwebtoken";
@@ -9,7 +10,7 @@
 // app.use(express.json());
 // app.use(cors());
 
-// // ------------------ DB CONNECTION ------------------
+// ------------------ DB CONNECTION ------------------
 // const pool = mysql.createPool({
 //   host: process.env.DB_HOST,
 //   port: process.env.DB_PORT,
@@ -167,6 +168,8 @@ import requestsRouter from './routes/requests.js';
 import usersRouter from './routes/users.js';
 import purchaseOrdersRouter from './routes/purchaseOrders.js';
 import maintenanceRouter from './routes/maintenance.js';
+import organizationsRouter from './routes/organizations.js';
+import { generateKey } from "./utils/keyGenerator.js";
 import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
@@ -208,7 +211,7 @@ const authenticate = (roles = []) => {
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
             req.user = decoded;
 
-            if (roles.length && !roles.includes(decoded.role)) {
+            if (roles.length && !roles.some(role => role.toLowerCase() === (req.user.role || "").toLowerCase())) {
                 return res.status(403).json({ error: "Forbidden" });
             }
 
@@ -230,16 +233,19 @@ app.post("/api/auth/register", async (req, res) => {
         const [exists] = await pool.query("SELECT * FROM users WHERE email=?", [email]);
         if (exists.length > 0) return res.status(400).json({ message: "Email already exists" });
 
+        // Generate unpk if not provided
+        const unpk = req.body.unpk || generateKey(5);
+
         // Insert user
         const [result] = await pool.query(
-            "INSERT INTO users (name, email, password, role, department, phone) VALUES (?, ?, ?, ?, ?, ?)", [name, email, password, role, department || null, phone || null]
+            "INSERT INTO users (name, email, password, role, department, phone, unpk) VALUES (?, ?, ?, ?, ?, ?, ?)", [name, email, password, role, department || null, phone || null, unpk]
         );
 
         const token = jwt.sign({ id: result.insertId, name, email, role },
             process.env.JWT_SECRET, { expiresIn: "1d" }
         );
 
-        res.json({ message: "User registered", user: { id: result.insertId, name, email, role, department, phone }, token });
+        res.json({ message: "User registered", user: { id: result.insertId, name, email, role, department, phone, unpk }, token });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Server error" });
@@ -432,6 +438,30 @@ app.get("/api/employee/dashboard", authenticate(["Employee"]), async (req, res) 
     }
 });
 
+// ------------------ SOFTWARE DEVELOPER DASHBOARD ------------------
+app.get("/api/sd/dashboard", authenticate(["Software Developer"]), async (req, res) => {
+    try {
+        const [assignedAssets] = await pool.query("SELECT COUNT(*) as count FROM assets WHERE assigned_to = ?", [req.user.id]);
+        const [pendingRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE requested_by = ? AND status = 'Pending'", [req.user.id]);
+        const [approvedRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE requested_by = ? AND status = 'Approved'", [req.user.id]);
+        const [totalRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE requested_by = ?", [req.user.id]);
+        const [assignedAssetsList] = await pool.query("SELECT id, name, status, serial_number FROM assets WHERE assigned_to = ?", [req.user.id]);
+        const [myRequests] = await pool.query("SELECT id, description, status, created_at FROM asset_requests WHERE requested_by = ?", [req.user.id]);
+
+        res.json({
+            assignedAssets: assignedAssets[0].count,
+            pendingRequests: pendingRequests[0].count,
+            approvedRequests: approvedRequests[0].count,
+            totalRequests: totalRequests[0].count,
+            assignedAssetsList,
+            myRequests,
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
 // ------------------ VENDOR DASHBOARD ------------------
 app.get("/api/vendor/dashboard", authenticate(["Vendor"]), async (req, res) => {
     try {
@@ -506,8 +536,9 @@ app.get("/api/maintenance/dashboard", authenticate(["Maintenance", "Super Admin"
 
 app.post("/api/users", authenticate(["Super Admin", "Admin"]), async (req, res) => {
     const { name, email, password, role, department, phone } = req.body;
+    const unpk = req.body.unpk || generateKey(5);
     await pool.query(
-        "INSERT INTO users (name, email, password, role, department, phone) VALUES (?, ?, ?, ?, ?, ?)", [name, email, password, role, department || null, phone || null]
+        "INSERT INTO users (name, email, password, role, department, phone, unpk) VALUES (?, ?, ?, ?, ?, ?, ?)", [name, email, password, role, department || null, phone || null, unpk]
     );
     res.json({ success: true });
 });
@@ -545,6 +576,7 @@ app.use('/api/requests', requestsRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/purchase-orders', purchaseOrdersRouter);
 app.use('/api/maintenance', maintenanceRouter);
+app.use('/api/organizations', organizationsRouter);
 
 // Error Handler (must be last)
 app.use(errorHandler);

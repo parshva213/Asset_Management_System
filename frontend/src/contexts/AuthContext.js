@@ -215,6 +215,9 @@ export const AuthProvider = ({ children }) => {
         case "Maintenance":
           redirectPath = "/maintenance-dashboard"
           break
+        case "Software Developer":
+          redirectPath = "/sd-dashboard"
+          break
         default:
           redirectPath = "/login"
       }

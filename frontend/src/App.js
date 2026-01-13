@@ -43,6 +43,8 @@ import NewConfiguration from "./pages/NewConfiguration"
 import UpdateMaintenance from "./pages/UpdateMaintenance"
 import MaintenanceDashboard from "./pages/MaintenanceDashboard"
 import MaintenanceTasks from "./pages/MaintenanceTasks"
+import SDDashboard from "./pages/SDDashboard"
+import Organizations from "./pages/Organizations"
 
 import "./App.css"
 
@@ -73,8 +75,9 @@ function App() {
               }
             >
               {/* Common */}
-              <Route path="dashboard" element={<ProtectedRoute roles={['Super Admin', 'Supervisor', 'Employee', 'Vendor', 'Maintenance']}><Dashboard /></ProtectedRoute>} />
-              <Route path="profile" element={<ProtectedRoute roles={['Super Admin', 'Supervisor', 'Employee', 'Vendor', 'Maintenance']}><Profile /></ProtectedRoute>} />
+              <Route path="dashboard" element={<ProtectedRoute roles={['Super Admin', 'Supervisor', 'Employee', 'Vendor', 'Maintenance', 'Software Developer']}><Dashboard /></ProtectedRoute>} />
+              <Route path="profile" element={<ProtectedRoute roles={['Super Admin', 'Supervisor', 'Employee', 'Vendor', 'Maintenance', 'Software Developer']}><Profile /></ProtectedRoute>} />
+              <Route path="assets" element={<ProtectedRoute roles={['Super Admin', 'Supervisor', 'Employee', 'Maintenance', 'Software Developer']}><Assets /></ProtectedRoute>} />
 
               {/* Super Admin */}
               <Route path="admin-dashboard" element={<ProtectedRoute roles={['Super Admin']}><AdminDashboard /></ProtectedRoute>} />
@@ -82,7 +85,6 @@ function App() {
               <Route path="categories" element={<ProtectedRoute roles={['Super Admin']}><Categories /></ProtectedRoute>} />
               <Route path="locations" element={<ProtectedRoute roles={['Super Admin', 'Supervisor']}><Locations /></ProtectedRoute>} />
               <Route path="rooms" element={<ProtectedRoute roles={['Super Admin', 'Supervisor']}><LocationRooms /></ProtectedRoute>} />
-              <Route path="assets" element={<ProtectedRoute roles={['Super Admin', 'Supervisor', 'Employee', 'Maintenance']}><Assets /></ProtectedRoute>} />
 
               {/* Supervisor */}
               <Route path="supervisor-dashboard" element={<ProtectedRoute roles={['Supervisor']}><SupervisorDashboard /></ProtectedRoute>} />
@@ -90,9 +92,13 @@ function App() {
               {/* Employee */}
               <Route path="employee-dashboard" element={<ProtectedRoute roles={['Employee']}><EmployeeDashboard /></ProtectedRoute>} />
 
+              {/* Software Developer */}
+              <Route path="sd-dashboard" element={<ProtectedRoute roles={['Software Developer']}><SDDashboard /></ProtectedRoute>} />
+              <Route path="organizations" element={<ProtectedRoute roles={['Software Developer']}><Organizations /></ProtectedRoute>} />
+
               {/* Supervisor */}
               <Route path="purchase-orders" element={<ProtectedRoute roles={['Super Admin', 'Supervisor']}><PurchaseOrders /></ProtectedRoute>} />
-              <Route path="requests" element={<ProtectedRoute roles={['Super Admin', 'Supervisor', 'Employee']}><Requests /></ProtectedRoute>} />
+              <Route path="requests" element={<ProtectedRoute roles={['Super Admin', 'Supervisor', 'Employee', 'Software Developer']}><Requests /></ProtectedRoute>} />
 
               {/* Vendor */}
               <Route path="vendor-dashboard" element={<ProtectedRoute roles={['Vendor']}><VendorDashboard /></ProtectedRoute>} />
