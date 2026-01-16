@@ -2,6 +2,7 @@ import express from "express";
 import db from "../config/database.js";
 import jwt from "jsonwebtoken";
 import { generateKey } from "../utils/keyGenerator.js";
+import { generateUniqueKey } from "../utils/uniqueKeyGenerator.js";
 
 const router = express.Router();
 
@@ -44,25 +45,31 @@ router.post("/register", async (req, res) => {
     if (roleResult.length === 0) {
     }
 
-    const unpk = req.body.unpk || generateKey(5);
-    const organization_id = req.body.orgId || null;
+    const unpk = req.body.unpk || generateKey(5); // Keep using simple key for unpk fallback if it assumes parent? Or should this also be unique? unpk is usually a link.
+    // If unpk is being generated for the user as *their* backlink key (Wait, unpk in user table is Not Unique).
+    // The prompt specificially asked for OWNPK. So we generate ownpk.
+    
+    // The prompt specificially asked for OWNPK. So we generate ownpk.
+    
+    const ownpk = await generateUniqueKey();
+    const org_id = req.body.orgId || null;
 
     const [result] = await db.query(
-      "INSERT INTO users (name, email, password, role, department, phone, unpk, organization_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-      [name, email, password, normalizedRole, department || null, phone || null, unpk, organization_id]
+      "INSERT INTO users (name, email, password, role, department, phone, unpk, ownpk, org_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [name, email, password, normalizedRole, department || null, phone || null, unpk, ownpk, org_id]
     );
 
     const userId = result.insertId;
 
-    if (organization_id && req.body.regKey) {
+    if (org_id && req.body.regKey) {
       await db.query(
         "INSERT INTO key_vault (organization_id, key_value, user_id) VALUES (?, ?, ?)",
-        [organization_id, req.body.regKey, userId]
+        [org_id, req.body.regKey, userId]
       );
-      console.log(`Recorded key usage in key_vault for org ${organization_id}`);
+      console.log(`Recorded key usage in key_vault for org ${org_id}`);
     }
 
-    const user = { id: userId, name, email, role: normalizedRole, department: department || null, phone: phone || null, unpk, organization_id };
+    const user = { id: userId, name, email, role: normalizedRole, department: department || null, phone: phone || null, unpk, ownpk, org_id };
     const token = jwt.sign(user, JWT_SECRET, { expiresIn: "1d" });
 
     res.json({ message: "User registered", user, token });
@@ -77,7 +84,7 @@ router.post("/login", async (req, res) => {
 
   try {
     const [userResult] = await db.query(
-      `SELECT id, name, email, password, role, department
+      `SELECT id, name, email, password, role, department, ownpk
        FROM users
        WHERE email = ?`,
       [email]
@@ -86,6 +93,7 @@ router.post("/login", async (req, res) => {
     if (userResult.length === 0) {
       return res.status(404).json({ message: "Account is not registered" });
     }
+    console.log(userResult);
 
     const user = userResult[0];
 
@@ -109,7 +117,7 @@ router.post("/login", async (req, res) => {
 router.get("/profile", authenticate(), async (req, res) => {
   try {
     const [result] = await db.query(
-      `SELECT id, name, email, role, department, phone, status, created_at
+      `SELECT id, name, email, role, department, phone, unpk, status, created_at
        FROM users 
        WHERE id = ?`,
       [req.user.id]
@@ -225,9 +233,50 @@ router.post("/verify-registration-key", async (req, res) => {
       });
     }
 
+    // Check users table for ownpk
+    const [ownpkResult] = await db.query(
+      "SELECT u.id, u.name, u.email, u.role, u.org_id, o.name as orgName " +
+      "FROM users u LEFT JOIN organizations o ON u.org_id = o.id " +
+      "WHERE u.ownpk = ?",
+      [key]
+    );
+
+    if (ownpkResult.length > 0) {
+      const user = ownpkResult[0];
+      console.log(`Key recognized as OWNPK for user: ${user.name} (${user.role}). Org: ${user.orgName || 'None'}`);
+
+      if (user.role === "Super Admin") {
+        return res.json({
+          type: "admin_referral",
+        referrerName: user.name || user.email,
+          allowedRoles: ["IT Supervisor", "Maintenance Staff"],
+          orgId: user.org_id,
+          orgName: user.orgName
+        });
+      }
+
+      if (user.role === "IT Supervisor" || user.role === "Supervisor") {
+        return res.json({
+          type: "supervisor_referral",
+        referrerName: user.name || user.email,
+          allowedRoles: ["Employee"],
+          orgId: user.org_id,
+          orgName: user.orgName
+        });
+      }
+
+      return res.json({
+        type: "user_referral",
+        referrerName: user.name,
+        allowedRoles: ["Employee"],
+        orgId: user.org_id,
+        orgName: user.orgName
+      });
+    }
+
     const [userResult] = await db.query(
-      "SELECT u.id, u.name, u.role, u.organization_id, o.name as orgName " +
-      "FROM users u LEFT JOIN organizations o ON u.organization_id = o.id " +
+      "SELECT u.id, u.name, u.role, u.org_id, o.name as orgName " +
+      "FROM users u LEFT JOIN organizations o ON u.org_id = o.id " +
       "WHERE u.unpk = ?",
       [key]
     );
@@ -240,7 +289,7 @@ router.post("/verify-registration-key", async (req, res) => {
           type: "admin_referral",
           referrerName: user.name,
           allowedRoles: ["IT Supervisor", "Maintenance Staff"],
-          orgId: user.organization_id,
+          orgId: user.org_id,
           orgName: user.orgName
         });
       }
@@ -250,7 +299,7 @@ router.post("/verify-registration-key", async (req, res) => {
           type: "supervisor_referral",
           referrerName: user.name,
           allowedRoles: ["Employee"],
-          orgId: user.organization_id,
+          orgId: user.org_id,
           orgName: user.orgName
         });
       }
@@ -259,7 +308,7 @@ router.post("/verify-registration-key", async (req, res) => {
         type: "user_referral",
         referrerName: user.name,
         allowedRoles: ["Employee"],
-        orgId: user.organization_id,
+        orgId: user.org_id,
         orgName: user.orgName
       });
     }

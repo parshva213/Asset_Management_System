@@ -66,6 +66,9 @@ const SDDashboard = () => {
                         <div className="profile-detail-item">
                             <span>🏢</span> {user?.department || 'Engineering'}
                         </div>
+                        <div className="profile-detail-item">
+                            <span>🔑</span> {user?.ownpk || 'Not set'}
+                        </div>
                          <div className="profile-detail-item">
                             <span>📞</span> {user?.phone || 'Not set'}
                         </div>
@@ -140,6 +143,7 @@ const SDDashboard = () => {
                     </div>
                 </div>
             </div>
+
         </div>
     )
 }

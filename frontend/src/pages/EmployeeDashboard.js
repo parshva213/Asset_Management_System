@@ -11,17 +11,21 @@ const EmployeeDashboard = () => {
         pendingRequests: 0,
         approvedRequests: 0,
         totalRequests: 0,
+        assignedAssetsList: [],
+        myRequests: []
     })
     const [loading, setLoading] = useState(true)
 
     const fetchDashboardData = useCallback(async () => {
         try {
-            const dashboardRes = await api.get("/dashboard")
+            const dashboardRes = await api.get("/employee/dashboard")
             setStats({
                 assignedAssets: dashboardRes.data.assignedAssets || 0,
                 pendingRequests: dashboardRes.data.pendingRequests || 0,
                 approvedRequests: dashboardRes.data.approvedRequests || 0,
                 totalRequests: dashboardRes.data.totalRequests || 0,
+                assignedAssetsList: dashboardRes.data.assignedAssetsList || [],
+                myRequests: dashboardRes.data.myRequests || []
             })
         } catch (error) {
             console.error("Error fetching dashboard data:", error)
@@ -61,6 +65,9 @@ const EmployeeDashboard = () => {
                         </div>
                         <div className="profile-detail-item">
                             <span>🏢</span> {user?.department || 'General Staff'}
+                        </div>
+                        <div className="profile-detail-item">
+                            <span>🔑</span> {user?.unpk}
                         </div>
                          <div className="profile-detail-item">
                             <span>📞</span> {user?.phone || 'Not set'}
@@ -134,6 +141,54 @@ const EmployeeDashboard = () => {
                             </Link>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <div className="dashboard-bottom-row">
+                <div className="stat-widget">
+                    <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span>💻</span> My Assigned Assets
+                    </h3>
+                    {stats.assignedAssetsList.length === 0 ? (
+                        <p style={{ opacity: 0.6 }}>No assets assigned</p>
+                    ) : (
+                        <div className="recent-list">
+                            {stats.assignedAssetsList.map(asset => (
+                                <div key={asset.id} className="recent-item">
+                                    <div className="recent-item-info">
+                                        <div className="recent-item-title">{asset.name}</div>
+                                        <div className="recent-item-sub">{asset.status}</div>
+                                    </div>
+                                    <span className={`badge badge-${asset.status === 'Assigned' ? 'success' : 'warning'}`}>
+                                        {asset.status}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                <div className="stat-widget">
+                    <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span>📝</span> My Recent Requests
+                    </h3>
+                    {stats.myRequests.length === 0 ? (
+                        <p style={{ opacity: 0.6 }}>No recent requests</p>
+                    ) : (
+                        <div className="recent-list">
+                            {stats.myRequests.map(req => (
+                                <div key={req.id} className="recent-item">
+                                    <div className="recent-item-info">
+                                        <div className="recent-item-title">{req.description}</div>
+                                        <div className="recent-item-sub">{req.status}</div>
+                                    </div>
+                                    <span className={`badge badge-${req.status === 'Approved' ? 'success' : req.status === 'Pending' ? 'warning' : 'danger'}`}>
+                                        {req.status}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

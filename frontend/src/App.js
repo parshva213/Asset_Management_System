@@ -43,8 +43,10 @@ import NewConfiguration from "./pages/NewConfiguration"
 import UpdateMaintenance from "./pages/UpdateMaintenance"
 import MaintenanceDashboard from "./pages/MaintenanceDashboard"
 import MaintenanceTasks from "./pages/MaintenanceTasks"
-import SDDashboard from "./pages/SDDashboard"
+
+// ---------- SOFTWARE DEVELOPER PAGES ----------
 import Organizations from "./pages/Organizations"
+import SDDashboard from "./pages/SdDashboard"
 
 import "./App.css"
 
@@ -59,7 +61,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/role-selection" element={<RoleSelection />} />
-              <Route path="/role-selection" element={<RoleSelection />} />
+
               <Route path="/reset-password" element={<ResetPassword />} />
 
             {/* Default Redirect */}

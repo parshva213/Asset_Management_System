@@ -1,1 +1,0 @@
-USE asset_management;

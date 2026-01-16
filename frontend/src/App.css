@@ -493,9 +493,8 @@ body.dark .role-option:hover {
 .header-left {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    flex: 1;
-    /* Occupy left space */
+    gap: 1.5rem;
+    flex: 1; /* Occupy left space */
 }
 
 /* Hamburger Menu Toggle */
@@ -542,19 +541,11 @@ body.dark .role-option:hover {
     font-size: 1rem;
 }
 
-.header-center {
+/* Brand Container in Left Header */
+.brand-container {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    pointer-events: none;
-    /* Only the logo and name inside can be clicked if needed */
-}
-
-.header-center>* {
-    pointer-events: auto;
 }
 
 .brand-name {
@@ -565,6 +556,8 @@ body.dark .role-option:hover {
     white-space: nowrap;
 }
 
+/* Header Center Removed */
+
 .header-right {
     display: flex;
     align-items: center;
@@ -572,6 +565,20 @@ body.dark .role-option:hover {
     flex: 1;
     /* Occupy right space */
     justify-content: flex-end;
+}
+
+.organization-name {
+    font-weight: 600;
+    color: var(--primary);
+    font-size: 0.95rem;
+    margin-right: 0.5rem;
+    display: none; /* Hidden on very small screens if needed, or show */
+}
+
+@media (min-width: 768px) {
+    .organization-name {
+        display: block;
+    }
 }
 
 .user-profile {

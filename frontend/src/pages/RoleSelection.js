@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, Link } from "react-router-dom"
 import api from "../api"
 
 import ThemeToggle from "../components/ThemeToggle"
@@ -126,8 +126,13 @@ const RoleSelection = () => {
         )}
 
         <div className="auth-link">
+          {!verificationData && (
+            <p style={{ marginBottom: '10px' }}>
+              <Link to="/register" state={{ role: 'Vendor' }}>Register as Vendor</Link>
+            </p>
+          )}
           <p>
-            Already have an account? <a href="/login">Login here</a>
+            Already have an account? <Link to="/login">Login here</Link>
           </p>
         </div>
       </div>

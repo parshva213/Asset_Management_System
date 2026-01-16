@@ -1,10 +1,8 @@
 "use client"
 import { useState } from "react"
 import api from "../api"
-import { useAuth } from "../contexts/AuthContext"
 
 const VendorAssets = () => {
-  const { user } = useAuth()
   const [asset, setAsset] = useState({
     name: "",
     description: "",

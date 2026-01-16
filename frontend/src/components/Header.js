@@ -11,14 +11,21 @@ const Header = ({ user, logout, toggleSidebar }) => {
             <path d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
+        <div className="brand-container">
+          <img src={logo} alt="Logo" className="header-logo" />
+          <span className="brand-name">IT Asset Management System</span>
+        </div>
       </div>
       
-      <div className="header-center">
-        <img src={logo} alt="Logo" className="header-logo" />
-        <span className="brand-name">IT Asset Management System</span>
-      </div>
+      {/* Center div removed as logo moved to left */}
 
       <div className="header-right">
+        {console.log("Header User Data:", user)}
+        {user.organization_name ? (
+          <span className="organization-name">{user.organization_name}</span>
+        ) : (
+          <span className="organization-name" style={{ color: 'orange' }}>No Org Assigned</span>
+        )}
         <div className="user-profile">
           <span className="user-name">{user.name}</span>
           <span className="user-role">({user.role})</span>

@@ -17,7 +17,6 @@ const AdminDashboard = () => {
         totalRooms: 0,
     })
     const [loading, setLoading] = useState(true)
-
     const fetchDashboardData = useCallback(async () => {
         try {
             // Parallel fetch for efficiency
@@ -78,8 +77,11 @@ const AdminDashboard = () => {
                         <div className="profile-detail-item">
                             <span>📧</span> {user?.email}
                         </div>
-                        <div className="profile-detail-item">
+                    <div className="profile-detail-item">
                             <span>🛡️</span> {user?.role}
+                        </div>
+                        <div className="profile-detail-item">
+                            <span>🔑</span> {user?.ownpk}
                         </div>
                         <div className="profile-detail-item">
                             <span>📞</span> {user?.phone || 'Not set'}

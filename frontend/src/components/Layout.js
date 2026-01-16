@@ -54,8 +54,6 @@ const ICONS = {
 const MENU_ITEMS = {
   "Super Admin": [
     { name: "Dashboard", path: ["/admin-dashboard"], icon: "dashboard" },
-    { name: "Users", path: ["/employees"], icon: "users" },
-    { name: "Organizations", path: ["/organizations"], icon: "organizations" },
     { name: "Categories", path: ["/categories"], icon: "categories" },
     { name: "Locations", path: ["/locations", "/rooms?locationId="], icon: "locations" },
     { name: "Assets", path: ["/assets"], icon: "assets" },
@@ -95,8 +93,6 @@ const MENU_ITEMS = {
   "Software Developer": [
     { name: "Dashboard", path: ["/sd-dashboard", "/dashboard"], icon: "dashboard" },
     { name: "Org", path: ["/organizations"], icon: "organizations" },
-    { name: "Assets", path: ["/assets"], icon: "assets" },
-    { name: "Requests", path: ["/requests"], icon: "requests" },
     { name: "Profile", path: ["/profile"], icon: "profile" },
   ],
   "IT Supervisor": [
@@ -128,7 +124,13 @@ const Layout = () => {
   }
 
   // ------------------ ROLE BASED MENUS ------------------
-  const currentMenu = useMemo(() => (user ? (MENU_ITEMS[user.role] || []) : []), [user])
+  // ------------------ ROLE BASED MENUS ------------------
+  const currentMenu = useMemo(() => {
+    if (!user) return []
+    // Case-insensitive lookup
+    const roleKey = Object.keys(MENU_ITEMS).find(key => key.toLowerCase() === (user.role || "").toLowerCase())
+    return roleKey ? MENU_ITEMS[roleKey] : []
+  }, [user])
 
   if (!user) {
     return <Loading message="Loading user profile..." />

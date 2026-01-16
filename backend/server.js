@@ -238,7 +238,7 @@ app.post("/api/auth/register", async (req, res) => {
 
         // Insert user
         const [result] = await pool.query(
-            "INSERT INTO users (name, email, password, role, department, phone, unpk) VALUES (?, ?, ?, ?, ?, ?, ?)", [name, email, password, role, department || null, phone || null, unpk]
+            "INSERT INTO users (name, email, password, role, department, phone, ownpk) VALUES (?, ?, ?, ?, ?, ?, ?)", [name, email, password, role, department || null, phone || null, unpk]
         );
 
         const token = jwt.sign({ id: result.insertId, name, email, role },
@@ -257,9 +257,10 @@ app.post("/api/auth/login", async (req, res) => {
     const { email, password } = req.body;
     try {
         const [rows] = await pool.query(
-            `SELECT id, name, email, role 
-       FROM users 
-       WHERE email=? AND password=?`, [email, password]
+            `SELECT u.id, u.name, u.email, u.role, o.name as organization_name 
+       FROM users u
+       LEFT JOIN organizations o ON u.org_id = o.id
+       WHERE u.email=? AND u.password=?`, [email, password]
         );
 
         if (rows.length === 0) return res.status(401).json({ message: "Invalid credentials" });
@@ -280,10 +281,14 @@ app.post("/api/auth/login", async (req, res) => {
 app.get("/api/auth/profile", authenticate(), async (req, res) => {
     try {
         const [rows] = await pool.query(
-            "SELECT id, name, email, role, department, phone FROM users WHERE id=?", [req.user.id]
+            `SELECT u.id, u.name, u.email, u.role, u.department, u.phone, u.ownpk, o.name as organization_name 
+             FROM users u
+             LEFT JOIN organizations o ON u.org_id = o.id
+             WHERE u.id=?`, [req.user.id]
         );
         if (rows.length === 0) return res.status(404).json({ message: "User not found" });
 
+        console.log("Fetching profile for user:", rows[0]);
         res.json({ user: rows[0] });
     } catch (err) {
         console.error(err);
@@ -346,7 +351,7 @@ app.get("/api/dashboard", authenticate(), async (req, res) => {
 app.get("/api/admin/dashboard", authenticate(["Super Admin", "Admin"]), async (req, res) => {
     try {
         const [totalAssets] = await pool.query("SELECT COUNT(*) as count FROM assets");
-        const [totalUsers] = await pool.query("SELECT COUNT(*) as count FROM users");
+        const [totalUsers] = await pool.query("SELECT COUNT(*) as count FROM users WHERE role != 'Super Admin' AND role != 'software developer'");
         const [totalCategories] = await pool.query("SELECT COUNT(*) as count FROM categories");
         const [totalLocations] = await pool.query("SELECT COUNT(*) as count FROM locations");
         const [totalRooms] = await pool.query("SELECT COUNT(*) as count FROM rooms");

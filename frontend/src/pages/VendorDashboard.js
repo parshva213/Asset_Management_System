@@ -6,7 +6,13 @@ import { Link } from "react-router-dom"
 
 const VendorDashboard = () => {
   const { user, logout } = useAuth()
-  const [stats, setStats] = useState({ pending: 0, completed: 0, totalSupplied: 0 })
+  const [stats, setStats] = useState({ 
+      pending: 0, 
+      completed: 0, 
+      totalSupplied: 0,
+      pendingOrders: [],
+      completedOrders: []
+  })
 
   /* Dashboard State */
 
@@ -18,6 +24,8 @@ const VendorDashboard = () => {
         pending: data.pendingCount || 0,
         completed: data.completedCount || 0,
         totalSupplied: data.totalSupplied || 0,
+        pendingOrders: data.pendingOrders || [],
+        completedOrders: data.completedOrders || []
       })
     } catch (err) {
       if (err.response?.status === 403) {
@@ -54,6 +62,9 @@ const VendorDashboard = () => {
                     </div>
                     <div className="profile-detail-item">
                         <span>🏢</span> {user?.department || 'External Vendor'}
+                    </div>
+                    <div className="profile-detail-item">
+                        <span>🔑</span> {user?.unpk || 'Not set'}
                     </div>
                     <div className="profile-detail-item">
                         <span>📞</span> {user?.phone || 'Not set'}
@@ -128,8 +139,53 @@ const VendorDashboard = () => {
                     </div>
                 </div>
             </div>
+            </div>
+
+            <div className="dashboard-bottom-row">
+                <div className="stat-widget">
+                    <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span>📦</span> Pending Orders
+                    </h3>
+                    {stats.pendingOrders.length === 0 ? (
+                        <p style={{ opacity: 0.6 }}>No pending orders</p>
+                    ) : (
+                        <div className="recent-list">
+                            {stats.pendingOrders.map(order => (
+                                <div key={order.id} className="recent-item">
+                                    <div className="recent-item-info">
+                                        <div className="recent-item-title">{order.asset_name || `Order #${order.id}`}</div>
+                                        <div className="recent-item-sub">Req by: {order.requested_by || 'Unknown'}</div>
+                                    </div>
+                                    <Link to="/vendor-requests" className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}>View</Link>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                <div className="stat-widget">
+                    <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span>✅</span> Completed Orders
+                    </h3>
+                    {stats.completedOrders.length === 0 ? (
+                        <p style={{ opacity: 0.6 }}>No completed orders</p>
+                    ) : (
+                        <div className="recent-list">
+                            {stats.completedOrders.map(order => (
+                                <div key={order.id} className="recent-item">
+                                    <div className="recent-item-info">
+                                        <div className="recent-item-title">{order.asset_name || `Order #${order.id}`}</div>
+                                        <div className="recent-item-sub">Delivered on {new Date(order.updated_at).toLocaleDateString()}</div>
+                                    </div>
+                                    <span className="badge badge-success">Delivered</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
         </div>
-    </div>
+
   )
 }
 

@@ -2,16 +2,19 @@ import express from "express";
 import pool from "../config/database.js";
 import { verifyToken } from "../middleware/auth.js";
 import { logActivity } from "../utils/activityLogger.js";
-import { generateKey } from "../utils/keyGenerator.js";
+import { generateUniqueKey } from "../utils/uniqueKeyGenerator.js";
 
 const router = express.Router();
 
 // Get all organizations
 router.get("/", verifyToken, async (req, res) => {
   try {
-    // Only Software Developer can access organizations
-    if (req.user.role !== "Software Developer") {
-      return res.status(403).json({ message: "Access denied" });
+    console.log("User attempting to access organizations:", req.user);
+    const userRole = (req.user.role || "").trim().toLowerCase();
+    if (userRole !== "software developer") {
+      return res.status(403).json({ 
+        message: `Access denied. Your role is: '${req.user.role}' (normalized: '${userRole}'). Required: 'software developer'` 
+      });
     }
 
     const [rows] = await pool.query("SELECT * FROM organizations ORDER BY name");
@@ -25,12 +28,12 @@ router.get("/", verifyToken, async (req, res) => {
 // Get single organization
 router.get("/:id", verifyToken, async (req, res) => {
   try {
-    if (req.user.role !== "Software Developer") {
+    if ((req.user.role || "").trim().toLowerCase() !== "software developer") {
       return res.status(403).json({ message: "Access denied" });
     }
 
     const { id } = req.params;
-    const [rows] = await pool.query("SELECT * FROM organizations WHERE id = ?", [id]);
+    const [rows] = await pool.query("SELECT * FROM organizations");
     
     if (rows.length === 0) {
       return res.status(404).json({ message: "Organization not found" });
@@ -46,7 +49,7 @@ router.get("/:id", verifyToken, async (req, res) => {
 // Create organization
 router.post("/", verifyToken, async (req, res) => {
   try {
-    if (req.user.role !== "Software Developer") {
+    if ((req.user.role || "").trim().toLowerCase() !== "software developer") {
       return res.status(403).json({ message: "Access denied" });
     }
 
@@ -57,8 +60,8 @@ router.post("/", verifyToken, async (req, res) => {
     }
 
     // Generate keys if not provided
-    if (!orgpk) orgpk = generateKey(5);
-    if (!v_opk) v_opk = generateKey(5);
+    if (!orgpk) orgpk = await generateUniqueKey();
+    if (!v_opk) v_opk = await generateUniqueKey();
 
     const [result] = await pool.query(
       "INSERT INTO organizations (name, description, orgpk, member, v_opk) VALUES (?, ?, ?, ?, ?)",
@@ -72,14 +75,14 @@ router.post("/", verifyToken, async (req, res) => {
     res.status(201).json({ message: "Organization created successfully", id: organizationId });
   } catch (error) {
     console.error("Error creating organization:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: error.message || "Server error" });
   }
 });
 
 // Update organization
 router.put("/:id", verifyToken, async (req, res) => {
   try {
-    if (req.user.role !== "Software Developer") {
+    if ((req.user.role || "").trim().toLowerCase() !== "software developer") {
       return res.status(403).json({ message: "Access denied" });
     }
 
@@ -114,7 +117,7 @@ router.put("/:id", verifyToken, async (req, res) => {
 // Delete organization
 router.delete("/:id", verifyToken, async (req, res) => {
   try {
-    if (req.user.role !== "Software Developer") {
+    if ((req.user.role || "").trim().toLowerCase() !== "software developer") {
       return res.status(403).json({ message: "Access denied" });
     }
 

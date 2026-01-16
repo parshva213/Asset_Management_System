@@ -188,6 +188,8 @@ export const AuthProvider = ({ children }) => {
       const response = await axios.post(`${API_BASE}/login`, { email, password })
       const { token, user } = response.data
 
+      console.log("Login successful! User data:", user);
+
       if (rememberMe) {
           localStorage.setItem("token", token)
       } else {
@@ -197,30 +199,36 @@ export const AuthProvider = ({ children }) => {
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`
       setUser(user)
 
-      // Determine redirect path based on user role
+      // Determine redirect path based on user role (case-insensitive)
       let redirectPath = "/login"
-      switch (user.role) {
-        case "Super Admin":
+      const role = user.role ? user.role.toLowerCase() : ""
+      console.log("Normalized role for redirect:", role);
+
+      switch (role) {
+        case "super admin":
           redirectPath = "/admin-dashboard"
           break
-        case "Supervisor":
+        case "supervisor":
           redirectPath = "/supervisor-dashboard"
           break
-        case "Employee":
+        case "employee":
           redirectPath = "/employee-dashboard"
           break
-        case "Vendor":
+        case "vendor":
           redirectPath = "/vendor-dashboard"
           break
-        case "Maintenance":
+        case "maintenance":
           redirectPath = "/maintenance-dashboard"
           break
-        case "Software Developer":
+        case "software developer":
           redirectPath = "/sd-dashboard"
           break
         default:
           redirectPath = "/login"
+          console.warn("Unknown role, defaulting to login:", role);
       }
+
+      console.log("Redirecting to:", redirectPath);
 
       return { success: true, user, redirectPath }
     } catch (error) {

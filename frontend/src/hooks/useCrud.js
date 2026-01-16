@@ -10,9 +10,9 @@ export default function useCrud(resourcePath, options = {}) {
   const [message, setMessage] = useState(null)
   const previousSnapshotRef = useRef(null)
 
-  const takeSnapshot = () => {
+  const takeSnapshot = useCallback(() => {
     previousSnapshotRef.current = JSON.parse(JSON.stringify(items))
-  }
+  }, [items])
 
   const rollback = () => {
     if (previousSnapshotRef.current) {
@@ -57,7 +57,7 @@ export default function useCrud(resourcePath, options = {}) {
         setError(err?.message || "Failed to create")
       }
     },
-    [idKey, list, resourcePath]
+    [idKey, list, resourcePath, takeSnapshot]
   )
 
   const update = useCallback(
@@ -81,7 +81,7 @@ export default function useCrud(resourcePath, options = {}) {
         setError(err?.message || "Failed to update")
       }
     },
-    [idKey, list, resourcePath]
+    [idKey, list, resourcePath, takeSnapshot]
   )
 
   const remove = useCallback(
@@ -98,7 +98,7 @@ export default function useCrud(resourcePath, options = {}) {
         setError(err?.message || "Failed to delete")
       }
     },
-    [idKey, resourcePath]
+    [idKey, resourcePath, takeSnapshot]
   )
 
   useEffect(() => {
