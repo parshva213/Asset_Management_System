@@ -67,7 +67,7 @@ const MaintenanceDashboard = () => {
                         <span>🏷️</span> {user?.role} - {user?.department || 'IT Dept'}
                     </div>
                     <div className="profile-detail-item">
-                        <span>🔑</span> {user?.unpk || 'Not set'}
+                        <span>🔑</span> {user?.ownpk || 'Not set'}
                     </div>
                     <div className="profile-detail-item">
                         <span>📞</span> {user?.phone || 'Not set'}

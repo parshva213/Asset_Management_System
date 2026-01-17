@@ -223,78 +223,13 @@ const authenticate = (roles = []) => {
 };
 
 // ------------------ REGISTER ------------------
-app.post("/api/auth/register", async (req, res) => {
-    const { name, email, password, role, department, phone } = req.body;
-    if (!name || !email || !password || !role)
-        return res.status(400).json({ message: "All required fields must be filled" });
-
-    try {
-        // Check if email exists
-        const [exists] = await pool.query("SELECT * FROM users WHERE email=?", [email]);
-        if (exists.length > 0) return res.status(400).json({ message: "Email already exists" });
-
-        // Generate unpk if not provided
-        const unpk = req.body.unpk || generateKey(5);
-
-        // Insert user
-        const [result] = await pool.query(
-            "INSERT INTO users (name, email, password, role, department, phone, ownpk) VALUES (?, ?, ?, ?, ?, ?, ?)", [name, email, password, role, department || null, phone || null, unpk]
-        );
-
-        const token = jwt.sign({ id: result.insertId, name, email, role },
-            process.env.JWT_SECRET, { expiresIn: "1d" }
-        );
-
-        res.json({ message: "User registered", user: { id: result.insertId, name, email, role, department, phone, unpk }, token });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Server error" });
-    }
-});
+// Duplicate register route removed. Using routes/auth.js instead.
 
 // ------------------ LOGIN ------------------
-app.post("/api/auth/login", async (req, res) => {
-    const { email, password } = req.body;
-    try {
-        const [rows] = await pool.query(
-            `SELECT u.id, u.name, u.email, u.role, o.name as organization_name 
-       FROM users u
-       LEFT JOIN organizations o ON u.org_id = o.id
-       WHERE u.email=? AND u.password=?`, [email, password]
-        );
-
-        if (rows.length === 0) return res.status(401).json({ message: "Invalid credentials" });
-
-        const user = rows[0];
-        const token = jwt.sign({ id: user.id, name: user.name, email: user.email, role: user.role },
-            process.env.JWT_SECRET, { expiresIn: "1d" }
-        );
-
-        res.json({ user, token });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Server error" });
-    }
-});
+// Duplicate login route removed. Using routes/auth.js instead.
 
 // ------------------ GET PROFILE ------------------
-app.get("/api/auth/profile", authenticate(), async (req, res) => {
-    try {
-        const [rows] = await pool.query(
-            `SELECT u.id, u.name, u.email, u.role, u.department, u.phone, u.ownpk, o.name as organization_name 
-             FROM users u
-             LEFT JOIN organizations o ON u.org_id = o.id
-             WHERE u.id=?`, [req.user.id]
-        );
-        if (rows.length === 0) return res.status(404).json({ message: "User not found" });
-
-        console.log("Fetching profile for user:", rows[0]);
-        res.json({ user: rows[0] });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Server error" });
-    }
-});
+// Duplicate profile route removed. Using routes/auth.js instead.
 
 // ------------------ DASHBOARD ------------------
 app.get("/api/dashboard", authenticate(), async (req, res) => {

@@ -67,7 +67,7 @@ const EmployeeDashboard = () => {
                             <span>🏢</span> {user?.department || 'General Staff'}
                         </div>
                         <div className="profile-detail-item">
-                            <span>🔑</span> {user?.unpk}
+                            <span>🔑</span> {user?.ownpk || 'Not set'}
                         </div>
                          <div className="profile-detail-item">
                             <span>📞</span> {user?.phone || 'Not set'}

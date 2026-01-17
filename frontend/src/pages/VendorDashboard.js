@@ -64,7 +64,7 @@ const VendorDashboard = () => {
                         <span>🏢</span> {user?.department || 'External Vendor'}
                     </div>
                     <div className="profile-detail-item">
-                        <span>🔑</span> {user?.unpk || 'Not set'}
+                        <span>🔑</span> {user?.ownpk || 'Not set'}
                     </div>
                     <div className="profile-detail-item">
                         <span>📞</span> {user?.phone || 'Not set'}

@@ -18,7 +18,7 @@ const Register = () => {
     confirmPassword: "",
     department: "",
     phone: "",
-    unpk: generateKey(5)
+    ownpk: generateKey(5)
   })
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState("")
@@ -59,7 +59,7 @@ const Register = () => {
         role: role, // Role Name e.g. "Super Admin"
         department: formData.department,
         phone: formData.phone,
-        unpk: formData.unpk,
+        ownpk: formData.ownpk,
         orgId: location.state?.orgId,
         regKey: location.state?.regKey
       })
@@ -160,6 +160,19 @@ const Register = () => {
             </div>
           )}
 
+          <div className="form-group input-group">
+            <label className="form-label">Phone Number</label>
+            <input
+              type="tel"
+              name="phone"
+              className="form-input"
+              value={formData.phone}
+              onChange={handleChange}
+              placeholder="Enter phone number"
+              required // Assuming phone is required based on backend schema/user intent
+            />
+          </div>
+
           {role === 'Vendor' && (
              <div className="form-group input-group">
                 <label className="form-label">Company Name</label>
@@ -176,12 +189,12 @@ const Register = () => {
           )}
           
           <div className="form-group input-group">
-            <label className="form-label">UNPK</label>
+            <label className="form-label">OWNPK</label>
             <input
                 type="text"
-                name="unpk"
+                name="ownpk"
                 className="form-input"
-                value={formData.unpk}
+                value={formData.ownpk}
                 onChange={handleChange}
                 placeholder="Unique key"
                 maxLength={5}
