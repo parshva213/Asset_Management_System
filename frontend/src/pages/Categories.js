@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react"
 import { useAuth } from "../contexts/AuthContext"
 import { useToast } from "../contexts/ToastContext"
 import api from "../api"
+import { formatDate } from "../utils/dateUtils"
 import Button from "../components/Button"
 
 const Categories = () => {
@@ -105,7 +106,15 @@ const Categories = () => {
         <div>
             <div className="flex-between mb-4">
                 <h2>Categories Management</h2>
-
+                {['Super Admin', 'Supervisor'].includes(user?.role) && (
+                    <Button onClick={() => {
+                        setEditingCategory(null)
+                        setFormData({ name: "", description: "" })
+                        setShowModal(true)
+                    }}>
+                        Add New Category
+                    </Button>
+                )}
             </div>
 
             {categories.length === 0 ? (
@@ -127,7 +136,7 @@ const Categories = () => {
                             <tr key={category.id}>
                                 <td>{category.name}</td>
                                 <td>{category.description || "N/A"}</td>
-                                <td>{category.created_at ? new Date(category.created_at).toLocaleDateString() : "-"}</td>
+                                <td>{category.created_at ? formatDate(category.created_at) : "-"}</td>
                                 {user?.role === "Super Admin" && (
                                     <td>
                                         <div className="flex gap-2">
@@ -199,10 +208,10 @@ const Categories = () => {
                                     type="button"
                                     variant="secondary"
                                     onClick={() => {
-                                                                                                setShowModal(false)
-                                                                                                setEditingCategory(null)
-                                                                                                resetForm()
-                                                                                                setError(null)
+                                    setShowModal(false)
+                                    setEditingCategory(null)
+                                    resetForm()
+                                    setError(null)
                                     }}
                                 >
                                     Cancel
@@ -213,7 +222,6 @@ const Categories = () => {
                 </div>
             )}
         </div>
-                                                )
-                                        }
-
-                                        export default Categories
+        )
+    }
+export default Categories

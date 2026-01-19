@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from "react"
 import api from "../api"
 import { useAuth } from "../contexts/AuthContext"
 import { Link } from "react-router-dom"
+import { formatDate } from "../utils/dateUtils"
 
 const VendorDashboard = () => {
   const { user, logout } = useAuth()
@@ -70,7 +71,7 @@ const VendorDashboard = () => {
                         <span>📞</span> {user?.phone || 'Not set'}
                     </div>
                     <div className="profile-detail-item">
-                        <span>📅</span> Joined {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
+                        <span>📅</span> Joined {user?.created_at ? formatDate(user.created_at) : 'N/A'}
                     </div>
                 </div>
                 <div className="card-footer">
@@ -175,7 +176,7 @@ const VendorDashboard = () => {
                                 <div key={order.id} className="recent-item">
                                     <div className="recent-item-info">
                                         <div className="recent-item-title">{order.asset_name || `Order #${order.id}`}</div>
-                                        <div className="recent-item-sub">Delivered on {new Date(order.updated_at).toLocaleDateString()}</div>
+                                        <div className="recent-item-sub">Delivered on {formatDate(order.updated_at)}</div>
                                     </div>
                                     <span className="badge badge-success">Delivered</span>
                                 </div>

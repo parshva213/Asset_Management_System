@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useAuth } from "../contexts/AuthContext"
 import axios from "axios"
+import { formatDate } from "../utils/dateUtils"
 
 const RegistrationRequests = () => {
   const { user } = useAuth()
@@ -150,7 +151,7 @@ const RegistrationRequests = () => {
                     {request.status}
                   </span>
                 </td>
-                <td>{new Date(request.requested_at).toLocaleDateString()}</td>
+                <td>{formatDate(request.requested_at)}</td>
                 <td>
                   {request.status === "Pending" && (
                     <div className="flex gap-2">

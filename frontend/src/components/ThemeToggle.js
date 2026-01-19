@@ -28,7 +28,7 @@ const ThemeToggle = ({ style, className }) => {
             case 'light': return '☀️';
             case 'dark': return '🌙';
             case 'system': return '🖥️';
-            default: return '☀️';
+            default: return '🖥️';
         }
     };
 

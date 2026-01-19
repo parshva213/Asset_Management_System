@@ -6,7 +6,6 @@ import api from "../api"
 import ThemeToggle from "../components/ThemeToggle"
 import Footer from "../components/Footer"
 import logo from "../img/logo.png"
-import { generateKey } from "../utils/helpers"
 
 const Register = () => {
   const navigate = useNavigate()
@@ -18,11 +17,19 @@ const Register = () => {
     confirmPassword: "",
     department: "",
     phone: "",
-    ownpk: generateKey(5)
   })
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState("")
   const [role, setRole] = useState("")
+  // Validation States
+  const [validations, setValidations] = useState({
+      name: null,
+      email: null,
+      password: null,
+      confirm: null,
+      department: null,
+      phone: null
+  })
 
   useEffect(() => {
     // Get role from state or query param, otherwise redirect to role selection
@@ -36,6 +43,19 @@ const Register = () => {
     }
   }, [location, navigate])
 
+  // Real-time Validation Effect
+  // Real-time Validation Effect
+  useEffect(() => {
+      setValidations({
+          name: formData.name.trim().length >= 2,
+          email: formData.email.includes('@') && formData.email.includes('.'),
+          password: formData.password.length >= 6,
+          confirm: formData.password === formData.confirmPassword && formData.confirmPassword.length > 0,
+          phone: formData.phone.length === 10,
+          department: true // Optional field
+      })
+  }, [formData])
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
@@ -46,7 +66,12 @@ const Register = () => {
     if (formData.password !== formData.confirmPassword) {
       setMessage("Passwords do not match")
       return
+    } else if (!validations.name || !validations.email || !validations.password || !validations.confirm || !validations.phone) {
+      setMessage("Please fill all the fields correctly")
+      return
     }
+    if (!formData.name || !formData.email || !formData.password || !formData.phone)
+    setMessage("All fields are required");
 
     setLoading(true)
     setMessage("")
@@ -57,11 +82,10 @@ const Register = () => {
         email: formData.email,
         password: formData.password,
         role: role, // Role Name e.g. "Super Admin"
-        department: formData.department,
+        department: formData.department || "",
         phone: formData.phone,
-        ownpk: formData.ownpk,
         orgId: location.state?.orgId,
-        regKey: location.state?.regKey
+        unpk: location.state?.regKey
       })
 
       setMessage("Registration successful! Redirecting to login...")
@@ -74,6 +98,15 @@ const Register = () => {
     } finally {
       setLoading(false)
     }
+  }
+
+  const getInputClass = (fieldName) => {
+      if (formData[fieldName] === '') return 'form-input'; // Initial state
+      // Special case for confirm password, needs second field check
+      if (fieldName === 'confirmPassword') {
+          return `form-input ${validations.confirm ? 'input-valid' : formData.confirmPassword ? 'input-invalid' : ''}`
+      }
+      return `form-input ${validations[fieldName] ? 'input-valid' : 'input-invalid'}`
   }
 
   return (
@@ -102,10 +135,9 @@ const Register = () => {
             <input
               type="text"
               name="name"
-              className="form-input"
+              className={getInputClass('name')}
               value={formData.name}
               onChange={handleChange}
-              required
             />
           </div>
 
@@ -114,10 +146,9 @@ const Register = () => {
             <input
               type="email"
               name="email"
-              className="form-input"
+              className={getInputClass('email')}
               value={formData.email}
               onChange={handleChange}
-              required
             />
           </div>
 
@@ -126,10 +157,9 @@ const Register = () => {
             <input
               type="password"
               name="password"
-              className="form-input"
+              className={getInputClass('password')}
               value={formData.password}
               onChange={handleChange}
-              required
               minLength={6}
             />
           </div>
@@ -139,21 +169,20 @@ const Register = () => {
             <input
               type="password"
               name="confirmPassword"
-              className="form-input"
+              className={getInputClass('confirmPassword')}
               value={formData.confirmPassword}
               onChange={handleChange}
-              required
             />
           </div>
 
           {/* Optional fields based on role could go here, e.g. Department for Employees */}
-          {['Employee', 'Supervisor', 'Maintenance Staff', 'Super Admin', 'IT Supervisor', 'Admin'].includes(role) && (
+          {['Employee', 'Supervisor', 'Maintenance Staff', 'IT Supervisor'].includes(role) && (
              <div className="form-group input-group">
                 <label className="form-label">Department (Optional)</label>
                 <input
                 type="text"
                 name="department"
-                className="form-input"
+                className="form-input" // Optional, no validation needed
                 value={formData.department}
                 onChange={handleChange}
                 />
@@ -165,11 +194,12 @@ const Register = () => {
             <input
               type="tel"
               name="phone"
-              className="form-input"
+              className={getInputClass('phone')}
               value={formData.phone}
               onChange={handleChange}
               placeholder="Enter phone number"
-              required // Assuming phone is required based on backend schema/user intent
+              minLength={10}
+              maxLength={10}
             />
           </div>
 
@@ -182,27 +212,11 @@ const Register = () => {
                 className="form-input"
                 value={formData.department}
                 onChange={handleChange}
-                required
                 placeholder="Enter your company name"
                 />
             </div>
           )}
           
-          <div className="form-group input-group">
-            <label className="form-label">OWNPK</label>
-            <input
-                type="text"
-                name="ownpk"
-                className="form-input"
-                value={formData.ownpk}
-                onChange={handleChange}
-                placeholder="Unique key"
-                maxLength={5}
-                readOnly
-                style={{ backgroundColor: 'var(--bg-secondary)', cursor: 'not-allowed' }}
-            />
-          </div>
-
           <button type="submit" className="btn btn-primary" style={{ width: "100%", marginTop: '1rem' }} disabled={loading}>
             {loading ? "Registering..." : "Register"}
           </button>

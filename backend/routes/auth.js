@@ -30,43 +30,26 @@ export const authenticate = (roles = []) => {
 };
 
 router.post("/register", async (req, res) => {
-  const { name, email, password, role, department, phone } = req.body;
-  if (!name || !email || !password || !role)
-    return res.status(400).json({ message: "All fields are required" });
-
+  const { name, email, password, role, department, phone, orgId, unpk } = req.body;
   try {
-    console.log('in try')
     const [existsResult] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
     if (existsResult.length > 0) return res.status(400).json({ message: "Email already exists" });
 
     let normalizedRole = role;
     if (role === "IT Supervisor") normalizedRole = "Supervisor";
     if (role === "Maintenance Staff") normalizedRole = "Maintenance";
-
-    // Role validation skip (table doesn't exist)
-
+    if (role === "Software Developer") normalizedRole = "software developer";
     // We can assume `unpk` might be needed for some legacy reason or consistency, so we generate it uniquely too.
-    const unpk = await generateUniqueKey();
     
     // Use provided ownpk (if valid/unique check needed? we should probably check uniqueness if provided)
     // For now, if provided ownpk exists, we might error or retry? 
     // The implementation plan says: Check if ownpk is provided. If so, verify uniqueness. If duplicate, return 400.
     
-    let ownpk = req.body.ownpk;
-    if (ownpk) {
-        // Check uniqueness
-         const [exists] = await db.query(
-             "SELECT id FROM users WHERE ownpk = ? UNION SELECT id FROM organizations WHERE orgpk = ? UNION SELECT id FROM organizations WHERE v_opk = ?", 
-             [ownpk, ownpk, ownpk]
-         );
-         if (exists.length > 0) {
-             return res.status(400).json({ message: "OWNPK already exists. Please try again." });
-         }
-    } else {
-        ownpk = await generateUniqueKey();
+    const ownpk = await generateUniqueKey();
+    let org_id = null;
+    if(orgId){
+      org_id = orgId;
     }
-    console.log('compliting ownpk')
-    const org_id = req.body.orgId || null;
 
     // Hash password
     const salt = await bcrypt.genSalt(10);
@@ -74,68 +57,41 @@ router.post("/register", async (req, res) => {
 
     const [result] = await db.query(
       "INSERT INTO users (name, email, password, role, department, phone, unpk, ownpk, org_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      [name, email, hashedPassword, normalizedRole, department || null, phone || null, unpk, ownpk, org_id]
+      [name, email, hashedPassword, normalizedRole, department || null, phone || null, unpk || null, ownpk, orgId || null]
     );
-
+console.log(result)
     const userId = result.insertId;
 
-    // if (org_id && req.body.regKey) {
-    //   // await db.query(
-    //   //   "INSERT INTO key_vault (organization_id, key_value, user_id) VALUES (?, ?, ?)",
-    //   //   [org_id, req.body.regKey, userId]
-    //   // );
-    //   console.log(`Recorded key usage in key_vault for org ${org_id}`);
-    // }
-
-    const user = { id: userId, name, email, role: normalizedRole, department: department || null, phone: phone || null, unpk, ownpk, org_id };
+    const user = { id: userId, name, email, role: normalizedRole, department: department || null, phone: phone || null, ownpk, org_id };
     const token = jwt.sign(user, JWT_SECRET, { expiresIn: "1d" });
 
     res.json({ message: "User registered", user, token });
   } catch (err) {
     console.log(err);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Server error: " + err.message });
   }
 });
 
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
-
   try {
     const [userResult] = await db.query(
-      `SELECT id, name, email, password, role, department, phone, ownpk
-       FROM users
-       WHERE email = ?`,
+      `SELECT u.id, u.name, u.email, u.password, u.role, u.department, u.phone, u.ownpk, u.org_id, o.name as organization_name
+       FROM users u
+       LEFT JOIN organizations o ON u.org_id = o.id
+       WHERE u.email = ?`,
       [email]
     );
 
     if (userResult.length === 0) {
       return res.status(404).json({ message: "Account is not registered" });
     }
-    console.log(userResult);
-
     const user = userResult[0];
 
     const isMatch = await bcrypt.compare(password, user.password);
-    // Fallback for plain text passwords during migration (optional, but good for dev)
-    if (!isMatch && user.password !== password) {
-      return res.status(401).json({ message: "Password does not match" });
-    } else if (!isMatch && user.password === password) {
-        // If plain text matches but bcrypt doesn't, it's a legacy password.
-        // Ideally we would hash it now, but for now let's just allow it (or force fail if strict).
-        // Let's migrate it on fly? 
-        // For simplicity and "Secure Login" request, let's treat it as valid but maybe we should rely on bcrypt mainly.
-        // Actually, if await bcrypt.compare(plain, plain) it will return false.
-        // So we strictly check:
-    }
     
-    // Actually, simple logic:
-    // If bcrypt compare fails, check if exact match (legacy support)
-    // If both fail, unauthorized.
     if (!isMatch) {
-         if (user.password !== password) {
-             return res.status(401).json({ message: "Password does not match" });
-         }
-         // If we are here, it matched plain text. We could upgrade the hash here if we wanted.
+      return res.status(401).json({ message: "Password does not match" });
     }
 
     const token = jwt.sign(
@@ -154,9 +110,10 @@ router.post("/login", async (req, res) => {
 router.get("/profile", authenticate(), async (req, res) => {
   try {
     const [result] = await db.query(
-      `SELECT id, name, email, role, department, phone, unpk, ownpk, status, created_at
-       FROM users 
-       WHERE id = ?`,
+      `SELECT u.id, u.name, u.email, u.role, u.department, u.phone, u.unpk, u.ownpk, u.created_at, u.org_id, o.name as organization_name
+       FROM users u
+       LEFT JOIN organizations o ON u.org_id = o.id
+       WHERE u.id = ?`,
       [req.user.id]
     );
     if (result.length === 0) return res.status(404).json({ message: "User not found" });
@@ -208,149 +165,117 @@ router.put("/change-password", authenticate(), async (req, res) => {
   }
 });
 
+router.post("/forgot-password", async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ message: "Email is required" });
+
+  try {
+    const [user] = await db.query("SELECT count(*) as count FROM users WHERE email = ?", [email]);
+    if (user[0].count === 0) {
+      return res.status(404).json({ message: "Email not found" });
+    }
+
+    // Generate a simple PIN (for simulation)
+    const resetPin = Math.floor(100000 + Math.random() * 900000).toString();
+    console.log(`[RESET PASSWORD] PIN for ${email}: ${resetPin}`);
+
+    // In a real app, send email here.
+    
+    res.json({ message: "Reset PIN sent to your email", resetPin }); 
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Endpoint for no-email password reset flow (direct update)
+router.post("/reset-password-confirm", async (req, res) => {
+  const { email, newPassword } = req.body;
+  
+  if (!email || !newPassword) {
+      return res.status(400).json({ message: "Email and new password are required" });
+  }
+
+  try {
+      // 1. Check if user exists
+      const [userRows] = await db.query("SELECT id FROM users WHERE email = ?", [email]);
+      if (userRows.length === 0) {
+          return res.status(404).json({ message: "User not found" });
+      }
+
+      // 2. Hash new password
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+      // 3. Update password
+      await db.query("UPDATE users SET password = ? WHERE email = ?", [hashedPassword, email]);
+
+      res.json({ message: "Password updated successfully" });
+  } catch (err) {
+      console.error("Reset Password Error:", err);
+      res.status(500).json({ message: "Server error" });
+  }
+});
+
 router.post("/verify-registration-key", async (req, res) => {
   const { key } = req.body;
-  console.log(`Verifying key: ${key}`);
   if (!key) return res.status(400).json({ message: "Key is required" });
 
   try {
+    // check org table for orgpk
     const [orgResult] = await db.query(
       "SELECT id, name, member FROM organizations WHERE orgpk = ?",
       [key]
     );
     if (orgResult.length > 0) {
       const org = orgResult[0];
-      console.log(`Key recognized as orgpk for: ${org.name}. Limit: ${org.member}`);
-
-      const [vaultResult] = await db.query(
-        "SELECT COUNT(*) as count FROM key_vault WHERE organization_id = ?",
-        [org.id]
-      );
-      const usedCount = vaultResult[0].count;
-      console.log(`Checking quota: ${usedCount} used of ${org.member} allowed`);
-
-      if (org.member && usedCount >= parseInt(org.member)) {
-        return res.status(400).json({ message: "Limet comes to the end" });
+      const [count] = await db.query(
+        "SELECT COUNT(*) as count FROM users WHERE unpk = ?",
+        [key]
+      )
+      if (count[0].count >= org.member) {
+        return res.status(400).json({ message: "Organization limit reached" });
       }
-
-      console.log(`[VERIFY] Organization key verified. Assigning Super Admin role for org: ${org.name}`);
       return res.json({
         type: "organization",
         orgId: org.id,
-        orgName: org.name,
-        allowedRoles: ["Super Admin"]
+        allowedRoles: ["Super Admin"],
+        unpk: key
       });
     }
-
-    const [vOrgResult] = await db.query(
-      "SELECT id, name, member FROM organizations WHERE v_opk = ?",
-      [key]
-    );
-    if (vOrgResult.length > 0) {
-      const org = vOrgResult[0];
-      console.log(`Key recognized as v_opk for: ${org.name}. Limit: ${org.member}`);
-
-      const [vaultResult] = await db.query(
-        "SELECT COUNT(*) as count FROM key_vault WHERE organization_id = ?",
-        [org.id]
-      );
-      const usedCount = vaultResult[0].count;
-      console.log(`Checking quota: ${usedCount} used of ${org.member} allowed`);
-
-      if (org.member && usedCount >= parseInt(org.member)) {
-        return res.status(400).json({ message: "Limet comes to the end" });
-      }
-
-      console.log(`Key recognized as v_opk for: ${org.name}`);
-      return res.json({
-        type: "vendor",
-        orgId: org.id,
-        orgName: org.name,
-        allowedRoles: ["Vendor"]
-      });
-    }
-
     // Check users table for ownpk
     const [ownpkResult] = await db.query(
-      "SELECT u.id, u.name, u.email, u.role, u.org_id, o.name as orgName " +
-      "FROM users u LEFT JOIN organizations o ON u.org_id = o.id " +
-      "WHERE u.ownpk = ?",
+      "SELECT id, name, role, org_id FROM users WHERE ownpk = ?",
       [key]
     );
-
     if (ownpkResult.length > 0) {
+      const [orgName] = await db.query(
+        "SELECT name FROM organizations WHERE id = ?",
+        [ownpkResult[0].org_id]
+      );
       const user = ownpkResult[0];
+      user.orgName = orgName[0].name; 
       console.log(`Key recognized as OWNPK for user: ${user.name} (${user.role}). Org: ${user.orgName || 'None'}`);
-
       if (user.role === "Super Admin") {
         return res.json({
           type: "admin_referral",
-        referrerName: user.name || user.email,
+        referrerName: user.name,
           allowedRoles: ["IT Supervisor", "Maintenance Staff"],
           orgId: user.org_id,
-          orgName: user.orgName
+          unpk: key
         });
       }
-
-      if (user.role === "IT Supervisor" || user.role === "Supervisor") {
+      if (user.role === "Supervisor") {
         return res.json({
           type: "supervisor_referral",
         referrerName: user.name || user.email,
           allowedRoles: ["Employee"],
           orgId: user.org_id,
-          orgName: user.orgName
+          unpk: key
         });
       }
-
-      return res.json({
-        type: "user_referral",
-        referrerName: user.name,
-        allowedRoles: ["Employee"],
-        orgId: user.org_id,
-        orgName: user.orgName
-      });
     }
-
-    const [userResult] = await db.query(
-      "SELECT u.id, u.name, u.role, u.org_id, o.name as orgName " +
-      "FROM users u LEFT JOIN organizations o ON u.org_id = o.id " +
-      "WHERE u.unpk = ?",
-      [key]
-    );
-    if (userResult.length > 0) {
-      const user = userResult[0];
-      console.log(`Key recognized as UNPK for user: ${user.name} (${user.role}). Org: ${user.orgName || 'None'}`);
-
-      if (user.role === "Super Admin") {
-        return res.json({
-          type: "admin_referral",
-          referrerName: user.name,
-          allowedRoles: ["IT Supervisor", "Maintenance Staff"],
-          orgId: user.org_id,
-          orgName: user.orgName
-        });
-      }
-
-      if (user.role === "IT Supervisor" || user.role === "Supervisor") {
-        return res.json({
-          type: "supervisor_referral",
-          referrerName: user.name,
-          allowedRoles: ["Employee"],
-          orgId: user.org_id,
-          orgName: user.orgName
-        });
-      }
-
-      return res.json({
-        type: "user_referral",
-        referrerName: user.name,
-        allowedRoles: ["Employee"],
-        orgId: user.org_id,
-        orgName: user.orgName
-      });
-    }
-
-    console.log(`Key ${key} not found in any registration category`);
+    console.error(`Key ${key} not found in any registration category`);
     res.status(400).json({ message: "Invalid registration key" });
   } catch (err) {
     console.error("Key Verification Error:", err);

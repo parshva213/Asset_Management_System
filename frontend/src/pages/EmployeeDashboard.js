@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react"
 import { useAuth } from "../contexts/AuthContext"
 import { Link } from "react-router-dom"
 import api from "../api"
+import { formatDate } from "../utils/dateUtils"
 
 const EmployeeDashboard = () => {
     const { user, logout } = useAuth()
@@ -73,7 +74,7 @@ const EmployeeDashboard = () => {
                             <span>📞</span> {user?.phone || 'Not set'}
                         </div>
                         <div className="profile-detail-item">
-                            <span>📅</span> Joined {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
+                            <span>📅</span> Joined {user?.created_at ? formatDate(user.created_at) : 'N/A'}
                         </div>
                     </div>
                      <div className="card-footer">

@@ -4,8 +4,7 @@ import React, { useState, useEffect } from "react"
 import { useToast } from "../contexts/ToastContext"
 import api from "../api"
 import Button from "../components/Button"
-import { generateKey } from "../utils/helpers"
-
+import { formatDate } from "../utils/dateUtils"
 const Organizations = () => {
     const { showSuccess, showError } = useToast()
     const [organizations, setOrganizations] = useState([])
@@ -15,9 +14,7 @@ const Organizations = () => {
     const [formData, setFormData] = useState({
         name: "",
         description: "",
-        orgpk: "",
         member: "",
-        v_opk: ""
     })
     const [submitting, setSubmitting] = useState(false)
     const [error, setError] = useState(null)
@@ -126,9 +123,7 @@ const Organizations = () => {
                     setFormData({
                         name: "",
                         description: "",
-                        orgpk: generateKey(5),
                         member: "",
-                        v_opk: generateKey(5)
                     })
                     setShowModal(true)
                 }}>
@@ -161,7 +156,7 @@ const Organizations = () => {
                                 <td>{organization.orgpk || "N/A"}</td>
                                 <td>{organization.member || "N/A"}</td>
                                 <td>{organization.v_opk || "N/A"}</td>
-                                <td>{organization.created_at ? new Date(organization.created_at).toLocaleDateString() : "-"}</td>
+                                <td>{organization.created_at ? formatDate(organization.created_at) : "-"}</td>
                                 <td>
                                     <div className="flex gap-2">
                                         <Button variant="secondary" onClick={() => handleEdit(organization)}>
@@ -227,21 +222,6 @@ const Organizations = () => {
                             </div>
 
                             <div className="form-group">
-                                <label className="form-label">Org PK</label>
-                                <input
-                                    type="text"
-                                    name="orgpk"
-                                    className="form-input"
-                                    value={formData.orgpk}
-                                    onChange={handleChange}
-                                    placeholder="Organization PK"
-                                    maxLength={255}
-                                    readOnly
-                                    style={{ backgroundColor: 'var(--bg-secondary)', cursor: 'not-allowed' }}
-                                />
-                            </div>
-
-                            <div className="form-group">
                                 <label className="form-label">Member</label>
                                 <input
                                     type="text"
@@ -251,21 +231,6 @@ const Organizations = () => {
                                     onChange={handleChange}
                                     placeholder="Enter member"
                                     maxLength={255}
-                                />
-                            </div>
-
-                            <div className="form-group">
-                                <label className="form-label">V OPK</label>
-                                <input
-                                    type="text"
-                                    name="v_opk"
-                                    className="form-input"
-                                    value={formData.v_opk}
-                                    onChange={handleChange}
-                                    placeholder="V OPK"
-                                    maxLength={255}
-                                    readOnly
-                                    style={{ backgroundColor: 'var(--bg-secondary)', cursor: 'not-allowed' }}
                                 />
                             </div>
 

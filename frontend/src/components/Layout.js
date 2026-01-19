@@ -63,7 +63,6 @@ const MENU_ITEMS = {
   ],
   "Supervisor": [
     { name: "Dashboard", path: ["/dashboard", "/supervisor-dashboard"], icon: "dashboard" },
-    { name: "Locations", path: ["/locations"], icon: "locations" },
     { name: "Assets", path: ["/assets"], icon: "assets" },
     { name: "Orders", path: ["/purchase-orders"], icon: "orders" },
     { name: "Requests", path: ["/requests"], icon: "requests" },
@@ -94,15 +93,7 @@ const MENU_ITEMS = {
     { name: "Dashboard", path: ["/sd-dashboard", "/dashboard"], icon: "dashboard" },
     { name: "Org", path: ["/organizations"], icon: "organizations" },
     { name: "Profile", path: ["/profile"], icon: "profile" },
-  ],
-  "IT Supervisor": [
-    { name: "Dashboard", path: ["/supervisor-dashboard", "/dashboard"], icon: "dashboard" },
-    { name: "Locations", path: ["/locations"], icon: "locations" },
-    { name: "Assets", path: ["/assets"], icon: "assets" },
-    { name: "Orders", path: ["/purchase-orders"], icon: "orders" },
-    { name: "Requests", path: ["/requests"], icon: "requests" },
-    { name: "Profile", path: ["/profile"], icon: "profile" },
-  ],
+  ]
 }
 
 

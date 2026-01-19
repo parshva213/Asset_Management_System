@@ -20,7 +20,6 @@ const Header = ({ user, logout, toggleSidebar }) => {
       {/* Center div removed as logo moved to left */}
 
       <div className="header-right">
-        {console.log("Header User Data:", user)}
         {user.organization_name ? (
           <span className="organization-name">{user.organization_name}</span>
         ) : (

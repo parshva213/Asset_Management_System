@@ -21,7 +21,6 @@ const RoleSelection = () => {
         role: roleName,
         regKey: unpk,
         orgId: verificationData?.orgId,
-        orgName: verificationData?.orgName
       }
     })
   }, [navigate, unpk, verificationData]);
@@ -29,14 +28,16 @@ const RoleSelection = () => {
   // Auto-navigate if only one role is available
   useEffect(() => {
     if (verificationData?.allowedRoles?.length === 1) {
-      console.log("Auto-navigating for single role:", verificationData.allowedRoles[0]);
       handleRoleSelect(verificationData.allowedRoles[0]);
     }
   }, [verificationData, handleRoleSelect]);
 
   const handleVerifyKey = async (e) => {
-    if (e) e.preventDefault()
-    if (!unpk.trim()) return
+    if (e) e.preventDefault()    
+    if (!unpk.trim()) {
+      setError("Please enter a registration key")
+      return
+    }
 
     setLoading(true)
     setError("")
@@ -74,9 +75,8 @@ const RoleSelection = () => {
                 placeholder="Enter Key"
                 value={unpk}
                 onChange={(e) => setUnpk(e.target.value)}
-                maxLength={5}
+                minLength={1}
                 style={{ textAlign: 'center', fontSize: '1.2rem', letterSpacing: '2px' }}
-                required
               />
             </div>
             {error && <div className="alert alert-error" style={{ marginBottom: '1rem' }}>{error}</div>}
@@ -93,10 +93,10 @@ const RoleSelection = () => {
           <div>
             <div style={{ textAlign: "center", marginBottom: "20px" }}>
               <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem" }}>
-                {verificationData.type === 'organization' ? (
-                  <>Key verified for <strong>{verificationData.orgName}</strong></>
+                {verificationData.type === 'admin_referral' ? (
+                  <>Key verified. Referred by <strong>{verificationData.orgName || ""} {verificationData.referrerName || ""}</strong></>
                 ) : (
-                  <>Key verified. Referred by <strong>{verificationData.referrerName}</strong></>
+                  <>Key verified for <strong>{verificationData.orgName}</strong></>
                 )}
               </p>
               <h3 style={{ marginTop: '10px' }}>Select Your Role</h3>

@@ -67,7 +67,14 @@ router.post("/", verifyToken, async (req, res) => {
     // Log activity safely
     await logActivity(req.user.id, "Created location", "location", locationId, `Created location: ${name}`)
 
-    res.status(201).json({ message: "Location created successfully", id: locationId })
+    // Fetch the created location with room_count
+    const [location] = await db.query(`
+      SELECT l.*, (SELECT COUNT(*) FROM rooms r WHERE r.location_id = l.id) as room_count
+      FROM locations l
+      WHERE l.id = ?
+    `, [locationId])
+
+    res.status(201).json(location[0])
   } catch (error) {
     console.error("Error creating location:", error)
     res.status(500).json({ message: "Server error" })
@@ -117,7 +124,14 @@ router.put("/:id", verifyToken, async (req, res) => {
     // Log activity safely
     await logActivity(req.user.id, "Updated location", "location", id, `Updated location: ${name}`)
 
-    res.json({ message: "Location updated successfully" })
+    // Fetch the updated location with room_count
+    const [location] = await db.query(`
+      SELECT l.*, (SELECT COUNT(*) FROM rooms r WHERE r.location_id = l.id) as room_count
+      FROM locations l
+      WHERE l.id = ?
+    `, [id])
+
+    res.json(location[0])
   } catch (error) {
     console.error("Error updating location:", error)
     res.status(500).json({ message: "Server error" })

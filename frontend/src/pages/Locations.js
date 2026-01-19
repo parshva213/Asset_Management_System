@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useAuth } from "../contexts/AuthContext"
 import { useNavigate } from "react-router-dom"
 import useCrud from "../hooks/useCrud"
+import { formatDate } from "../utils/dateUtils"
 
 const Locations = () => {
   const { user } = useAuth()
@@ -12,6 +13,7 @@ const Locations = () => {
   const [loading, setLoading] = useState(true)
   const [showLocationModal, setShowLocationModal] = useState(false)
   const [editingLocation, setEditingLocation] = useState(null)
+  const [openDropdownId, setOpenDropdownId] = useState(null)
   const [locationFormData, setLocationFormData] = useState({
     name: "",
     address: "",
@@ -40,6 +42,7 @@ const Locations = () => {
     } catch (error) {
       console.error("Error saving location:", error)
     }
+    window.location.reload()
   }
 
   const handleEditLocation = (location) => {
@@ -82,14 +85,12 @@ const Locations = () => {
     <div>
       <div className="flex-between mb-4">
         <h2>Locations Management</h2>
-        {user?.role === "Super Admin" && (
             <button
-                className="btn btn-primary"
-                onClick={() => setShowLocationModal(true)}
+              className="btn btn-primary"
+              onClick={() => setShowLocationModal(true)}
             >
-                Add New Location
+              Add New Location
             </button>
-        )}
       </div>
 
           {locations.length === 0 ? (
@@ -115,22 +116,45 @@ const Locations = () => {
                     <td>{location.address || "N/A"}</td>
                     <td>{location.room_count}</td>
                     <td>{location.description || "N/A"}</td>
-                    <td>{new Date(location.created_at).toLocaleDateString()}</td>
+                    <td>{formatDate(location.created_at)}</td>
                     <td>
                       <div className="flex gap-2">
-                        {user?.role === "Super Admin" && (
-                            <>
-                                <button onClick={() => handleEditLocation(location)} className="btn btn-secondary">
-                                Edit
-                                </button>
-                                <button onClick={() => handleDeleteLocation(location.id)} className="btn btn-danger">
-                                Delete
-                                </button>
-                            </>
-                        )}
-                        <button onClick={() => navigate(`/rooms?location_id=${location.id}`)} className="btn btn-secondary">
-                          Rooms
+                        <button onClick={() => handleEditLocation(location)} className="btn btn-secondary">
+                          Edit
                         </button>
+                        <button onClick={() => handleDeleteLocation(location.id)} className="btn btn-danger">
+                          Delete
+                        </button>
+                        <div className="dropdown-container">
+                          <button 
+                            onClick={() => setOpenDropdownId(openDropdownId === location.id ? null : location.id)} 
+                            className="btn btn-secondary"
+                          >
+                            View ▼
+                          </button>
+                          {openDropdownId === location.id && (
+                            <div className="dropdown-menu">
+                              <button
+                                onClick={() => {
+                                  navigate(`/rooms?location_id=${location.id}`)
+                                  setOpenDropdownId(null)
+                                }}
+                                className="dropdown-item"
+                              >
+                                Rooms
+                              </button>
+                              <button
+                                onClick={() => {
+                                  navigate(`/users?location_id=${location.id}&role=maintenance`)
+                                  setOpenDropdownId(null)
+                                }}
+                                className="dropdown-item"
+                              >
+                                Maintenance Team
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </td>
                   </tr>

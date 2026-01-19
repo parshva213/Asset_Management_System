@@ -33,12 +33,12 @@ router.get("/", verifyToken, async (req, res) => {
 
 router.post("/", verifyToken, async (req, res) => {
   try {
-    const { asset_id, request_type, reason, description, priority } = req.body
+    const { asset_id, request_type, reason, description, priority, assigned_to, response } = req.body
 
     const [result] = await db.execute(
-      `INSERT INTO asset_requests (asset_id, request_type, reason, description, priority, requested_by) 
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [asset_id || null, request_type, reason, description, priority, req.user.id],
+      `INSERT INTO asset_requests (asset_id, request_type, reason, description, priority, status, requested_by, assigned_to, response)
+       VALUES (?, ?, ?, ?, ?, 'Pending', ?, ?, ?)`,
+      [asset_id || null, request_type, reason || null, description || null, priority || 'Medium', req.user.id, assigned_to || null, response || null],
     )
 
     // Activity logging removed

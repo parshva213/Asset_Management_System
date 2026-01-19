@@ -14,6 +14,7 @@ import RoleSelection from "./pages/RoleSelection"
 import Profile from "./pages/Profile"
 import Dashboard from "./pages/Dashboard"
 import ResetPassword from "./pages/ResetPassword"
+import UpdatePassword from "./pages/UpdatePassword"
 
 // ---------- SUPER ADMIN PAGES ----------
 import Categories from "./pages/Categories"
@@ -21,6 +22,7 @@ import Locations from "./pages/Locations"
 import LocationRooms from "./pages/LocationRooms"
 import Assets from "./pages/Assets"
 import Employees from "./pages/Employees"
+import Users from "./pages/Users"
 import AdminDashboard from "./pages/AdminDashboard"
 
 // ---------- SUPERVISOR PAGES ----------
@@ -63,6 +65,7 @@ function App() {
               <Route path="/role-selection" element={<RoleSelection />} />
 
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/update-password" element={<UpdatePassword />} />
 
             {/* Default Redirect */}
             <Route path="/" element={<Navigate to="/login" replace />} />
@@ -84,6 +87,7 @@ function App() {
               {/* Super Admin */}
               <Route path="admin-dashboard" element={<ProtectedRoute roles={['Super Admin']}><AdminDashboard /></ProtectedRoute>} />
               <Route path="employees" element={<ProtectedRoute roles={['Super Admin']}><Employees /></ProtectedRoute>} />
+              <Route path="users" element={<ProtectedRoute roles={['Super Admin', 'Supervisor']}><Users /></ProtectedRoute>} />
               <Route path="categories" element={<ProtectedRoute roles={['Super Admin']}><Categories /></ProtectedRoute>} />
               <Route path="locations" element={<ProtectedRoute roles={['Super Admin', 'Supervisor']}><Locations /></ProtectedRoute>} />
               <Route path="rooms" element={<ProtectedRoute roles={['Super Admin', 'Supervisor']}><LocationRooms /></ProtectedRoute>} />

@@ -188,7 +188,7 @@ export const AuthProvider = ({ children }) => {
       const response = await axios.post(`${API_BASE}/login`, { email, password })
       const { token, user } = response.data
 
-      console.log("Login successful! User data:", user);
+      // console.log("Login successful! User data:", user);
 
       if (rememberMe) {
           localStorage.setItem("token", token)
@@ -202,7 +202,7 @@ export const AuthProvider = ({ children }) => {
       // Determine redirect path based on user role (case-insensitive)
       let redirectPath = "/login"
       const role = user.role ? user.role.toLowerCase() : ""
-      console.log("Normalized role for redirect:", role);
+      // console.log("Normalized role for redirect:", role);
 
       switch (role) {
         case "super admin":
@@ -228,7 +228,7 @@ export const AuthProvider = ({ children }) => {
           console.warn("Unknown role, defaulting to login:", role);
       }
 
-      console.log("Redirecting to:", redirectPath);
+      // console.log("Redirecting to:", redirectPath);
 
       return { success: true, user, redirectPath }
     } catch (error) {

@@ -39,9 +39,15 @@ router.post("/", authenticateToken, async (req, res) => {
     serial_number,
     category_id,
     location_id,
+    room_id,
+    status,
     asset_type,
     purchase_date,
-    warranty_expiry
+    warranty_expiry,
+    purchase_cost,
+    assigned_to,
+    assigned_by,
+    created_by
   } = req.body;
 
   try {
@@ -53,7 +59,7 @@ router.post("/", authenticateToken, async (req, res) => {
       return res.status(400).json({ message: "Serial number is required for hardware" });
     }
 
-    // Foreign key checks (category_id/location_id may be null)
+    // Foreign key checks (category_id/location_id/room_id/assigned_to/assigned_by/created_by may be null)
     if (category_id) {
       const [cats] = await pool.query("SELECT id FROM categories WHERE id=?", [category_id]);
       if (cats.length === 0) return res.status(400).json({ message: "Invalid category" });
@@ -62,11 +68,27 @@ router.post("/", authenticateToken, async (req, res) => {
       const [locs] = await pool.query("SELECT id FROM locations WHERE id=?", [location_id]);
       if (locs.length === 0) return res.status(400).json({ message: "Invalid location" });
     }
+    if (room_id) {
+      const [rooms] = await pool.query("SELECT id FROM rooms WHERE id=?", [room_id]);
+      if (rooms.length === 0) return res.status(400).json({ message: "Invalid room" });
+    }
+    if (assigned_to) {
+      const [users] = await pool.query("SELECT id FROM users WHERE id=?", [assigned_to]);
+      if (users.length === 0) return res.status(400).json({ message: "Invalid assigned_to user" });
+    }
+    if (assigned_by) {
+      const [users] = await pool.query("SELECT id FROM users WHERE id=?", [assigned_by]);
+      if (users.length === 0) return res.status(400).json({ message: "Invalid assigned_by user" });
+    }
+    if (created_by) {
+      const [users] = await pool.query("SELECT id FROM users WHERE id=?", [created_by]);
+      if (users.length === 0) return res.status(400).json({ message: "Invalid created_by user" });
+    }
 
     const [result] = await pool.query(
-      `INSERT INTO assets (name, description, serial_number, category_id, location_id, asset_type, purchase_date, warranty_expiry)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [name, description || null, serial_number || null, category_id || null, location_id || null, asset_type, purchase_date || null, warranty_expiry || null]
+      `INSERT INTO assets (name, description, serial_number, category_id, location_id, room_id, status, asset_type, purchase_date, warranty_expiry, purchase_cost, assigned_to, assigned_by, created_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [name, description || null, serial_number || null, category_id || null, location_id || null, room_id || null, status || 'Available', asset_type, purchase_date || null, warranty_expiry || null, purchase_cost || null, assigned_to || null, assigned_by || null, created_by || req.user.id]
     );
     res.status(201).json({ message: "Asset created", assetId: result.insertId });
   } catch (err) {
@@ -87,15 +109,42 @@ router.put("/:id", authenticateToken, async (req, res) => {
     serial_number,
     category_id,
     location_id,
+    room_id,
+    status,
     asset_type,
     purchase_date,
-    warranty_expiry
+    warranty_expiry,
+    purchase_cost,
+    assigned_to,
+    assigned_by
   } = req.body;
 
   try {
+    // Foreign key checks (category_id/location_id/room_id/assigned_to/assigned_by may be null)
+    if (category_id) {
+      const [cats] = await pool.query("SELECT id FROM categories WHERE id=?", [category_id]);
+      if (cats.length === 0) return res.status(400).json({ message: "Invalid category" });
+    }
+    if (location_id) {
+      const [locs] = await pool.query("SELECT id FROM locations WHERE id=?", [location_id]);
+      if (locs.length === 0) return res.status(400).json({ message: "Invalid location" });
+    }
+    if (room_id) {
+      const [rooms] = await pool.query("SELECT id FROM rooms WHERE id=?", [room_id]);
+      if (rooms.length === 0) return res.status(400).json({ message: "Invalid room" });
+    }
+    if (assigned_to) {
+      const [users] = await pool.query("SELECT id FROM users WHERE id=?", [assigned_to]);
+      if (users.length === 0) return res.status(400).json({ message: "Invalid assigned_to user" });
+    }
+    if (assigned_by) {
+      const [users] = await pool.query("SELECT id FROM users WHERE id=?", [assigned_by]);
+      if (users.length === 0) return res.status(400).json({ message: "Invalid assigned_by user" });
+    }
+
     await pool.query(
-      `UPDATE assets SET name=?, description=?, serial_number=?, category_id=?, location_id=?, asset_type=?, purchase_date=?, warranty_expiry=? WHERE id=?`,
-      [name, description, serial_number, category_id, location_id, asset_type, purchase_date, warranty_expiry, req.params.id]
+      `UPDATE assets SET name=?, description=?, serial_number=?, category_id=?, location_id=?, room_id=?, status=?, asset_type=?, purchase_date=?, warranty_expiry=?, purchase_cost=?, assigned_to=?, assigned_by=? WHERE id=?`,
+      [name, description || null, serial_number || null, category_id || null, location_id || null, room_id || null, status || null, asset_type, purchase_date || null, warranty_expiry || null, purchase_cost || null, assigned_to || null, assigned_by || null, req.params.id]
     );
     res.json({ message: "Asset updated" });
   } catch (err) {
