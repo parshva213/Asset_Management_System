@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.get("/", verifyToken, async (req, res) => {
   try {
-    const [rows] = await db.query("SELECT * FROM categories ORDER BY name")
+    const [rows] = await db.query("SELECT * FROM categories ORDER BY id ASC")
     res.json(rows)
   } catch (error) {
     console.error("Error fetching categories:", error)

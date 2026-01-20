@@ -116,9 +116,11 @@ const Employees = () => {
       ) : (
         <div className="employee-grid">
           {employees.map((employee) => (
-            <div key={employee.id} className="card">
+            <div key={employee.id} className="card" id={`user-${employee.id}`}>
               <div className="employee-header">
-                <h3>{employee.name}</h3>
+                <div>
+                  <h3>{employee.name}</h3>
+                </div>
                 <span className="employee-role">{employee.role}</span>
               </div>
               <div className="employee-info">

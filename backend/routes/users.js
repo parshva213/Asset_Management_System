@@ -9,25 +9,38 @@ router.get("/", verifyToken, async (req, res) => {
       return res.status(403).json({ message: "Access denied" })
     }
 
+    const [org_id] = await db.execute("SELECT org_id FROM users WHERE id = ?", [req.user.id]);
+
+    const { location_id, room_id} = req.query;
+    let queryParams = [];
+
     let query = `
-      SELECT u.id, u.name, u.email, u.role, u.department, u.created_at,
-             GROUP_CONCAT(
-               CONCAT(a.id, ':', a.name, ':', IFNULL(a.serial_number, 'N/A')) 
-               SEPARATOR '|'
-             ) as assigned_assets_data
-      FROM users u
+      SELECT u.id, u.name, u.email, u.role, u.department, u.phone from users u
       LEFT JOIN asset_assignments aa ON u.id = aa.user_id
       LEFT JOIN assets a ON aa.asset_id = a.id
-      WHERE u.role != 'Super Admin'
+      LEFT JOIN locations l ON a.loc_id = l.id
+      LEFT JOIN rooms r ON a.room_id = r.id
+      WHERE u.org_id = ?
     `
+    queryParams.push(org_id[0].org_id)
 
     if (req.user.role === "IT Supervisor") {
       query += " AND u.role = 'Employee'"
     }
 
-    query += " GROUP BY u.id ORDER BY u.name"
+    if (location_id) {
+      query += " AND u.loc_id = ?"
+      queryParams.push(location_id)
+    }
 
-    const [users] = await db.execute(query)
+    if (role) {
+      query += " AND u.role = ?"
+      queryParams.push(role)
+    }
+
+    query += " GROUP BY u.id ORDER BY u.id ASC"
+
+    const [users] = await db.execute(query, queryParams)
 
     const usersWithAssets = users.map((user) => {
       const assignedAssets = []

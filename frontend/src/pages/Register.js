@@ -50,11 +50,11 @@ const Register = () => {
           name: formData.name.trim().length >= 2,
           email: formData.email.includes('@') && formData.email.includes('.'),
           password: formData.password.length >= 6,
-          confirm: formData.password === formData.confirmPassword && formData.confirmPassword.length > 0,
+          confirm: formData.password === formData.confirmPassword,
           phone: formData.phone.length === 10,
-          department: true // Optional field
+          department: role !== 'Vendor' ? formData.department.trim().length >= 2 : true // Optional field
       })
-  }, [formData])
+  }, [formData, role])
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -85,7 +85,7 @@ const Register = () => {
         department: formData.department || "",
         phone: formData.phone,
         orgId: location.state?.orgId,
-        unpk: location.state?.regKey
+        unpk: location.state?.regKey || ""
       })
 
       setMessage("Registration successful! Redirecting to login...")
@@ -95,6 +95,9 @@ const Register = () => {
     } catch (error) {
       console.error("Registration error:", error)
       setMessage(error.response?.data?.message || "Failed to register")
+      setTimeout(() => {
+        navigate("/role-selection")
+      }, 1500);
     } finally {
       setLoading(false)
     }
@@ -213,6 +216,7 @@ const Register = () => {
                 value={formData.department}
                 onChange={handleChange}
                 placeholder="Enter your company name"
+                required
                 />
             </div>
           )}

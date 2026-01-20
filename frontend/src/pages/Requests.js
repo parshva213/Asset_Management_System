@@ -225,7 +225,6 @@ const Requests = () => {
         <table className="table">
           <thead>
             <tr>
-              <th>Request ID</th>
               <th>Priority</th>
               <th>Type</th>
               <th>Asset</th>
@@ -236,8 +235,7 @@ const Requests = () => {
           </thead>
           <tbody>
             {filteredRequests.map((request) => (
-              <tr key={request.id}>
-                <td>#{request.id}</td>
+              <tr key={request.id} id={`req-${request.id}`}>
                 <td>
                   <span
                     style={{

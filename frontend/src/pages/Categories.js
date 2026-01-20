@@ -133,7 +133,7 @@ const Categories = () => {
                     </thead>
                     <tbody>
                         {categories.map((category) => (
-                            <tr key={category.id}>
+                            <tr key={category.id} id={`cat-${category.id}`}>
                                 <td>{category.name}</td>
                                 <td>{category.description || "N/A"}</td>
                                 <td>{category.created_at ? formatDate(category.created_at) : "-"}</td>

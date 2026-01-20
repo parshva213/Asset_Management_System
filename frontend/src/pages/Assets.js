@@ -181,7 +181,7 @@ const Assets = () => {
           </thead>
           <tbody>
             {assets.map((asset) => (
-              <tr key={asset.id}>
+              <tr key={asset.id} id={`asset-${asset.id}`}>
                 <td>{asset.name}</td>
                 <td>{asset.asset_type}</td>
                 <td>{asset.serial_number || "N/A"}</td>

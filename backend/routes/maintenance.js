@@ -12,7 +12,7 @@ router.get("/", verifyToken, async (req, res) => {
       FROM maintenance_records m
       JOIN assets a ON m.asset_id = a.id
       JOIN users u ON m.maintenance_by = u.id
-      ORDER BY m.created_at DESC
+      ORDER BY m.id ASC
     `);
         res.json(rows);
     } catch (err) {
@@ -29,7 +29,7 @@ router.get("/tasks", verifyToken, async (req, res) => {
       FROM maintenance_records m
       JOIN assets a ON m.asset_id = a.id
       WHERE m.status != 'Completed'
-      ORDER BY m.created_at ASC
+      ORDER BY m.id ASC
     `);
         res.json(rows);
     } catch (err) {

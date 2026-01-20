@@ -67,9 +67,6 @@ const EmployeeDashboard = () => {
                         <div className="profile-detail-item">
                             <span>🏢</span> {user?.department || 'General Staff'}
                         </div>
-                        <div className="profile-detail-item">
-                            <span>🔑</span> {user?.ownpk || 'Not set'}
-                        </div>
                          <div className="profile-detail-item">
                             <span>📞</span> {user?.phone || 'Not set'}
                         </div>
@@ -145,53 +142,7 @@ const EmployeeDashboard = () => {
                 </div>
             </div>
 
-            <div className="dashboard-bottom-row">
-                <div className="stat-widget">
-                    <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span>💻</span> My Assigned Assets
-                    </h3>
-                    {stats.assignedAssetsList.length === 0 ? (
-                        <p style={{ opacity: 0.6 }}>No assets assigned</p>
-                    ) : (
-                        <div className="recent-list">
-                            {stats.assignedAssetsList.map(asset => (
-                                <div key={asset.id} className="recent-item">
-                                    <div className="recent-item-info">
-                                        <div className="recent-item-title">{asset.name}</div>
-                                        <div className="recent-item-sub">{asset.status}</div>
-                                    </div>
-                                    <span className={`badge badge-${asset.status === 'Assigned' ? 'success' : 'warning'}`}>
-                                        {asset.status}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-
-                <div className="stat-widget">
-                    <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span>📝</span> My Recent Requests
-                    </h3>
-                    {stats.myRequests.length === 0 ? (
-                        <p style={{ opacity: 0.6 }}>No recent requests</p>
-                    ) : (
-                        <div className="recent-list">
-                            {stats.myRequests.map(req => (
-                                <div key={req.id} className="recent-item">
-                                    <div className="recent-item-info">
-                                        <div className="recent-item-title">{req.description}</div>
-                                        <div className="recent-item-sub">{req.status}</div>
-                                    </div>
-                                    <span className={`badge badge-${req.status === 'Approved' ? 'success' : req.status === 'Pending' ? 'warning' : 'danger'}`}>
-                                        {req.status}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            </div>
+            
         </div>
     )
 }

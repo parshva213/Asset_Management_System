@@ -38,6 +38,13 @@ const RoleSelection = () => {
       setError("Please enter a registration key")
       return
     }
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    for (let i = 0; i < unpk.length; i++){
+      if (!characters.includes(unpk[i])){
+        setError("Key format is Case Sensitive")
+        return
+      }
+    }
 
     setLoading(true)
     setError("")
@@ -72,7 +79,7 @@ const RoleSelection = () => {
               <input
                 type="text"
                 className="form-input"
-                placeholder="Enter Key"
+                placeholder="Enter Key (Case Sensitive)"
                 value={unpk}
                 onChange={(e) => setUnpk(e.target.value)}
                 minLength={1}

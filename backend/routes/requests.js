@@ -21,7 +21,7 @@ router.get("/", verifyToken, async (req, res) => {
       params.push(req.user.id)
     }
 
-    query += " ORDER BY ar.created_at DESC"
+    query += " ORDER BY ar.id ASC"
 
     const [requests] = await db.execute(query, params)
     res.json(requests)

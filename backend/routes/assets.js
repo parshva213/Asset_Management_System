@@ -11,6 +11,7 @@ router.get("/", authenticateToken, async (req, res) => {
       FROM assets a
       LEFT JOIN categories c ON a.category_id = c.id
       LEFT JOIN locations l ON a.location_id = l.id
+      ORDER BY a.id ASC
     `;
     const params = [];
 

@@ -616,6 +616,10 @@ body.dark .role-option:hover {
     display: none; /* Hidden on very small screens if needed, or show */
 }
 
+.dark .organization-name {
+    color: orange;
+}
+
 @media (min-width: 768px) {
     .organization-name {
         display: block;

@@ -1,147 +1,107 @@
-import { useState, useEffect } from "react"
+"use client"
+
+import { useState, useEffect, useCallback } from "react"
 import { useSearchParams, useNavigate } from "react-router-dom"
+import { useAuth } from "../contexts/AuthContext"
 import api from "../api"
+import { formatDate } from "../utils/dateUtils"
 
 const Users = () => {
-  const [searchParams] = useSearchParams()
+  useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [users, setUsers] = useState([])
-  const [loading, setLoading] = useState(true)
   const [locationName, setLocationName] = useState("")
+  const [loading, setLoading] = useState(true)
 
   const locationId = searchParams.get("location_id")
   const role = searchParams.get("role")
 
-  useEffect(() => {
-    fetchUsers()
-    if (locationId) {
-      fetchLocationName()
-    }
-  }, [locationId, role])
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setLoading(true)
     try {
-      const params = {}
-      if (locationId) params.location_id = locationId
-      if (role) params.role = role
-
-      const response = await api.get("/users", { params })
+      const url = `/users?${searchParams.toString()}`
+      const response = await api.get(url)
       setUsers(response.data)
     } catch (error) {
       console.error("Error fetching users:", error)
     } finally {
       setLoading(false)
     }
-  }
+  }, [searchParams])
 
-  const fetchLocationName = async () => {
+  const fetchLocationName = useCallback(async () => {
     try {
       const response = await api.get(`/locations/${locationId}`)
       setLocationName(response.data.name)
     } catch (error) {
-      console.error("Error fetching location:", error)
+      console.error("Error fetching location name:", error)
     }
-  }
+  }, [locationId])
 
-  const getPageTitle = () => {
-    const parts = []
-    if (role) {
-      parts.push(role.charAt(0).toUpperCase() + role.slice(1))
+  useEffect(() => {
+    fetchUsers()
+    if (locationId) {
+      fetchLocationName()
     }
-    if (locationName) {
-      parts.push(`at ${locationName}`)
-    }
-    return parts.length > 0 ? parts.join(" ") : "Users"
-  }
+  }, [locationId, role, fetchUsers, fetchLocationName])
 
   if (loading) {
-    return <div className="loading">Loading users...</div>
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="spinner"></div>
+      </div>
+    )
   }
 
+  const title = role 
+    ? `${role.charAt(0).toUpperCase() + role.slice(1)} Team` 
+    : "Users"
+
   return (
-    <div>
+    <div className="content">
       <div className="flex-between mb-4">
-        <h2>{getPageTitle()}</h2>
-        <button onClick={() => navigate("/locations")} className="btn btn-secondary">
-          ← Back to Locations
-        </button>
+        <div>
+          <button 
+            onClick={() => navigate("/locations")} 
+            className="btn btn-secondary mb-2"
+            style={{ padding: '0.4rem 0.8rem', fontSize: '13px' }}
+          >
+            ← Back to Locations
+          </button>
+          <h2>{title} {locationName && ` - ${locationName}`}</h2>
+        </div>
       </div>
 
       {users.length === 0 ? (
         <div className="empty-state">
-          <p>No users found</p>
+          <p>No users found for this filter.</p>
         </div>
       ) : (
-        <div className="users-grid">
+        <div className="user-grid">
           {users.map((user) => (
-            <div key={user.id} className="card">
-              <div className="user-header">
-                <h3>{user.name}</h3>
-                <span className="user-role-badge">{user.role}</span>
+            <div key={user.id} className="card user-card" id={`user-${user.id}`}>
+              <div className="card-header border-b pb-2 mb-3 flex-between">
+                <div>
+                  <h3 className="text-lg font-bold">{user.name}</h3>
+                </div>
+                <span className="badge badge-primary">{user.role}</span>
               </div>
-              <div className="user-info">
-                <p>
-                  <strong>Email:</strong> {user.email}
-                </p>
-                {user.department && (
-                  <p>
-                    <strong>Department:</strong> {user.department}
-                  </p>
-                )}
-                {user.phone && (
-                  <p>
-                    <strong>Phone:</strong> {user.phone}
-                  </p>
-                )}
+              <div className="card-body">
+                <p className="mb-2"><strong>Email:</strong> {user.email}</p>
+                <p className="mb-2"><strong>Phone:</strong> {user.phone || "N/A"}</p>
+                <p className="mb-2"><strong>Department:</strong> {user.department || "N/A"}</p>
+                <p className="mb-2"><strong>Joined:</strong> {formatDate(user.created_at)}</p>
+              </div>
+              <div className="card-footer mt-3 pt-3 border-t">
+                 <span className="text-sm text-secondary">
+                   Assigned Assets: {user.assigned_assets?.length || 0}
+                 </span>
               </div>
             </div>
           ))}
         </div>
       )}
-
-      <style>{`
-        .users-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-          gap: 1.5rem;
-        }
-
-        .user-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 1rem;
-          padding-bottom: 0.75rem;
-          border-bottom: 1px solid var(--border-color);
-        }
-
-        .user-header h3 {
-          margin: 0;
-          font-size: 1.125rem;
-          color: var(--text-primary);
-        }
-
-        .user-role-badge {
-          background: var(--primary);
-          color: white;
-          padding: 0.25rem 0.75rem;
-          border-radius: 0.375rem;
-          font-size: 0.75rem;
-          font-weight: 600;
-        }
-
-        .user-info p {
-          margin-bottom: 0.5rem;
-          font-size: 0.875rem;
-          color: var(--text-primary);
-        }
-
-        .user-info strong {
-          color: var(--text-secondary);
-          margin-right: 0.5rem;
-        }
-      `}</style>
     </div>
   )
 }

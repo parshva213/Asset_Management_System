@@ -24,8 +24,8 @@ const VendorRequests = () => {
       <h2>Replacement/Upgrade Requests</h2>
       <ul className="request-list">
         {requests.map((req) => (
-          <li key={req.id} className="card mb-2">
-            <strong>Order #{req.id}</strong>: {req.asset_name} (Qty: {req.quantity}) - <span className={`badge badge-${req.status === 'Completed' ? 'high' : 'medium'}`}>{req.status}</span>
+          <li key={req.id} className="card mb-2" id={`po-${req.id}`}>
+            {req.asset_name} (Qty: {req.quantity}) - <span className={`badge badge-${req.status === 'Completed' ? 'high' : 'medium'}`}>{req.status}</span>
           </li>
         ))}
       </ul>

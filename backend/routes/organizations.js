@@ -17,7 +17,7 @@ router.get("/", verifyToken, async (req, res) => {
       });
     }
 
-    const [rows] = await pool.query("SELECT * FROM organizations ORDER BY name");
+    const [rows] = await pool.query("SELECT * FROM organizations ORDER BY id ASC");
     res.json(rows);
   } catch (error) {
     console.error("Error fetching organizations:", error);

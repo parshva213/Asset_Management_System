@@ -224,13 +224,13 @@ router.post("/verify-registration-key", async (req, res) => {
   try {
     // check org table for orgpk
     const [orgResult] = await db.query(
-      "SELECT id, name, member FROM organizations WHERE orgpk = ?",
+      "SELECT id, name, member FROM organizations WHERE BINARY orgpk = ?",
       [key]
     );
     if (orgResult.length > 0) {
       const org = orgResult[0];
       const [count] = await db.query(
-        "SELECT COUNT(*) as count FROM users WHERE unpk = ?",
+        "SELECT COUNT(*) as count FROM users WHERE BINARY unpk = ?",
         [key]
       )
       if (count[0].count >= org.member) {
@@ -245,7 +245,7 @@ router.post("/verify-registration-key", async (req, res) => {
     }
     // Check users table for ownpk
     const [ownpkResult] = await db.query(
-      "SELECT id, name, role, org_id FROM users WHERE ownpk = ?",
+      "SELECT id, name, role, org_id FROM users WHERE BINARY ownpk = ?",
       [key]
     );
     if (ownpkResult.length > 0) {

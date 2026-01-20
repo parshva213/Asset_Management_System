@@ -150,7 +150,7 @@ const Organizations = () => {
                     </thead>
                     <tbody>
                         {organizations.map((organization) => (
-                            <tr key={organization.id}>
+                            <tr key={organization.id} id={`org-${organization.id}`}>
                                 <td>{organization.name}</td>
                                 <td>{organization.description || "N/A"}</td>
                                 <td>{organization.orgpk || "N/A"}</td>

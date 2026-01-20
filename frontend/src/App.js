@@ -22,8 +22,8 @@ import Locations from "./pages/Locations"
 import LocationRooms from "./pages/LocationRooms"
 import Assets from "./pages/Assets"
 import Employees from "./pages/Employees"
-import Users from "./pages/Users"
 import AdminDashboard from "./pages/AdminDashboard"
+import Users from "./pages/Users"
 
 // ---------- SUPERVISOR PAGES ----------
 import PurchaseOrders from "./pages/purchase-orders"
@@ -87,10 +87,10 @@ function App() {
               {/* Super Admin */}
               <Route path="admin-dashboard" element={<ProtectedRoute roles={['Super Admin']}><AdminDashboard /></ProtectedRoute>} />
               <Route path="employees" element={<ProtectedRoute roles={['Super Admin']}><Employees /></ProtectedRoute>} />
-              <Route path="users" element={<ProtectedRoute roles={['Super Admin', 'Supervisor']}><Users /></ProtectedRoute>} />
               <Route path="categories" element={<ProtectedRoute roles={['Super Admin']}><Categories /></ProtectedRoute>} />
               <Route path="locations" element={<ProtectedRoute roles={['Super Admin', 'Supervisor']}><Locations /></ProtectedRoute>} />
               <Route path="rooms" element={<ProtectedRoute roles={['Super Admin', 'Supervisor']}><LocationRooms /></ProtectedRoute>} />
+              <Route path="users" element={<ProtectedRoute roles={['Super Admin', 'Supervisor']}><Users /></ProtectedRoute>} />
 
               {/* Supervisor */}
               <Route path="supervisor-dashboard" element={<ProtectedRoute roles={['Supervisor']}><SupervisorDashboard /></ProtectedRoute>} />

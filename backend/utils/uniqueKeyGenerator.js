@@ -16,13 +16,13 @@ export const generateUniqueKey = async () => {
         // Check availability in all relevant columns
         // We act optimistically; if any match found, we retry.
         try {
-            const [orgPkResult] = await pool.query("SELECT id FROM organizations WHERE orgpk = ?", [key]);
+            const [orgPkResult] = await pool.query("SELECT id FROM organizations WHERE BINARY orgpk = ?", [key]);
             if (orgPkResult.length > 0) continue;
 
-            const [vOpkResult] = await pool.query("SELECT id FROM organizations WHERE v_opk = ?", [key]);
+            const [vOpkResult] = await pool.query("SELECT id FROM organizations WHERE BINARY v_opk = ?", [key]);
             if (vOpkResult.length > 0) continue;
 
-            const [userOwnPkResult] = await pool.query("SELECT id FROM users WHERE ownpk = ?", [key]);
+            const [userOwnPkResult] = await pool.query("SELECT id FROM users WHERE BINARY ownpk = ?", [key]);
             if (userOwnPkResult.length > 0) continue;
 
             // If we reach here, it's unique

@@ -167,7 +167,6 @@ export default function PurchaseOrders() {
         <table className="table">
           <thead>
             <tr>
-              <th>ID</th>
               <th>Asset</th>
               <th>Quantity</th>
               <th>Supervisor</th>
@@ -179,8 +178,7 @@ export default function PurchaseOrders() {
           </thead>
           <tbody>
             {filteredOrders.map((order) => (
-              <tr key={order.id}>
-                <td>#{order.id}</td>
+              <tr key={order.id} id={`po-${order.id}`}>
                 <td>{order.asset_name}</td>
                 <td>{order.quantity}</td>
                 <td>{order.supervisor_name || order.supervisor_id}</td>

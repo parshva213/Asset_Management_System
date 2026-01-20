@@ -8,8 +8,6 @@ import { formatDate } from "../utils/dateUtils"
 const MaintenanceDashboard = () => {
   const { user } = useAuth()
   const [pendingTasks, setPendingTasks] = useState([])
-
-  const [assetsToMaintain, setAssetsToMaintain] = useState([])
   const [stats, setStats] = useState({ pending: 0, completed: 0, totalAssets: 0, configCount: 0 })
   const [error, setError] = useState(null)
   
@@ -24,8 +22,6 @@ const MaintenanceDashboard = () => {
       const res = await api.get("/maintenance/dashboard")
       const data = res.data
       setPendingTasks(data.pendingTasks || [])
-
-      setAssetsToMaintain(data.assetsToMaintain || [])
       setStats({
         pending: data.pendingCount || 0,
         completed: data.completedCount || 0,
@@ -66,9 +62,6 @@ const MaintenanceDashboard = () => {
                     </div>
                     <div className="profile-detail-item">
                         <span>🏷️</span> {user?.role} - {user?.department || 'IT Dept'}
-                    </div>
-                    <div className="profile-detail-item">
-                        <span>🔑</span> {user?.ownpk || 'Not set'}
                     </div>
                     <div className="profile-detail-item">
                         <span>📞</span> {user?.phone || 'Not set'}
@@ -144,51 +137,7 @@ const MaintenanceDashboard = () => {
                     </div>
                 </div>
             </div>
-            </div>
-            {/* Dashboard Bottom Row */}
-            <div className="dashboard-bottom-row">
-                <div className="stat-widget">
-                    <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span>📋</span> Pending Maintenance
-                    </h3>
-                    {pendingTasks.length === 0 ? (
-                        <p style={{ opacity: 0.6 }}>No pending tasks</p>
-                    ) : (
-                        <div className="recent-list">
-                            {pendingTasks.map(task => (
-                                <div key={task.id} className="recent-item">
-                                    <div className="recent-item-info">
-                                        <div className="recent-item-title">{task.maintenance_type}</div>
-                                        <div className="recent-item-sub">{task.asset_name || 'Unknown Asset'}</div>
-                                    </div>
-                                    <Link to="/maintenance-tasks" className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}>View</Link>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-
-                <div className="stat-widget">
-                    <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span>⚠️</span> Assets Needing Attention
-                    </h3>
-                    {assetsToMaintain.length === 0 ? (
-                        <p style={{ opacity: 0.6 }}>No assets flaggged</p>
-                    ) : (
-                        <div className="recent-list">
-                            {assetsToMaintain.map(asset => (
-                                <div key={asset.id} className="recent-item">
-                                    <div className="recent-item-info">
-                                        <div className="recent-item-title">{asset.name}</div>
-                                        <div className="recent-item-sub">{asset.status}</div>
-                                    </div>
-                                    <Link to={`/assets/${asset.id}`} className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}>Check</Link>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            </div>
+        </div>
     </div>
     )
 }

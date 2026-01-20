@@ -154,7 +154,7 @@ const LocationRooms = () => {
               </thead>
               <tbody>
                 {rooms.map((room) => (
-                  <tr key={room.id}>
+                  <tr key={room.id} id={`room-${room.id}`}>
                     <td>{room.name}</td>
                     <td>{room.floor || "N/A"}</td>
                     <td>{room.capacity || "N/A"}</td>

@@ -9,7 +9,7 @@ router.get("/", verifyToken, async (req, res) => {
     const [rows] = await db.query(`
       SELECT l.*, (SELECT COUNT(*) FROM rooms r WHERE r.location_id = l.id) as room_count
       FROM locations l
-      ORDER BY l.name
+      ORDER BY l.id ASC
     `)
     res.json(rows)
   } catch (error) {
@@ -24,7 +24,7 @@ router.get("/rooms", verifyToken, async (req, res) => {
       SELECT r.*, l.name as location_name 
       FROM rooms r 
       LEFT JOIN locations l ON r.location_id = l.id 
-      ORDER BY l.name, r.name
+      ORDER BY r.id ASC
     `)
     res.json(rows)
   } catch (error) {

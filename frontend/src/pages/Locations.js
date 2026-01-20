@@ -1,13 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useAuth } from "../contexts/AuthContext"
 import { useNavigate } from "react-router-dom"
 import useCrud from "../hooks/useCrud"
 import { formatDate } from "../utils/dateUtils"
 
 const Locations = () => {
-  const { user } = useAuth()
   const navigate = useNavigate()
   const { items: locations, loading: locationsLoading, create: createLocation, update: updateLocation, remove: removeLocation, list: listLocations } = useCrud("locations")
   const [loading, setLoading] = useState(true)
@@ -111,7 +109,7 @@ const Locations = () => {
               </thead>
               <tbody>
                 {locations.map((location) => (
-                  <tr key={location.id}>
+                  <tr key={location.id} id={`loc-${location.id}`}>
                     <td>{location.name}</td>
                     <td>{location.address || "N/A"}</td>
                     <td>{location.room_count}</td>
@@ -145,7 +143,7 @@ const Locations = () => {
                               </button>
                               <button
                                 onClick={() => {
-                                  navigate(`/users?location_id=${location.id}&role=maintenance`)
+                                  navigate(`/users?location_id=${location.id}`)
                                   setOpenDropdownId(null)
                                 }}
                                 className="dropdown-item"

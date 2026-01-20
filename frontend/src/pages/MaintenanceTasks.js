@@ -74,7 +74,6 @@ const MaintenanceTasks = () => {
           <table className="table">
             <thead>
               <tr>
-                <th>Service ID</th>
                 <th>Asset Name</th>
                 <th>Maintenance Type</th>
                 <th>Priority</th>
@@ -84,8 +83,7 @@ const MaintenanceTasks = () => {
             </thead>
             <tbody>
               {tasks.map((task) => (
-                <tr key={task.id}>
-                  <td>#{task.id}</td>
+                <tr key={task.id} id={`maint-${task.id}`}>
                   <td>{task.asset_name}</td>
                   <td>{task.maintenance_type}</td>
                   <td>

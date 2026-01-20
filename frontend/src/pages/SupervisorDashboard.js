@@ -159,50 +159,6 @@ const SupervisorDashboard = () => {
                     </div>
                 </div>
             </div>
-
-            <div className="dashboard-bottom-row">
-                <div className="stat-widget">
-                    <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span>💻</span> Assigned Assets
-                    </h3>
-                    {stats.assignedAssetsList.length === 0 ? (
-                        <p style={{ opacity: 0.6 }}>No assets assigned</p>
-                    ) : (
-                        <div className="recent-list">
-                            {stats.assignedAssetsList.map(asset => (
-                                <div key={asset.id} className="recent-item">
-                                    <div className="recent-item-info">
-                                        <div className="recent-item-title">{asset.name}</div>
-                                        <div className="recent-item-sub">{asset.assigned_to_name || 'Assigned'}</div>
-                                    </div>
-                                    <Link to={`/assets/${asset.id}`} className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}>View</Link>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-
-                <div className="stat-widget">
-                    <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span>📝</span> Pending Requests
-                    </h3>
-                    {stats.pendingRequestsList.length === 0 ? (
-                        <p style={{ opacity: 0.6 }}>No pending requests</p>
-                    ) : (
-                        <div className="recent-list">
-                            {stats.pendingRequestsList.map(req => (
-                                <div key={req.id} className="recent-item">
-                                    <div className="recent-item-info">
-                                        <div className="recent-item-title">{req.description}</div>
-                                        <div className="recent-item-sub">By {req.requested_by_name || 'Unknown'}</div>
-                                    </div>
-                                    <Link to="/requests" className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}>Review</Link>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            </div>
         </div>
     )
 }
