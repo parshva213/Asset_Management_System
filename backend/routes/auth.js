@@ -76,7 +76,7 @@ router.post("/login", async (req, res) => {
   const { email, password } = req.body;
   try {
     const [userResult] = await db.query(
-      `SELECT u.id, u.name, u.email, u.password, u.role, u.department, u.phone, u.ownpk, u.org_id, o.name as organization_name
+      `SELECT u.id, u.name, u.email, u.password, u.role, u.department, u.phone, u.ownpk, u.org_id, o.name as organization_name, u.status
        FROM users u
        LEFT JOIN organizations o ON u.org_id = o.id
        WHERE u.email = ?`,
@@ -87,6 +87,9 @@ router.post("/login", async (req, res) => {
       return res.status(404).json({ message: "Account is not registered" });
     }
     const user = userResult[0];
+    if (!['Active', 'On Leave'].includes(user.status)) {
+      return res.status(403).json({ message: "Account is not active" });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
     
@@ -126,15 +129,15 @@ router.get("/profile", authenticate(), async (req, res) => {
 });
 
 router.put("/profile", authenticate(), async (req, res) => {
-  const { name, email, department, phone } = req.body;
+  const { name, email, department} = req.body;
   if (!name || !email) {
     return res.status(400).json({ message: "Name and Email are required" });
   }
 
   try {
     await db.query(
-      "UPDATE users SET name=?, email=?, department=?, phone=? WHERE id=?",
-      [name, email, department || null, phone || null, req.user.id]
+      "UPDATE users SET name=?, email=?, department=? WHERE id=?",
+      [name, email, department || null, req.user.id]
     );
     res.json({ message: "Profile updated successfully" });
   } catch (err) {
@@ -233,8 +236,16 @@ router.post("/verify-registration-key", async (req, res) => {
         "SELECT COUNT(*) as count FROM users WHERE BINARY unpk = ?",
         [key]
       )
+      if (org.id === 1) {
+        return res.json({
+          type: "organization",
+          orgId: org.id,
+          allowedRoles: ["software developer"],
+          unpk: key
+        })
+      }
       if (count[0].count >= org.member) {
-        return res.status(400).json({ message: "Organization limit reached" });
+        return res.status(400).json({ message: "Organization limit reached"+org.id });
       }
       return res.json({
         type: "organization",

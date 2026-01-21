@@ -9,8 +9,9 @@ router.get("/", verifyToken, async (req, res) => {
     const [rows] = await db.query(`
       SELECT l.*, (SELECT COUNT(*) FROM rooms r WHERE r.location_id = l.id) as room_count
       FROM locations l
+      WHERE l.org_id = ?
       ORDER BY l.id ASC
-    `)
+    `, [req.user.org_id])
     res.json(rows)
   } catch (error) {
     console.error("Error fetching locations:", error)
@@ -24,8 +25,9 @@ router.get("/rooms", verifyToken, async (req, res) => {
       SELECT r.*, l.name as location_name 
       FROM rooms r 
       LEFT JOIN locations l ON r.location_id = l.id 
+      WHERE l.org_id = ?
       ORDER BY r.id ASC
-    `)
+    `, [req.user.org_id])
     res.json(rows)
   } catch (error) {
     console.error("Error fetching rooms:", error)
@@ -36,7 +38,7 @@ router.get("/rooms", verifyToken, async (req, res) => {
 router.get("/:id", verifyToken, async (req, res) => {
   try {
     const { id } = req.params
-    const [rows] = await db.query("SELECT * FROM locations WHERE id = ?", [id])
+    const [rows] = await db.query("SELECT * FROM locations WHERE id = ? AND org_id = ?", [id, req.user.org_id])
     
     if (rows.length === 0) {
       return res.status(404).json({ message: "Location not found" })
@@ -57,10 +59,11 @@ router.post("/", verifyToken, async (req, res) => {
 
     const { name, address, description } = req.body
 
-    const [result] = await db.query("INSERT INTO locations (name, address, description) VALUES (?, ?, ?)", [
+    const [result] = await db.query("INSERT INTO locations (name, address, description, org_id) VALUES (?, ?, ?, ?)", [
       name,
       address,
       description,
+      req.user.org_id
     ])
     const locationId = result.insertId
 

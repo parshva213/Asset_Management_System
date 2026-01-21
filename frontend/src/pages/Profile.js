@@ -89,10 +89,6 @@ const Profile = () => {
 
   return (
     <div className="dashboard-layout profile-page">
-      <div className="page-header">
-        <h2>{isReadOnly ? "Profile Management-$ (profile information/change password)" : "Profile Management"}</h2>
-      </div>
-
       <div className="dashboard-grid profile-grid">
         {/* Profile Information Card */}
         <div className="card profile-card">

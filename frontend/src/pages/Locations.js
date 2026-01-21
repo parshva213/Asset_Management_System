@@ -143,12 +143,21 @@ const Locations = () => {
                               </button>
                               <button
                                 onClick={() => {
-                                  navigate(`/users?location_id=${location.id}`)
+                                  navigate(`/main-users?location_id=${location.id}`)
                                   setOpenDropdownId(null)
                                 }}
                                 className="dropdown-item"
                               >
                                 Maintenance Team
+                              </button>
+                              <button
+                                onClick={() => {
+                                  navigate(`/assets?location_id=${location.id}`)
+                                  setOpenDropdownId(null)
+                                }}
+                                className="dropdown-item"
+                              >
+                                Assets
                               </button>
                             </div>
                           )}

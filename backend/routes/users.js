@@ -5,61 +5,84 @@ const router = express.Router();
 
 router.get("/", verifyToken, async (req, res) => {
   try {
-    if (req.user.role === "Employee") {
+    if (req.user.role === "Employee" || req.user.role === "Maintenance" || req.user.role === "Vendor") {
       return res.status(403).json({ message: "Access denied" })
     }
+    
+    const [org_id_rows] = await db.execute("SELECT org_id FROM users WHERE id = ?", [req.user.id]);
+    const org_id = org_id_rows[0].org_id;
 
-    const [org_id] = await db.execute("SELECT org_id FROM users WHERE id = ?", [req.user.id]);
+    const { location_id, role: queryRole } = req.query;
 
-    const { location_id, room_id} = req.query;
-    let queryParams = [];
+    // Special Case: Super Admin viewing unassigned team members (no query params)
+    if (req.user.role === "Super Admin" && Object.keys(req.query).length === 0) {
+      const [users] = await db.execute(
+        `SELECT u.id, u.name, u.email, u.role, u.department, u.phone, u.created_at,
+               GROUP_CONCAT(CONCAT(a.id, ':', a.name, ':', a.serial_number) SEPARATOR '|') as assigned_assets_raw
+        FROM users u
+        LEFT JOIN asset_assignments aa ON u.id = aa.user_id
+        LEFT JOIN assets a ON aa.asset_id = a.id
+        WHERE u.org_id = ?
+          AND u.role = 'Maintenance'
+          AND u.loc_id IS NULL
+          AND u.room_id IS NULL
+        GROUP BY u.id
+        ORDER BY u.id ASC`,
+        [org_id]
+      )
+      const usersWithAssets = users.map((u) => {
+        const assigned_assets = [];
+        if (u.assigned_assets_raw) {
+          u.assigned_assets_raw.split('|').forEach(str => {
+            const [id, name, sn] = str.split(':');
+            assigned_assets.push({ id: parseInt(id), name, serial_number: sn });
+          });
+        }
+        return { ...u, assigned_assets, assigned_assets_raw: undefined };
+      });
+      return res.json(usersWithAssets)
+    }
 
+    // Standard Filtering Case
+    let queryParams = [org_id];
     let query = `
-      SELECT u.id, u.name, u.email, u.role, u.department, u.phone from users u
+      SELECT u.id, u.name, u.email, u.role, u.department, u.phone, u.loc_id, l.name as location_name, u.created_at,
+             GROUP_CONCAT(CONCAT(a.id, ':', a.name, ':', a.serial_number) SEPARATOR '|') as assigned_assets_raw
+      FROM users u
+      LEFT JOIN locations l ON u.loc_id = l.id
       LEFT JOIN asset_assignments aa ON u.id = aa.user_id
       LEFT JOIN assets a ON aa.asset_id = a.id
-      LEFT JOIN locations l ON a.loc_id = l.id
-      LEFT JOIN rooms r ON a.room_id = r.id
       WHERE u.org_id = ?
     `
-    queryParams.push(org_id[0].org_id)
 
     if (req.user.role === "IT Supervisor") {
       query += " AND u.role = 'Employee'"
     }
 
     if (location_id) {
-      query += " AND u.loc_id = ?"
+      query += ` AND u.loc_id = ?`
       queryParams.push(location_id)
     }
 
-    if (role) {
+    if (queryRole) {
       query += " AND u.role = ?"
-      queryParams.push(role)
+      queryParams.push(queryRole)
     }
 
     query += " GROUP BY u.id ORDER BY u.id ASC"
 
     const [users] = await db.execute(query, queryParams)
 
-    const usersWithAssets = users.map((user) => {
-      const assignedAssets = []
-      if (user.assigned_assets_data) {
-        const assetsData = user.assigned_assets_data.split("|")
-        assetsData.forEach((assetData) => {
-          const parts = assetData.split(":")
-          if (parts.length >= 2) {
-             const [id, name, serial_number] = parts
-             assignedAssets.push({ id: Number.parseInt(id), name, serial_number })
-          }
-        })
+    const usersWithAssets = users.map((u) => {
+      const assigned_assets = [];
+      if (u.assigned_assets_raw) {
+        u.assigned_assets_raw.split('|').forEach(str => {
+          const [id, name, sn] = str.split(':');
+          assigned_assets.push({ id: parseInt(id), name, serial_number: sn });
+        });
       }
-      return {
-        ...user,
-        assigned_assets: assignedAssets,
-        assigned_assets_data: undefined,
-      }
-    })
+      return { ...u, assigned_assets, location_name: u.location_name, assigned_assets_raw: undefined };
+    });
 
     res.json(usersWithAssets)
   } catch (error) {
@@ -118,6 +141,39 @@ router.post("/unassign-asset", verifyToken, async (req, res) => {
     res.json({ message: "Asset unassigned successfully" })
   } catch (error) {
     console.error("Error unassigning asset:", error)
+    res.status(500).json({ message: "Server error" })
+  }
+})
+
+router.put("/:id", verifyToken, async (req, res) => {
+  try {
+    if (req.user.role === "Employee") {
+      return res.status(403).json({ message: "Access denied" })
+    }
+
+    const { loc_id, department, phone } = req.body
+    
+    // We update only what's provided, focusing on loc_id for the user request
+    let query = "UPDATE users SET "
+    let params = []
+    let updates = []
+
+    if (loc_id !== undefined) {
+      updates.push("loc_id = ?")
+      params.push(loc_id)
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ message: "No fields to update" })
+    }
+
+    query += updates.join(", ") + " WHERE id = ?"
+    params.push(req.params.id)
+
+    await db.execute(query, params)
+    res.json({ message: "User updated successfully" })
+  } catch (error) {
+    console.error("Error updating user:", error)
     res.status(500).json({ message: "Server error" })
   }
 })

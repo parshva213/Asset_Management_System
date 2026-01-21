@@ -16,7 +16,7 @@ export const verifyToken = async (req, res, next) => {
     const decoded = jwt.verify(token, JWT_SECRET);
 
     // Get user from database (token payload uses `id`)
-    const [rows] = await db.query("SELECT id, email, name, role FROM users WHERE id = ?", [decoded.id]);
+    const [rows] = await db.query("SELECT id, email, name, role, org_id FROM users WHERE id = ?", [decoded.id]);
 
     if (rows.length === 0) {
       return res.status(401).json({ message: "Invalid token." });

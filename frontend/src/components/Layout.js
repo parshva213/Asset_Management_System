@@ -54,10 +54,11 @@ const ICONS = {
 const MENU_ITEMS = {
   "Super Admin": [
     { name: "Dashboard", path: ["/admin-dashboard"], icon: "dashboard" },
+    { name: "Locations", path: ["/locations", "/rooms?locationId=", "/main-users?location_id=", "/assets?location_id="], icon: "locations" },
     { name: "Categories", path: ["/categories"], icon: "categories" },
-    { name: "Locations", path: ["/locations", "/rooms?locationId="], icon: "locations" },
     { name: "Assets", path: ["/assets"], icon: "assets" },
     { name: "Orders", path: ["/purchase-orders"], icon: "orders" },
+    { name: "Users", path: ["/users"], icon: "users" },
     { name: "Requests", path: ["/requests"], icon: "requests" },
     { name: "Profile", path: ["/profile"], icon: "profile" },
   ],
@@ -96,14 +97,6 @@ const MENU_ITEMS = {
   ]
 }
 
-
-
-// ... (ICONS constant remains same, skipping for brevity in replacement if possible, but replace_file_content needs exact match usually. 
-// Actually I can target the component start line to update imports and component body.)
-
-// I will do it in chunks. first imports.
-// Wait, I can do it in one go if I target the component definition.
-
 const Layout = () => {
   const { user, logout } = useAuth()
   const { theme } = useTheme()
@@ -114,11 +107,8 @@ const Layout = () => {
     setIsSidebarOpen(!isSidebarOpen)
   }
 
-  // ------------------ ROLE BASED MENUS ------------------
-  // ------------------ ROLE BASED MENUS ------------------
   const currentMenu = useMemo(() => {
     if (!user) return []
-    // Case-insensitive lookup
     const roleKey = Object.keys(MENU_ITEMS).find(key => key.toLowerCase() === (user.role || "").toLowerCase())
     return roleKey ? MENU_ITEMS[roleKey] : []
   }, [user])
@@ -132,9 +122,7 @@ const Layout = () => {
       <Header user={user} logout={logout} toggleSidebar={toggleSidebar} />
 
       <div className="layout-body">
-        {/* Sidebar */}
         <aside className={`sidebar ${!isSidebarOpen ? 'closed' : ''}`}>
-          {/* Sidebar Header Removed as requested */}
           <nav className="sidebar-nav">
             <ul>
               {currentMenu.map((item, idx) => {
@@ -162,7 +150,6 @@ const Layout = () => {
           </nav>
         </aside>
 
-        {/* Main Content Area */}
         <div className={`main-content ${location.pathname.includes('dashboard') ? 'dashboard-mode' : ''}`}>
           <main className={`content ${location.pathname.includes('dashboard') ? 'dashboard-content' : ''}`}>
             <Outlet />

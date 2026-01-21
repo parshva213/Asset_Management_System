@@ -11,14 +11,29 @@ router.get("/", authenticateToken, async (req, res) => {
       FROM assets a
       LEFT JOIN categories c ON a.category_id = c.id
       LEFT JOIN locations l ON a.location_id = l.id
-      ORDER BY a.id ASC
+      WHERE 1=1
     `;
     const params = [];
 
     if (req.user.role === "Employee") {
-      query += " WHERE a.assigned_to = ?";
+      query += " AND a.assigned_to = ?";
       params.push(req.user.id);
+    } else {
+      query += " AND a.org_id = ?";
+      params.push(req.user.org_id);
     }
+
+    if (req.query.location_id) {
+      query += " AND a.location_id = ?";
+      params.push(req.query.location_id);
+    }
+
+    if (req.query.status) {
+      query += " AND a.status = ?";
+      params.push(req.query.status);
+    }
+
+    query += " ORDER BY a.id ASC";
 
     const [results] = await pool.query(query, params);
     res.json(results);
@@ -87,9 +102,9 @@ router.post("/", authenticateToken, async (req, res) => {
     }
 
     const [result] = await pool.query(
-      `INSERT INTO assets (name, description, serial_number, category_id, location_id, room_id, status, asset_type, purchase_date, warranty_expiry, purchase_cost, assigned_to, assigned_by, created_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [name, description || null, serial_number || null, category_id || null, location_id || null, room_id || null, status || 'Available', asset_type, purchase_date || null, warranty_expiry || null, purchase_cost || null, assigned_to || null, assigned_by || null, created_by || req.user.id]
+      `INSERT INTO assets (name, description, serial_number, category_id, location_id, room_id, status, asset_type, purchase_date, warranty_expiry, purchase_cost, assigned_to, assigned_by, created_by, org_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [name, description || null, serial_number || null, category_id || null, location_id || null, room_id || null, status || 'Available', asset_type, purchase_date || null, warranty_expiry || null, purchase_cost || null, assigned_to || null, assigned_by || null, created_by || req.user.id, req.user.org_id]
     );
     res.status(201).json({ message: "Asset created", assetId: result.insertId });
   } catch (err) {

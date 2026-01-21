@@ -488,10 +488,10 @@ app.post("/api/users", authenticate(["Super Admin", "Admin"]), async (req, res) 
     res.json({ success: true });
 });
 
-app.put("/api/users/:id", authenticate(["Super Admin", "Admin"]), async (req, res) => {
-    const { name, email, password, role, department, phone } = req.body;
+app.put("/api/users/:id", authenticate(["Super Admin"]), async (req, res) => {
+    const { loc_id } = req.body;
     await pool.query(
-        "UPDATE users SET name=?, email=?, password=?, role=?, department=?, phone=? WHERE id=?", [name, email, password, role, department || null, phone || null, req.params.id]
+        "UPDATE users SET loc_id=? WHERE id=?", [loc_id, req.params.id]
     );
     res.json({ success: true });
 });

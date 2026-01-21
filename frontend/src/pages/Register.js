@@ -52,7 +52,7 @@ const Register = () => {
           password: formData.password.length >= 6,
           confirm: formData.password === formData.confirmPassword,
           phone: formData.phone.length === 10,
-          department: role !== 'Vendor' ? formData.department.trim().length >= 2 : true // Optional field
+          department:formData.department.trim().length >= 2
       })
   }, [formData, role])
 
