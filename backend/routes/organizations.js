@@ -1,10 +1,89 @@
 import express from "express";
 import pool from "../config/database.js";
-import { verifyToken } from "../middleware/auth.js";
+import { verifyToken, checkRole } from "../middleware/auth.js";
 import { logActivity } from "../utils/activityLogger.js";
 import { generateUniqueKey } from "../utils/uniqueKeyGenerator.js";
 
 const router = express.Router();
+
+// ============ VENDOR ROUTES (Must be before generic /:id routes) ============
+
+// Get organizations for vendor (vendor-specific endpoint)
+router.get("/vendor/list", verifyToken, checkRole(["Vendor"]), async (req, res) => {
+  try {
+    const vendorId = req.user.id;
+
+    // Get all organizations that accept vendors (have v_opk)
+    const [allOrgs] = await pool.query("SELECT id, name, description, v_opk, created_at FROM organizations WHERE status = 'Active' AND v_opk IS NOT NULL AND v_opk != ''");
+
+    // Get organizations registered with this vendor
+    const [vendorOrgs] = await pool.query(
+      `SELECT o.id, o.name, o.description, o.v_opk, o.created_at 
+       FROM organizations o 
+       INNER JOIN vendor_org vo ON o.v_opk = vo.org_key 
+       WHERE vo.vendor_id = ? AND o.status = 'Active'`,
+      [vendorId]
+    );
+
+    // Extract vendor organization IDs for easy comparison
+    const vendorOrgIds = vendorOrgs.map(org => org.id);
+
+    // Separate organizations
+    const registeredOrganizations = vendorOrgs;
+    const otherOrganizations = allOrgs.filter(org => !vendorOrgIds.includes(org.id));
+
+    res.json({
+      registeredOrganizations,
+      otherOrganizations,
+      totalOrganizations: allOrgs.length,
+      vendorOrganizationsCount: vendorOrgs.length,
+      otherOrganizationsCount: otherOrganizations.length
+    });
+  } catch (error) {
+    console.error("Error fetching vendor organizations:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Register vendor with an organization
+router.post("/vendor/register/:orgId", verifyToken, checkRole(["Vendor"]), async (req, res) => {
+  try {
+    const vendorId = req.user.id;
+    const { orgId } = req.params;
+
+    // Get the organization to get its v_opk
+    const [orgData] = await pool.query("SELECT id, v_opk FROM organizations WHERE id = ? AND v_opk IS NOT NULL AND v_opk != ''", [orgId]);
+    
+    if (orgData.length === 0) {
+      return res.status(404).json({ message: "Organization not found or doesn't accept vendors" });
+    }
+
+    const orgKey = orgData[0].v_opk;
+
+    // Check if vendor is already registered with this organization
+    const [existingReg] = await pool.query("SELECT id FROM vendor_org WHERE vendor_id = ? AND org_key = ?", [vendorId, orgKey]);
+    
+    if (existingReg.length > 0) {
+      return res.status(400).json({ message: "You are already registered with this organization" });
+    }
+
+    // Insert into vendor_org table
+    const [result] = await pool.query(
+      "INSERT INTO vendor_org (vendor_id, org_key) VALUES (?, ?)",
+      [vendorId, orgKey]
+    );
+
+    // Log activity
+    await logActivity(vendorId, "Registered with organization", "vendor_org", result.insertId, `Vendor registered with organization: ${orgData[0].id}`);
+
+    res.status(201).json({ message: "Successfully registered with organization" });
+  } catch (error) {
+    console.error("Error registering vendor with organization:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ============ GENERAL ORGANIZATION ROUTES ============
 
 // Get all organizations
 router.get("/", verifyToken, async (req, res) => {

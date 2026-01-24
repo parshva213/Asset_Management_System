@@ -232,25 +232,22 @@ router.post("/verify-registration-key", async (req, res) => {
     );
     if (orgResult.length > 0) {
       const org = orgResult[0];
-      const [count] = await db.query(
-        "SELECT COUNT(*) as count FROM users WHERE BINARY unpk = ?",
-        [key]
-      )
+      // For organization key verification, just verify it exists and return allowed roles
+      // No member limit checks - employees can register freely with valid ORGPK
       if (org.id === 1) {
         return res.json({
           type: "organization",
           orgId: org.id,
+          orgName: org.name,
           allowedRoles: ["software developer"],
           unpk: key
         })
       }
-      if (count[0].count >= org.member) {
-        return res.status(400).json({ message: "Organization limit reached"+org.id });
-      }
       return res.json({
         type: "organization",
         orgId: org.id,
-        allowedRoles: ["Super Admin"],
+        orgName: org.name,
+        allowedRoles: ["Super Admin", "Supervisor", "Employee"],
         unpk: key
       });
     }

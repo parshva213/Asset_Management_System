@@ -169,6 +169,7 @@ import usersRouter from './routes/users.js';
 import purchaseOrdersRouter from './routes/purchaseOrders.js';
 import maintenanceRouter from './routes/maintenance.js';
 import organizationsRouter from './routes/organizations.js';
+import reportsRouter from './routes/reports.js';
 import { generateKey } from "./utils/keyGenerator.js";
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -522,6 +523,7 @@ app.use('/api/users', usersRouter);
 app.use('/api/purchase-orders', purchaseOrdersRouter);
 app.use('/api/maintenance', maintenanceRouter);
 app.use('/api/organizations', organizationsRouter);
+app.use('/api/reports', reportsRouter);
 
 // Error Handler (must be last)
 app.use(errorHandler);

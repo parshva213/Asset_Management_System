@@ -93,7 +93,7 @@ const SupervisorDashboard = () => {
                         </div>
                     </div>
                     <div className="card-footer">
-                        <Link to="/profile">
+                        <Link to="/supervisor-details">
                             View full details →
                         </Link>
                     </div>

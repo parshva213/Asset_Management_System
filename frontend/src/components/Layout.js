@@ -64,6 +64,8 @@ const MENU_ITEMS = {
   ],
   "Supervisor": [
     { name: "Dashboard", path: ["/dashboard", "/supervisor-dashboard"], icon: "dashboard" },
+    { name: "My Details", path: ["/supervisor-details"], icon: "profile" },
+    { name: "My Team Report", path: ["/supervisor-report"], icon: "users" },
     { name: "Assets", path: ["/assets"], icon: "assets" },
     { name: "Orders", path: ["/purchase-orders"], icon: "orders" },
     { name: "Requests", path: ["/requests"], icon: "requests" },
@@ -71,6 +73,7 @@ const MENU_ITEMS = {
   ],
   "Employee": [
     { name: "Dashboard", path: ["/dashboard", "/employee-dashboard"], icon: "dashboard" },
+    { name: "My Details", path: ["/employee-details"], icon: "profile" },
     { name: "Assets", path: ["/assets"], icon: "assets" },
     { name: "Requests", path: ["/requests"], icon: "requests" },
     { name: "Profile", path: ["/profile"], icon: "profile" },
@@ -81,6 +84,7 @@ const MENU_ITEMS = {
     { name: "Warranty", path: ["/warranty-docs"], icon: "file" },
     { name: "Products", path: ["/vendor-assets"], icon: "assets" },
     { name: "Requests", path: ["/vendor-requests"], icon: "requests" },
+    { name: "Organizations", path: ["/vendor-organizations"], icon: "organizations" },
     { name: "Profile", path: ["/profile"], icon: "profile" },
   ],
   "Maintenance": [

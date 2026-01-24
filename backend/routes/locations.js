@@ -35,6 +35,77 @@ router.get("/rooms", verifyToken, async (req, res) => {
   }
 })
 
+// Get employees in a specific room with supervisor and maintenance staff
+router.get("/rooms/:roomId/employees", verifyToken, async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    
+    // Get room details
+    const [roomData] = await db.query(`
+      SELECT r.*, l.name as location_name 
+      FROM rooms r 
+      LEFT JOIN locations l ON r.location_id = l.id 
+      WHERE r.id = ?
+    `, [roomId]);
+
+    if (roomData.length === 0) {
+      return res.status(404).json({ message: "Room not found" });
+    }
+
+    // Get all employees/users assigned to assets in this room with supervisor and maintenance staff
+    const [employees] = await db.query(`
+      SELECT 
+        u.id, u.name, u.email, u.role, u.phone, u.department,
+        COUNT(DISTINCT a.id) as assets_count,
+        (SELECT GROUP_CONCAT(DISTINCT supervisor.name SEPARATOR ', ') 
+         FROM users u2
+         INNER JOIN assets a2 ON u2.id = a2.assigned_to
+         INNER JOIN users supervisor ON a2.assigned_by = supervisor.id
+         WHERE a2.room_id = ? AND u2.id = u.id AND a2.status IN ('Assigned', 'Available')) as supervised_by,
+        (SELECT GROUP_CONCAT(DISTINCT maint.name SEPARATOR ', ')
+         FROM users u3
+         INNER JOIN assets a3 ON u3.id = a3.assigned_to
+         INNER JOIN maintenance_records mr ON a3.id = mr.asset_id
+         INNER JOIN users maint ON mr.maintenance_by = maint.id
+         WHERE a3.room_id = ? AND u3.id = u.id AND a3.status IN ('Assigned', 'Available')) as maintained_by
+      FROM users u
+      INNER JOIN assets a ON u.id = a.assigned_to
+      WHERE a.room_id = ? AND a.status IN ('Assigned', 'Available')
+      GROUP BY u.id
+      ORDER BY u.name ASC
+    `, [roomId, roomId, roomId]);
+
+    res.json({
+      room: roomData[0],
+      employees: employees,
+      employeeCount: employees.length
+    });
+  } catch (error) {
+    console.error("Error fetching room employees:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Get all rooms for a specific location (by location ID)
+router.get("/:locationId/rooms", verifyToken, async (req, res) => {
+  try {
+    const { locationId } = req.params;
+    
+    const [rows] = await db.query(`
+      SELECT r.*, l.name as location_name 
+      FROM rooms r 
+      LEFT JOIN locations l ON r.location_id = l.id 
+      WHERE r.location_id = ? AND l.org_id = ?
+      ORDER BY r.id ASC
+    `, [locationId, req.user.org_id]);
+    
+    res.json(rows);
+  } catch (error) {
+    console.error("Error fetching rooms for location:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 router.get("/:id", verifyToken, async (req, res) => {
   try {
     const { id } = req.params

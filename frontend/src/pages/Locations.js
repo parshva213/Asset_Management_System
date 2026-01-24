@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import useCrud from "../hooks/useCrud"
+import RoomsModal from "../components/RoomsModal"
 import { formatDate } from "../utils/dateUtils"
 
 const Locations = () => {
@@ -10,6 +11,8 @@ const Locations = () => {
   const { items: locations, loading: locationsLoading, create: createLocation, update: updateLocation, remove: removeLocation, list: listLocations } = useCrud("locations")
   const [loading, setLoading] = useState(true)
   const [showLocationModal, setShowLocationModal] = useState(false)
+  const [showRoomsModal, setShowRoomsModal] = useState(false)
+  const [selectedLocationForRooms, setSelectedLocationForRooms] = useState(null)
   const [editingLocation, setEditingLocation] = useState(null)
   const [openDropdownId, setOpenDropdownId] = useState(null)
   const [locationFormData, setLocationFormData] = useState({
@@ -134,7 +137,8 @@ const Locations = () => {
                             <div className="dropdown-menu">
                               <button
                                 onClick={() => {
-                                  navigate(`/rooms?location_id=${location.id}`)
+                                  setSelectedLocationForRooms(location)
+                                  setShowRoomsModal(true)
                                   setOpenDropdownId(null)
                                 }}
                                 className="dropdown-item"
@@ -237,6 +241,17 @@ const Locations = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {showRoomsModal && selectedLocationForRooms && (
+        <RoomsModal 
+          locationId={selectedLocationForRooms.id}
+          locationName={selectedLocationForRooms.name}
+          onClose={() => {
+            setShowRoomsModal(false)
+            setSelectedLocationForRooms(null)
+          }}
+        />
       )}
     </div>
   )

@@ -30,9 +30,12 @@ import MainUsers from "./pages/MainUsers"
 import PurchaseOrders from "./pages/purchase-orders"
 import Requests from "./pages/Requests"
 import SupervisorDashboard from "./pages/SupervisorDashboard"
+import SupervisorReport from "./pages/SupervisorReport"
+import SupervisorDetails from "./pages/SupervisorDetails"
 
 // ---------- EMPLOYEE PAGES ----------
 import EmployeeDashboard from "./pages/EmployeeDashboard"
+import EmployeeDetails from "./pages/EmployeeDetails"
 
 // ---------- VENDOR PAGES ----------
 import SupplyAssets from "./pages/SupplyAssets"
@@ -40,6 +43,7 @@ import WarrantyDocs from "./pages/WarrantyDocs"
 import VendorDashboard from "./pages/VendorDashboard"
 import VendorAssets from "./pages/VendorAssets"
 import VendorRequests from "./pages/VendorRequests"
+import VendorOrganizations from "./pages/VendorOrganizations"
 
 // ---------- MAINTENANCE STAFF PAGES ----------
 import NewConfiguration from "./pages/NewConfiguration"
@@ -49,7 +53,7 @@ import MaintenanceTasks from "./pages/MaintenanceTasks"
 
 // ---------- SOFTWARE DEVELOPER PAGES ----------
 import Organizations from "./pages/Organizations"
-import SDDashboard from "./pages/SdDashboard"
+import SDDashboard from "./pages/SDDashboard"
 
 import "./App.css"
 
@@ -96,9 +100,12 @@ function App() {
 
               {/* Supervisor */}
               <Route path="supervisor-dashboard" element={<ProtectedRoute roles={['Supervisor']}><SupervisorDashboard /></ProtectedRoute>} />
+              <Route path="supervisor-details" element={<ProtectedRoute roles={['Supervisor']}><SupervisorDetails /></ProtectedRoute>} />
+              <Route path="supervisor-report" element={<ProtectedRoute roles={['Supervisor']}><SupervisorReport /></ProtectedRoute>} />
 
               {/* Employee */}
               <Route path="employee-dashboard" element={<ProtectedRoute roles={['Employee']}><EmployeeDashboard /></ProtectedRoute>} />
+              <Route path="employee-details" element={<ProtectedRoute roles={['Employee']}><EmployeeDetails /></ProtectedRoute>} />
 
               {/* Software Developer */}
               <Route path="sd-dashboard" element={<ProtectedRoute roles={['Software Developer']}><SDDashboard /></ProtectedRoute>} />
@@ -114,6 +121,7 @@ function App() {
               <Route path="warranty-docs" element={<ProtectedRoute roles={['Vendor']}><WarrantyDocs /></ProtectedRoute>} />
               <Route path="vendor-assets" element={<ProtectedRoute roles={['Vendor']}><VendorAssets /></ProtectedRoute>} />
               <Route path="vendor-requests" element={<ProtectedRoute roles={['Vendor']}><VendorRequests /></ProtectedRoute>} />
+              <Route path="vendor-organizations" element={<ProtectedRoute roles={['Vendor']}><VendorOrganizations /></ProtectedRoute>} />
 
               {/* Maintenance Staff */}
               <Route path="maintenance-dashboard" element={<ProtectedRoute roles={['Super Admin', 'Maintenance']}><MaintenanceDashboard /></ProtectedRoute>} />

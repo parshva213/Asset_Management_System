@@ -73,13 +73,13 @@ const RoleSelection = () => {
         {!verificationData ? (
           <form onSubmit={handleVerifyKey}>
             <p style={{ textAlign: "center", color: "var(--text-secondary)", marginBottom: "20px" }}>
-              Please enter your registration key (UNPK) to proceed
+              Please enter your organization key (ORGPK) to proceed
             </p>
             <div className="form-group">
               <input
                 type="text"
                 className="form-input"
-                placeholder="Enter Key (Case Sensitive)"
+                placeholder="Enter Organization Key (Case Sensitive)"
                 value={unpk}
                 onChange={(e) => setUnpk(e.target.value)}
                 minLength={1}
