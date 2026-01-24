@@ -132,10 +132,14 @@ const Layout = () => {
                     <Link
                       to={item.path[0]}
                       className={
-                        item.path.some(p =>
-                          location.pathname === p ||
-                          location.pathname === p.split('?')[0]
-                        ) ? 'active' : ''
+                        item.path.some(p => {
+                          const [basePath, query] = p.split('?');
+                          if (query) {
+                            const queryKey = query.split('=')[0];
+                            return location.pathname === basePath && location.search.includes(queryKey);
+                          }
+                          return location.pathname === basePath;
+                        }) ? 'active' : ''
                       }
                     >
                       <span className="sidebar-icon">

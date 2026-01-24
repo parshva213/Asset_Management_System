@@ -49,7 +49,7 @@ import MaintenanceTasks from "./pages/MaintenanceTasks"
 
 // ---------- SOFTWARE DEVELOPER PAGES ----------
 import Organizations from "./pages/Organizations"
-import SDDashboard from "./pages/SdDashboard"
+import SDDashboard from "./pages/SDDashboard"
 
 import "./App.css"
 
