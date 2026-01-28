@@ -64,7 +64,6 @@ const MENU_ITEMS = {
   ],
   "Supervisor": [
     { name: "Dashboard", path: ["/dashboard", "/supervisor-dashboard"], icon: "dashboard" },
-    { name: "My Details", path: ["/supervisor-details"], icon: "profile" },
     { name: "My Team Report", path: ["/supervisor-report"], icon: "users" },
     { name: "Assets", path: ["/assets"], icon: "assets" },
     { name: "Orders", path: ["/purchase-orders"], icon: "orders" },
@@ -73,7 +72,6 @@ const MENU_ITEMS = {
   ],
   "Employee": [
     { name: "Dashboard", path: ["/dashboard", "/employee-dashboard"], icon: "dashboard" },
-    { name: "My Details", path: ["/employee-details"], icon: "profile" },
     { name: "Assets", path: ["/assets"], icon: "assets" },
     { name: "Requests", path: ["/requests"], icon: "requests" },
     { name: "Profile", path: ["/profile"], icon: "profile" },
@@ -127,6 +125,7 @@ const Layout = () => {
 
       <div className="layout-body">
         <aside className={`sidebar ${!isSidebarOpen ? 'closed' : ''}`}>
+
           <nav className="sidebar-nav">
             <ul>
               {currentMenu.map((item, idx) => {

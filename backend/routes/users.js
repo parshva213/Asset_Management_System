@@ -22,7 +22,7 @@ router.get("/", verifyToken, async (req, res) => {
         FROM users u
         LEFT JOIN asset_assignments aa ON u.id = aa.user_id
         LEFT JOIN assets a ON aa.asset_id = a.id
-        WHERE u.org_id = ?
+        WHERE (u.org_id = ? OR u.org_id IS NULL)
           AND u.role = 'Maintenance'
           AND u.loc_id IS NULL
           AND u.room_id IS NULL
@@ -44,6 +44,7 @@ router.get("/", verifyToken, async (req, res) => {
     }
 
     // Standard Filtering Case
+    const orgFilter = "(u.org_id = ? OR u.org_id IS NULL)";
     let queryParams = [org_id];
     let query = `
       SELECT u.id, u.name, u.email, u.role, u.department, u.phone, u.loc_id, l.name as location_name, u.created_at,
@@ -52,7 +53,7 @@ router.get("/", verifyToken, async (req, res) => {
       LEFT JOIN locations l ON u.loc_id = l.id
       LEFT JOIN asset_assignments aa ON u.id = aa.user_id
       LEFT JOIN assets a ON aa.asset_id = a.id
-      WHERE u.org_id = ?
+      WHERE ${orgFilter}
     `
 
     if (req.user.role === "IT Supervisor") {

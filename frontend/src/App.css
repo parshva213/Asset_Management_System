@@ -114,7 +114,9 @@ body.dark {
     pointer-events: none;
 }
 
-/* ... existing code ... */
+
+
+
 
 .sidebar-nav {
     display: flex;
@@ -763,6 +765,25 @@ body.dark .role-option:hover {
     grid-template-columns: repeat(auto-fit, minmax(285px, 1fr));
     gap: 1.5rem;
     margin-bottom: 2rem;
+}
+
+.stats-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    flex: 1;
+}
+
+@media (max-width: 1024px) {
+    .stats-grid-3 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .stats-grid-3 {
+        grid-template-columns: 1fr;
+    }
 }
 
 .stat-card {

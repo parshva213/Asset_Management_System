@@ -9,12 +9,13 @@ import Layout from "./components/Layout"
 
 // ---------- COMMON PAGES ----------
 import Login from "./pages/Login"
-import Register from "./pages/Register"
+
 import RoleSelection from "./pages/RoleSelection"
 import Profile from "./pages/Profile"
 import Dashboard from "./pages/Dashboard"
 import ResetPassword from "./pages/ResetPassword"
 import UpdatePassword from "./pages/UpdatePassword"
+import Register from "./pages/Register"
 
 // ---------- SUPER ADMIN PAGES ----------
 import Categories from "./pages/Categories"
@@ -31,11 +32,11 @@ import PurchaseOrders from "./pages/purchase-orders"
 import Requests from "./pages/Requests"
 import SupervisorDashboard from "./pages/SupervisorDashboard"
 import SupervisorReport from "./pages/SupervisorReport"
-import SupervisorDetails from "./pages/SupervisorDetails"
+
 
 // ---------- EMPLOYEE PAGES ----------
 import EmployeeDashboard from "./pages/EmployeeDashboard"
-import EmployeeDetails from "./pages/EmployeeDetails"
+
 
 // ---------- VENDOR PAGES ----------
 import SupplyAssets from "./pages/SupplyAssets"
@@ -67,6 +68,7 @@ function App() {
               {/* Public Routes */}
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+
               <Route path="/role-selection" element={<RoleSelection />} />
 
               <Route path="/reset-password" element={<ResetPassword />} />
@@ -100,12 +102,12 @@ function App() {
 
               {/* Supervisor */}
               <Route path="supervisor-dashboard" element={<ProtectedRoute roles={['Supervisor']}><SupervisorDashboard /></ProtectedRoute>} />
-              <Route path="supervisor-details" element={<ProtectedRoute roles={['Supervisor']}><SupervisorDetails /></ProtectedRoute>} />
+
               <Route path="supervisor-report" element={<ProtectedRoute roles={['Supervisor']}><SupervisorReport /></ProtectedRoute>} />
 
               {/* Employee */}
               <Route path="employee-dashboard" element={<ProtectedRoute roles={['Employee']}><EmployeeDashboard /></ProtectedRoute>} />
-              <Route path="employee-details" element={<ProtectedRoute roles={['Employee']}><EmployeeDetails /></ProtectedRoute>} />
+
 
               {/* Software Developer */}
               <Route path="sd-dashboard" element={<ProtectedRoute roles={['Software Developer']}><SDDashboard /></ProtectedRoute>} />

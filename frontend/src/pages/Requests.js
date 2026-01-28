@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useAuth } from "../contexts/AuthContext"
 import api from "../api"
+import { formatDate } from "../utils/dateUtils"
 
 const Requests = () => {
   const { user } = useAuth()
@@ -225,6 +226,7 @@ const Requests = () => {
         <table className="table">
           <thead>
             <tr>
+              <th>Date</th>
               <th>Priority</th>
               <th>Type</th>
               <th>Asset</th>
@@ -236,6 +238,7 @@ const Requests = () => {
           <tbody>
             {filteredRequests.map((request) => (
               <tr key={request.id} id={`req-${request.id}`}>
+                <td>{formatDate(request.created_at)}</td>
                 <td>
                   <span
                     style={{

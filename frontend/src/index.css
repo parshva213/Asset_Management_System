@@ -189,17 +189,7 @@ body {
   border-right: 1px solid rgba(148, 163, 184, .12);
 }
 
-.sidebar-header {
-  padding: 0 20px 16px;
-  border-bottom: 1px solid rgba(148, 163, 184, .12);
-  margin-bottom: 16px;
-}
 
-.sidebar-title {
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: .4px;
-}
 
 .sidebar-nav {
   list-style: none;

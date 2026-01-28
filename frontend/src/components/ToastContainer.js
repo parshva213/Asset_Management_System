@@ -5,6 +5,8 @@ import { useToast } from '../contexts/ToastContext'
 const ToastContainer = () => {
   const { toasts, removeToast } = useToast()
   
+  if (toasts.length === 0) return null
+
   return (
     <div className="toast-container">
       {toasts.map((toast) => (

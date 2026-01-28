@@ -315,31 +315,73 @@ app.get("/api/admin/dashboard", authenticate(["Super Admin", "Admin"]), async (r
     }
 });
 
+// ------------------ PUBLIC DATA FOR REGISTRATION ------------------
+app.get("/api/public/locations", async (req, res) => {
+    try {
+        const { org_id } = req.query;
+        let query = "SELECT id, name FROM locations";
+        let params = [];
+        if (org_id) {
+            query += " WHERE org_id = ?";
+            params.push(org_id);
+        }
+        const [locations] = await pool.query(query, params);
+        res.json(locations);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+app.get("/api/public/rooms/:locationId", async (req, res) => {
+    try {
+        const { locationId } = req.params;
+        const [rooms] = await pool.query("SELECT id, name FROM rooms WHERE location_id = ?", [locationId]);
+        res.json(rooms);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
 // ------------------ SUPERVISOR DASHBOARD ------------------
 app.get("/api/supervisor/dashboard", authenticate(["Supervisor"]), async (req, res) => {
     try {
-        const [assignedAssets] = await pool.query("SELECT COUNT(*) as count FROM assets WHERE status = 'Assigned'");
-        const [departmentUsers] = await pool.query("SELECT COUNT(*) as count FROM users WHERE role = 'Employee'");
-        const [pendingRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE status = 'Pending'");
-        const [maintenanceRequests] = await pool.query("SELECT COUNT(*) as count FROM maintenance_records WHERE status = 'Pending'");
-        const [totalRooms] = await pool.query("SELECT COUNT(*) as count FROM rooms");
-        const [totalOrders] = await pool.query("SELECT COUNT(*) as count FROM purchase_orders");
+        const org_id = req.user.org_id;
+
+        // Using OR org_id IS NULL to restore visibility if org_id is not set on records
+        const orgFilter = "AND (org_id = ? OR org_id IS NULL)";
+        const location_id = req.query.location_id;
+
+        const [assignedAssets] = await pool.query(`SELECT COUNT(*) as count FROM assets WHERE status = 'Assigned' ${orgFilter}`, [org_id]);
+        const [departmentUsers] = await pool.query(`SELECT COUNT(*) as count FROM users WHERE role = 'Employee' ${orgFilter}`, [org_id]);
+        const [pendingRequests] = await pool.query(`SELECT COUNT(*) as count FROM asset_requests WHERE status = 'Pending' ${orgFilter}`, [org_id]);
+        const [maintenanceRequests] = await pool.query(`SELECT COUNT(*) as count FROM maintenance_records WHERE status = 'Pending' ${orgFilter}`, [org_id]);
+        const [totalRooms] = await pool.query(`SELECT COUNT(*) as count FROM rooms r JOIN locations l ON r.location_id = l.id WHERE (l.org_id = ? OR l.org_id IS NULL)`, [org_id]);
+        const [totalOrders] = await pool.query(`SELECT COUNT(*) as count FROM purchase_orders po JOIN users u ON po.supervisor_id = u.id WHERE (u.org_id = ? OR u.org_id IS NULL)`, [org_id]);
+        
+        let locationAssets = 0;
+        if (location_id) {
+            const [locAssets] = await pool.query(`SELECT COUNT(*) as count FROM assets WHERE location_id = ? ${orgFilter}`, [location_id, org_id]);
+            locationAssets = locAssets[0].count;
+        }
+
         const [assignedAssetsList] = await pool.query(`
       SELECT a.id, a.name, u.name as assigned_to_name
       FROM assets a
       LEFT JOIN users u ON a.assigned_to = u.id
-      WHERE a.status = 'Assigned'
+      WHERE a.status = 'Assigned' ${orgFilter}
       ORDER BY a.id ASC
       LIMIT 5
-    `);
+    `, [org_id]);
         const [pendingRequestsList] = await pool.query(`
       SELECT ar.id, ar.description, u.name as requested_by_name
       FROM asset_requests ar
       LEFT JOIN users u ON ar.requested_by = u.id
-      WHERE ar.status = 'Pending'
+      WHERE ar.status = 'Pending' ${orgFilter}
       ORDER BY ar.id ASC
       LIMIT 5
-    `);
+    `, [org_id]);
 
         res.json({
             assignedAssets: assignedAssets[0].count,
@@ -348,6 +390,7 @@ app.get("/api/supervisor/dashboard", authenticate(["Supervisor"]), async (req, r
             maintenanceRequests: maintenanceRequests[0].count,
             totalRooms: totalRooms[0].count,
             totalOrders: totalOrders[0].count,
+            locationAssets,
             assignedAssetsList,
             pendingRequestsList,
         });
@@ -481,10 +524,12 @@ app.get("/api/maintenance/dashboard", authenticate(["Maintenance", "Super Admin"
 // });
 
 app.post("/api/users", authenticate(["Super Admin", "Admin"]), async (req, res) => {
-    const { name, email, password, role, department, phone } = req.body;
+    const { name, email, password, role, department, phone, org_id } = req.body;
+    const finalOrgId = org_id || req.user.org_id;
     const unpk = req.body.unpk || generateKey(5);
     await pool.query(
-        "INSERT INTO users (name, email, password, role, department, phone, unpk) VALUES (?, ?, ?, ?, ?, ?, ?)", [name, email, password, role, department || null, phone || null, unpk]
+        "INSERT INTO users (name, email, password, role, department, phone, unpk, org_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 
+        [name, email, password, role, department || null, phone || null, unpk, finalOrgId]
     );
     res.json({ success: true });
 });

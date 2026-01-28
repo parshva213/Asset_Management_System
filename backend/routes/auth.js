@@ -30,34 +30,25 @@ export const authenticate = (roles = []) => {
 };
 
 router.post("/register", async (req, res) => {
-  const { name, email, password, role, department, phone, orgId, unpk } = req.body;
+  const { name, email, password, role, department, phone, orgId, unpk, room_id } = req.body;
   try {
-    const [existsResult] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
+    const [existsResult] = await db.query("SELECT id FROM users WHERE email = ?", [email]);
     if (existsResult.length > 0) return res.status(400).json({ message: "Email already exists" });
 
     let normalizedRole = role;
     if (role === "IT Supervisor") normalizedRole = "Supervisor";
     if (role === "Maintenance Staff") normalizedRole = "Maintenance";
     if (role === "Software Developer") normalizedRole = "software developer";
-    // We can assume `unpk` might be needed for some legacy reason or consistency, so we generate it uniquely too.
-    
-    // Use provided ownpk (if valid/unique check needed? we should probably check uniqueness if provided)
-    // For now, if provided ownpk exists, we might error or retry? 
-    // The implementation plan says: Check if ownpk is provided. If so, verify uniqueness. If duplicate, return 400.
     
     const ownpk = await generateUniqueKey();
-    let org_id = null;
-    if(orgId){
-      org_id = orgId;
-    }
-
+    
     // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const [result] = await db.query(
-      "INSERT INTO users (name, email, password, role, department, phone, unpk, ownpk, org_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      [name, email, hashedPassword, normalizedRole, department || null, phone || null, unpk || null, ownpk, orgId || null]
+      "INSERT INTO users (name, email, password, role, department, phone, unpk, ownpk, org_id, room_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [name, email, hashedPassword, normalizedRole, department || null, phone || null, unpk || null, ownpk, orgId || null, room_id || null]
     );
 console.log(result)
     const userId = result.insertId;
