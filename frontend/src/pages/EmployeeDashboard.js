@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback } from "react"
 import { useAuth } from "../contexts/AuthContext"
 import { Link } from "react-router-dom"
 import api from "../api"
-import { formatDate } from "../utils/dateUtils"
 
 const EmployeeDashboard = () => {
     const { user, logout } = useAuth()

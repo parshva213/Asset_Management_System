@@ -3,10 +3,9 @@ import { useState, useEffect, useCallback } from "react"
 import { useAuth } from "../contexts/AuthContext"
 import { Link } from "react-router-dom"
 import api from "../api"
-import { formatDate } from "../utils/dateUtils"
 
 const SupervisorDashboard = () => {
-    const { user, logout, updateProfile } = useAuth()
+    const { user, logout } = useAuth()
     const [stats, setStats] = useState({
         totalAssets: 0,
         assignedAssets: 0,
@@ -171,12 +170,12 @@ const SupervisorDashboard = () => {
                         <div>
                             <div className="stat-icon-new purple">👥</div>
                             <span className="stat-label-new">Team Members</span>
-                            <h3 className="stat-value-new" style={!user?.location_id ? { fontSize: '1.25rem' } : {}}>
-                                {user?.location_id ? stats.departmentUsers : "Location not set"}
+                            <h3 className="stat-value-new" style={!user?.loc_id ? { fontSize: '1.25rem' } : {}}>
+                                {user?.loc_id ? stats.departmentUsers : "Location not set"}
                             </h3>
                         </div>
                         <div className="stat-footer-new">
-                            {user?.location_id ? (
+                            {user?.loc_id ? (
                                 <Link to="/users">View Details →</Link>
                             ) : (
                                     ""
@@ -189,12 +188,12 @@ const SupervisorDashboard = () => {
                         <div>
                             <div className="stat-icon-new green">📦</div>
                             <span className="stat-label-new">Assigned Assets</span>
-                            <h3 className="stat-value-new" style={!user?.location_id ? { fontSize: '1.25rem' } : {}}>
-                                {user?.location_id ? stats.assignedAssets : "Location not set"}
+                            <h3 className="stat-value-new" style={!user?.loc_id ? { fontSize: '1.25rem' } : {}}>
+                                {user?.loc_id ? stats.assignedAssets : "Location not set"}
                             </h3>
                         </div>
                         <div className="stat-footer-new">
-                            {user?.location_id ? (
+                            {user?.loc_id ? (
                                 <Link to="/assets">View full details →</Link>
                             ) : ""}
                         </div>
@@ -205,12 +204,12 @@ const SupervisorDashboard = () => {
                         <div>
                             <div className="stat-icon-new blue">🏢</div>
                             <span className="stat-label-new">Location Assets</span>
-                            <h3 className="stat-value-new" style={!user?.location_id ? { fontSize: '1.25rem' } : {}}>
-                                {user?.location_id ? stats.totalAssets : "Location not set"}
+                            <h3 className="stat-value-new" style={!user?.loc_id ? { fontSize: '1.25rem' } : {}}>
+                                {user?.loc_id ? stats.totalAssets : "Location not set"}
                             </h3>
                         </div>
                         <div className="stat-footer-new">
-                            {user?.location_id ? (
+                            {user?.loc_id ? (
                                 <Link to="/assets">View full details →</Link>
                             ) : ""}
                         </div>
@@ -221,12 +220,12 @@ const SupervisorDashboard = () => {
                         <div>
                             <div className="stat-icon-new orange">📝</div>
                             <span className="stat-label-new">Pending Req.</span>
-                            <h3 className="stat-value-new" style={!user?.location_id ? { fontSize: '1.25rem' } : {}}>
-                                {user?.location_id ? stats.pendingRequests : "Location not set"}
+                            <h3 className="stat-value-new" style={!user?.loc_id ? { fontSize: '1.25rem' } : {}}>
+                                {user?.loc_id ? stats.pendingRequests : "Location not set"}
                             </h3>
                         </div>
                         <div className="stat-footer-new">
-                            {user?.location_id ? (
+                            {user?.loc_id ? (
                                 <Link to="/requests">View full details →</Link>
                             ) : ""}
                         </div>
@@ -237,12 +236,12 @@ const SupervisorDashboard = () => {
                         <div>
                             <div className="stat-icon-new cyan">🛒</div>
                             <span className="stat-label-new">Orders</span>
-                            <h3 className="stat-value-new" style={!user?.location_id ? { fontSize: '1.25rem' } : {}}>
-                                {user?.location_id ? stats.totalOrders : "Location not set"}
+                            <h3 className="stat-value-new" style={!user?.loc_id ? { fontSize: '1.25rem' } : {}}>
+                                {user?.loc_id ? stats.totalOrders : "Location not set"}
                             </h3>
                         </div>
                         <div className="stat-footer-new">
-                            {user?.location_id ? (
+                            {user?.loc_id ? (
                                 <Link to="/purchase-orders">View full details →</Link>
                             ) : ""}
                         </div>
@@ -300,7 +299,6 @@ const SupervisorDashboard = () => {
                                                 const occupancy = room.current_occupancy || 0
                                                 const capacity = room.capacity || 10
                                                 const percentage = Math.min((occupancy / capacity) * 100, 100)
-                                                const isFull = occupancy >= capacity && room.id !== user.room_id 
                                                 const isSelected = selectedRoom === room.id
                                                 
                                                 return (

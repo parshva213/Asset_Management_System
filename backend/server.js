@@ -490,13 +490,7 @@ app.post("/api/users", authenticate(["Super Admin", "Admin"]), async (req, res) 
     res.json({ success: true });
 });
 
-app.put("/api/users/:id", authenticate(["Super Admin"]), async (req, res) => {
-    const { loc_id } = req.body;
-    await pool.query(
-        "UPDATE users SET loc_id=? WHERE id=?", [loc_id, req.params.id]
-    );
-    res.json({ success: true });
-});
+
 
 app.delete("/api/users/:id", authenticate(["Super Admin", "Admin"]), async (req, res) => {
     await pool.query("DELETE FROM users WHERE id=?", [req.params.id]);
