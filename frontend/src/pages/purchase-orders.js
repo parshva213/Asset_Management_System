@@ -94,6 +94,19 @@ export default function PurchaseOrders() {
     return <div className="loading">Loading purchase orders...</div>
   }
 
+  if (user?.role === "Supervisor" && !user?.room_id) {
+    return (
+      <div className="content">
+        <div className="flex-center h-full">
+           <div className="empty-state">
+             <h3>Set your location first</h3>
+             <p className="text-secondary">You need to be assigned to a room to view purchase orders.</p>
+           </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div>
       <div className="flex-between mb-4">

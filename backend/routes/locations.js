@@ -22,7 +22,8 @@ router.get("/", verifyToken, async (req, res) => {
 router.get("/rooms", verifyToken, async (req, res) => {
   try {
     const [rows] = await db.query(`
-      SELECT r.*, l.name as location_name 
+      SELECT r.*, l.name as location_name,
+      (SELECT COUNT(*) FROM users u WHERE u.room_id = r.id) as current_occupancy
       FROM rooms r 
       LEFT JOIN locations l ON r.location_id = l.id 
       WHERE l.org_id = ?
@@ -38,8 +39,11 @@ router.get("/rooms", verifyToken, async (req, res) => {
 router.get("/:id", verifyToken, async (req, res) => {
   try {
     const { id } = req.params
-    const [rows] = await db.query("SELECT * FROM locations WHERE id = ? AND org_id = ?", [id, req.user.org_id])
-    
+    if (req.user.org_id && id) {
+      const [rows] = await db.query("SELECT * FROM locations WHERE id = ? AND org_id = ?", [id, req.user.org_id])
+    } else {
+      const [rows] = await db.query("SELECT * FROM locations WHERE org_id = ?", [id])
+    }
     if (rows.length === 0) {
       return res.status(404).json({ message: "Location not found" })
     }

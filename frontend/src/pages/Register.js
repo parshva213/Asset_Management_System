@@ -21,6 +21,10 @@ const Register = () => {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState("")
   const [role, setRole] = useState("")
+  const [locations, setLocations] = useState([])
+  const [rooms, setRooms] = useState([])
+  const [selectedLocation, setSelectedLocation] = useState("")
+  const [selectedRoom, setSelectedRoom] = useState("")
   // Validation States
   const [validations, setValidations] = useState({
       name: null,
@@ -28,7 +32,9 @@ const Register = () => {
       password: null,
       confirm: null,
       department: null,
-      phone: null
+      phone: null,
+      location: null,
+      room: null
   })
 
   useEffect(() => {
@@ -43,6 +49,42 @@ const Register = () => {
     }
   }, [location, navigate])
 
+  // Fetch locations when role is Supervisor and orgId is available
+  useEffect(() => {
+    if (role === "Supervisor" && location.state?.orgId) {
+      const fetchLocations = async () => {
+        try {
+          const response = await api.get(`/auth/public/locations/${location.state.orgId}`)
+          setLocations(response.data)
+        } catch (error) {
+          console.error("Error fetching locations:", error)
+          setMessage("Failed to load locations")
+        }
+      }
+      fetchLocations()
+    }
+  }, [role, location.state?.orgId])
+
+  // Fetch rooms when a location is selected
+  useEffect(() => {
+    if (selectedLocation) {
+      const fetchRooms = async () => {
+        try {
+          const response = await api.get(`/auth/public/rooms/${selectedLocation}`)
+          setRooms(response.data)
+          setSelectedRoom("") // Reset room selection when location changes
+        } catch (error) {
+          console.error("Error fetching rooms:", error)
+          setMessage("Failed to load rooms")
+        }
+      }
+      fetchRooms()
+    } else {
+      setRooms([])
+      setSelectedRoom("")
+    }
+  }, [selectedLocation])
+
   // Real-time Validation Effect
   // Real-time Validation Effect
   useEffect(() => {
@@ -52,9 +94,11 @@ const Register = () => {
           password: formData.password.length >= 6,
           confirm: formData.password === formData.confirmPassword,
           phone: formData.phone.length === 10,
-          department:formData.department.trim().length >= 2
+          department:formData.department.trim().length >= 2,
+          location: role === "Supervisor" ? selectedLocation !== "" : true,
+          room: role === "Supervisor" ? selectedRoom !== "" : true
       })
-  }, [formData, role])
+  }, [formData, role, selectedLocation, selectedRoom])
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -70,6 +114,13 @@ const Register = () => {
       setMessage("Please fill all the fields correctly")
       return
     }
+    
+    // Additional validation for Supervisor role
+    if (role === "Supervisor" && (!selectedLocation || !selectedRoom)) {
+      setMessage("Please select both location and room")
+      return
+    }
+    
     if (!formData.name || !formData.email || !formData.password || !formData.phone)
     setMessage("All fields are required");
 
@@ -85,7 +136,9 @@ const Register = () => {
         department: formData.department || "",
         phone: formData.phone,
         orgId: location.state?.orgId,
-        unpk: location.state?.regKey || ""
+        unpk: location.state?.regKey || "",
+        loc_id: role === "Supervisor" ? selectedLocation : null,
+        room_id: role === "Supervisor" ? selectedRoom : null
       })
 
       setMessage("Registration successful! Redirecting to login...")
@@ -179,7 +232,7 @@ const Register = () => {
           </div>
 
           {/* Optional fields based on role could go here, e.g. Department for Employees */}
-          {['Employee', 'Supervisor', 'Maintenance Staff', 'IT Supervisor'].includes(role) && (
+          {['Employee', 'Supervisor', 'Maintenance Staff'].includes(role) && (
              <div className="form-group input-group">
                 <label className="form-label">Department (Optional)</label>
                 <input
@@ -218,6 +271,46 @@ const Register = () => {
                 placeholder="Enter your company name"
                 required
                 />
+            </div>
+          )}
+
+          {/* Location Selection for Supervisor */}
+          {role === 'Supervisor' && (
+            <div className="form-group input-group">
+              <label className="form-label">Location</label>
+              <select
+                className={`form-input ${selectedLocation === '' ? '' : validations.location ? 'input-valid' : 'input-invalid'}`}
+                value={selectedLocation}
+                onChange={(e) => setSelectedLocation(e.target.value)}
+                required
+              >
+                <option value="">Select a location</option>
+                {locations.map((loc) => (
+                  <option key={loc.id} value={loc.id}>
+                    {loc.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Room Selection for Supervisor - Only shows when location is selected */}
+          {role === 'Supervisor' && selectedLocation && (
+            <div className="form-group input-group">
+              <label className="form-label">Room</label>
+              <select
+                className={`form-input ${selectedRoom === '' ? '' : validations.room ? 'input-valid' : 'input-invalid'}`}
+                value={selectedRoom}
+                onChange={(e) => setSelectedRoom(e.target.value)}
+                required
+              >
+                <option value="">Select a room</option>
+                {rooms.map((room) => (
+                  <option key={room.id} value={room.id}>
+                    {room.name}
+                  </option>
+                ))}
+              </select>
             </div>
           )}
           

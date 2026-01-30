@@ -139,7 +139,7 @@ const Employees = () => {
                 <button onClick={() => openDetailsModal(employee)} className="btn btn-secondary flex-1">
                   View Details
                 </button>
-                {(user?.role === "Super Admin" || user?.role === "IT Supervisor") && (
+                {(user?.role === "Super Admin" || user?.role === "Supervisor") && (
                   <button onClick={() => openAssignModal(employee)} className="btn btn-primary flex-1">
                     Assign Asset
                   </button>
@@ -181,7 +181,7 @@ const Employees = () => {
                       <span>
                         {asset.name} - {asset.serial_number}
                       </span>
-                      {(user?.role === "Super Admin" || user?.role === "IT Supervisor") && (
+                      {(user?.role === "Super Admin" || user?.role === "Supervisor") && (
                         <button
                           onClick={() => {
                             handleUnassignAsset(detailsEmployee.id, asset.id);

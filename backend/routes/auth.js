@@ -30,13 +30,12 @@ export const authenticate = (roles = []) => {
 };
 
 router.post("/register", async (req, res) => {
-  const { name, email, password, role, department, phone, orgId, unpk } = req.body;
+  const { name, email, password, role, department, phone, orgId, unpk, loc_id, room_id } = req.body;
   try {
     const [existsResult] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
     if (existsResult.length > 0) return res.status(400).json({ message: "Email already exists" });
 
     let normalizedRole = role;
-    if (role === "IT Supervisor") normalizedRole = "Supervisor";
     if (role === "Maintenance Staff") normalizedRole = "Maintenance";
     if (role === "Software Developer") normalizedRole = "software developer";
     // We can assume `unpk` might be needed for some legacy reason or consistency, so we generate it uniquely too.
@@ -56,8 +55,8 @@ router.post("/register", async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const [result] = await db.query(
-      "INSERT INTO users (name, email, password, role, department, phone, unpk, ownpk, org_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      [name, email, hashedPassword, normalizedRole, department || null, phone || null, unpk || null, ownpk, orgId || null]
+      "INSERT INTO users (name, email, password, role, department, phone, unpk, ownpk, org_id, loc_id, room_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [name, email, hashedPassword, normalizedRole, department || null, phone || null, unpk || null, ownpk, orgId || null, loc_id || null, room_id || null]
     );
 console.log(result)
     const userId = result.insertId;
@@ -76,9 +75,12 @@ router.post("/login", async (req, res) => {
   const { email, password } = req.body;
   try {
     const [userResult] = await db.query(
-      `SELECT u.id, u.name, u.email, u.password, u.role, u.department, u.phone, u.ownpk, u.org_id, o.name as organization_name, u.status
+      `SELECT u.id, u.name, u.email, u.password, u.role, u.department, u.phone, u.ownpk, u.org_id, 
+              o.name as organization_name, u.status, u.loc_id, l.name as location_name, u.room_id, r.name as room_name
        FROM users u
        LEFT JOIN organizations o ON u.org_id = o.id
+       LEFT JOIN locations l ON u.loc_id = l.id
+       LEFT JOIN rooms r ON u.room_id = r.id
        WHERE u.email = ?`,
       [email]
     );
@@ -113,9 +115,12 @@ router.post("/login", async (req, res) => {
 router.get("/profile", authenticate(), async (req, res) => {
   try {
     const [result] = await db.query(
-      `SELECT u.id, u.name, u.email, u.role, u.department, u.phone, u.unpk, u.ownpk, u.created_at, u.org_id, o.name as organization_name
+      `SELECT u.id, u.name, u.email, u.role, u.department, u.phone, u.unpk, u.ownpk, u.created_at, u.org_id, 
+              o.name as organization_name, u.loc_id, l.name as location_name, u.room_id, r.name as room_name
        FROM users u
        LEFT JOIN organizations o ON u.org_id = o.id
+       LEFT JOIN locations l ON u.loc_id = l.id
+       LEFT JOIN rooms r ON u.room_id = r.id
        WHERE u.id = ?`,
       [req.user.id]
     );
@@ -271,7 +276,7 @@ router.post("/verify-registration-key", async (req, res) => {
         return res.json({
           type: "admin_referral",
         referrerName: user.name,
-          allowedRoles: ["IT Supervisor", "Maintenance Staff"],
+          allowedRoles: ["Supervisor", "Maintenance Staff"],
           orgId: user.org_id,
           unpk: key
         });
@@ -290,6 +295,36 @@ router.post("/verify-registration-key", async (req, res) => {
     res.status(400).json({ message: "Invalid registration key" });
   } catch (err) {
     console.error("Key Verification Error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Public endpoint to fetch locations for registration (no auth required)
+router.get("/public/locations/:orgId", async (req, res) => {
+  const { orgId } = req.params;
+  try {
+    const [locations] = await db.query(
+      "SELECT id, name FROM locations WHERE org_id = ? ORDER BY name ASC",
+      [orgId]
+    );
+    res.json(locations);
+  } catch (err) {
+    console.error("Error fetching locations:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Public endpoint to fetch rooms by location for registration (no auth required)
+router.get("/public/rooms/:locationId", async (req, res) => {
+  const { locationId } = req.params;
+  try {
+    const [rooms] = await db.query(
+      "SELECT id, name, location_id FROM rooms WHERE location_id = ? ORDER BY name ASC",
+      [locationId]
+    );
+    res.json(rooms);
+  } catch (err) {
+    console.error("Error fetching rooms:", err);
     res.status(500).json({ message: "Server error" });
   }
 });

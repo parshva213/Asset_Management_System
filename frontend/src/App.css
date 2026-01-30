@@ -710,7 +710,7 @@ body.dark .role-option:hover {
 }
 
 .content {
-    padding: 1rem 2rem;
+    padding: 0rem 2rem;
 }
 
 /* Scrollbar hidden hack removed to allow scrolling on small screens */

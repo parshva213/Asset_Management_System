@@ -6,7 +6,7 @@ import api from "../api"
 import { formatDate } from "../utils/dateUtils"
 
 const SupervisorDashboard = () => {
-    const { user, logout } = useAuth()
+    const { user, logout, updateProfile } = useAuth()
     const [stats, setStats] = useState({
         totalAssets: 0,
         assignedAssets: 0,
@@ -15,10 +15,19 @@ const SupervisorDashboard = () => {
         maintenanceRequests: 0,
         totalRooms: 0,
         totalOrders: 0,
+        departmentUsers: 0,
         assignedAssetsList: [],
         pendingRequestsList: []
     })
     const [loading, setLoading] = useState(true)
+    
+    // Room Registration Modal State
+    const [showRoomModal, setShowRoomModal] = useState(false)
+    const [locations, setLocations] = useState([])
+    const [rooms, setRooms] = useState([])
+    const [selectedLocation, setSelectedLocation] = useState("")
+    const [selectedRoom, setSelectedRoom] = useState("")
+    const [registering, setRegistering] = useState(false)
 
     const fetchDashboardData = useCallback(async () => {
         try {
@@ -40,9 +49,6 @@ const SupervisorDashboard = () => {
                     pendingRequestsList: data.pendingRequestsList || []
                 })
             }
-
-
-
         } catch (error) {
             console.error("Error fetching dashboard data:", error)
             if (error.response?.status === 403) logout()
@@ -55,6 +61,65 @@ const SupervisorDashboard = () => {
         fetchDashboardData()
     }, [fetchDashboardData])
 
+    // Load locations when modal opens
+    useEffect(() => {
+        if (showRoomModal) {
+            fetchLocations()
+        }
+    }, [showRoomModal])
+
+    const fetchLocations = async () => {
+        try {
+            const response = await api.get("/locations")
+            setLocations(response.data)
+        } catch (error) {
+            console.error("Error fetching locations:", error)
+        }
+    }
+
+    const handleLocationChange = async (e) => {
+        const locationId = e.target.value
+        setSelectedLocation(locationId)
+        setSelectedRoom("") // Reset room
+        if (locationId) {
+            try {
+                const response = await api.get("/locations/rooms")
+                const filtered = response.data.filter(r => r.location_id === parseInt(locationId))
+                setRooms(filtered)
+            } catch (error) {
+                console.error("Error fetching rooms:", error)
+            }
+        } else {
+            setRooms([])
+        }
+    }
+
+    const handleRegisterRoom = async (e) => {
+        e.preventDefault()
+        if (!selectedLocation) return
+        
+        setRegistering(true)
+        try {
+            await api.put(`/users/${user.id}`, {
+                loc_id: selectedLocation,
+                room_id: selectedRoom || null 
+            })
+            
+            // Refresh dashboard/user data
+            // Assuming updateProfile refetches user or we reload
+            window.location.reload() 
+        } catch (error) {
+            console.error("Error updating room:", error)
+        } finally {
+            setRegistering(false)
+        }
+    }
+
+    const getInitials = (name) => {
+        if (!name) return "U"
+        return name.split(" ").map(n => n[0]).join("").toUpperCase().substring(0, 2)
+    }
+
     if (loading) {
         return <div className="loading">Loading dashboard...</div>
     }
@@ -63,102 +128,227 @@ const SupervisorDashboard = () => {
         <div className="dashboard-layout supervisor-dashboard">
             <div className="dashboard-top-row">
                 {/* Profile Card */}
-                <div className="profile-card">
-                    <div className="card-header">
-                        <img
-                            src={`https://ui-avatars.com/api/?name=${user?.name}&background=6366f1&color=fff`}
-                            alt="Profile"
-                            className="profile-avatar"
-                        />
-                        <div className="profile-info">
-                            <h3>Hi, {user?.name} 👋</h3>
-                           <span className="badge badge-high">Supervisor</span>
+                <div className="profile-card-new">
+                    <div className="profile-header-new">
+                        <div className="avatar-circle">
+                            {getInitials(user?.name)}
+                        </div>
+                        <div className="profile-greeting">
+                            <h3>Hi, {user?.name || "Supervisor"}</h3>
+                            <span className="waving-hand">👋</span>
+                            <span className="role-badge-new">Supervisor</span>
                         </div>
                     </div>
-                    <div className="card-body">
-                        <div className="profile-detail-item">
-                            <span>📧</span> {user?.email}
+                    <div className="profile-details-new">
+                        <div className="info-row">
+                            <span className="info-icon">📧</span> {user?.email}
                         </div>
-                        <div className="profile-detail-item">
-                            <span>🛡️</span> {user?.role} - {user?.department || 'General'}
+                        <div className="info-row">
+                            <span className="info-icon">📞</span> {user?.phone || "Not set"}
                         </div>
-                        <div className="profile-detail-item">
-                            <span>🔑</span> {user?.ownpk || 'Not set'}
+                        <div className="info-row">
+                            <span className="info-icon">🛡️</span> {user?.role} - {user?.department || "General"}
                         </div>
-                        <div className="profile-detail-item">
-                            <span>📞</span> {user?.phone || 'Not set'}
+                        <div className="info-row">
+                            <span className="info-icon">🔑</span> {user?.ownpk || "Not set"}
                         </div>
-                        <div className="profile-detail-item">
-                            <span>📅</span> Joined {user?.created_at ? formatDate(user.created_at) : 'N/A'}
+                        <div className="info-row">
+                            <span className="info-icon">📍</span> {user?.room_name || "Not assigned"}
+                        </div>
+                        <div className="info-row">
+                            <span className="info-icon">🏢</span> {user?.location_name || "Not assigned"}
                         </div>
                     </div>
-                    <div className="card-footer">
-                        <Link to="/profile">
-                            View full details →
-                        </Link>
+                    <div className="profile-footer-new">
+                        <Link to="/profile">Update Profile →</Link>
                     </div>
                 </div>
 
                 {/* Stats Grid */}
-                <div className="stats-grid-2">
-                    <div className="stat-widget">
+                <div className="stats-grid-3">
+                    {/* Team Members */}
+                    <div className="stat-widget-new">
                         <div>
-                            <div className="stat-icon-wrapper" style={{background: '#10b981'}}>
-                                📦
-                            </div>
-                            <div className="stat-title">Assigned Assets</div>
-                            <div className="stat-value">{stats.assignedAssets >= 10 ? `${Math.floor(stats.assignedAssets / 10) * 10}+` : stats.assignedAssets}</div>
+                            <div className="stat-icon-new purple">👥</div>
+                            <span className="stat-label-new">Team Members</span>
+                            <h3 className="stat-value-new" style={!user?.location_id ? { fontSize: '1.25rem' } : {}}>
+                                {user?.location_id ? stats.departmentUsers : "Location not set"}
+                            </h3>
                         </div>
-                         <div className="card-footer">
-                             <Link to="/assets">
-                                View full details →
-                            </Link>
+                        <div className="stat-footer-new">
+                            {user?.location_id ? (
+                                <Link to="/users">View Details →</Link>
+                            ) : (
+                                    ""
+                            )}
                         </div>
                     </div>
-                    <div className="stat-widget">
+
+                    {/* Assigned Assets */}
+                    <div className="stat-widget-new">
                         <div>
-                            <div className="stat-icon-wrapper" style={{background: '#f59e0b'}}>
-                                📝
-                            </div>
-                            <div className="stat-title">Pending Req.</div>
-                            <div className="stat-value">{stats.pendingRequests >= 10 ? `${Math.floor(stats.pendingRequests / 10) * 10}+` : stats.pendingRequests}</div>
+                            <div className="stat-icon-new green">📦</div>
+                            <span className="stat-label-new">Assigned Assets</span>
+                            <h3 className="stat-value-new" style={!user?.location_id ? { fontSize: '1.25rem' } : {}}>
+                                {user?.location_id ? stats.assignedAssets : "Location not set"}
+                            </h3>
                         </div>
-                        <div className="card-footer">
-                            <Link to="/requests">
-                                View full details →
-                            </Link>
+                        <div className="stat-footer-new">
+                            {user?.location_id ? (
+                                <Link to="/assets">View full details →</Link>
+                            ) : ""}
                         </div>
                     </div>
-                     <div className="stat-widget">
+
+                    {/* Location Assets */}
+                    <div className="stat-widget-new">
                         <div>
-                            <div className="stat-icon-wrapper" style={{background: '#8b5cf6'}}>
-                                 📍
-                            </div>
-                            <div className="stat-title">Manage Rooms</div>
-                            <div className="stat-value">{stats.totalRooms >= 10 ? `${Math.floor(stats.totalRooms / 10) * 10}+` : stats.totalRooms}</div>
+                            <div className="stat-icon-new blue">🏢</div>
+                            <span className="stat-label-new">Location Assets</span>
+                            <h3 className="stat-value-new" style={!user?.location_id ? { fontSize: '1.25rem' } : {}}>
+                                {user?.location_id ? stats.totalAssets : "Location not set"}
+                            </h3>
                         </div>
-                        <div className="card-footer">
-                             <Link to="/locations">
-                                View full details →
-                            </Link>
+                        <div className="stat-footer-new">
+                            {user?.location_id ? (
+                                <Link to="/assets">View full details →</Link>
+                            ) : ""}
                         </div>
                     </div>
-                    <div className="stat-widget">
+
+                    {/* Pending Requests */}
+                    <div className="stat-widget-new">
                         <div>
-                            <div className="stat-icon-wrapper" style={{background: '#06b6d4'}}>
-                                 🛒
-                            </div>
-                            <div className="stat-title">Orders</div>
-                            <div className="stat-value">{stats.totalOrders >= 10 ? `${Math.floor(stats.totalOrders / 10) * 10}+` : stats.totalOrders}</div>
+                            <div className="stat-icon-new orange">📝</div>
+                            <span className="stat-label-new">Pending Req.</span>
+                            <h3 className="stat-value-new" style={!user?.location_id ? { fontSize: '1.25rem' } : {}}>
+                                {user?.location_id ? stats.pendingRequests : "Location not set"}
+                            </h3>
                         </div>
-                        <div className="card-footer">
-                             <Link to="/purchase-orders">
-                                View full details →
-                            </Link>
+                        <div className="stat-footer-new">
+                            {user?.location_id ? (
+                                <Link to="/requests">View full details →</Link>
+                            ) : ""}
+                        </div>
+                    </div>
+
+                    {/* Orders */}
+                    <div className="stat-widget-new">
+                        <div>
+                            <div className="stat-icon-new cyan">🛒</div>
+                            <span className="stat-label-new">Orders</span>
+                            <h3 className="stat-value-new" style={!user?.location_id ? { fontSize: '1.25rem' } : {}}>
+                                {user?.location_id ? stats.totalOrders : "Location not set"}
+                            </h3>
+                        </div>
+                        <div className="stat-footer-new">
+                            {user?.location_id ? (
+                                <Link to="/purchase-orders">View full details →</Link>
+                            ) : ""}
+                        </div>
+                    </div>
+
+                    {/* Room Status */}
+                    <div className="stat-widget-new">
+                        <div>
+                            <div className="stat-icon-new purple">📍</div>
+                            <span className="stat-label-new">Room Status</span>
+                            <h3 className="stat-value-new" style={{ fontSize: '1.5rem' }}>
+                                {user?.room_name || "Not assigned"}
+                            </h3>
+                            <span className="stat-label-new" style={{ marginTop: '0.25rem' }}>
+                                {user?.location_name || "No location set"}
+                            </span>
+                        </div>
+                        <div className="stat-footer-new">
+                            <button onClick={() => setShowRoomModal(true)}>Register Now →</button>
                         </div>
                     </div>
                 </div>
             </div>
+
+            {/* Room Registration Modal New Design */}
+            {showRoomModal && (
+                <div className="modal-overlay">
+                    <div className="modal-new">
+                        <div className="modal-header-new">
+                            <h3 className="modal-title-new">Register to Location & Room</h3>
+                            <button className="close-btn-new" onClick={() => setShowRoomModal(false)}>×</button>
+                        </div>
+                        <form onSubmit={handleRegisterRoom}>
+                            <div style={{marginBottom: '1.5rem'}}>
+                                <label className="form-label-new">Select Location</label>
+                                <select 
+                                    className="form-select-new" 
+                                    value={selectedLocation} 
+                                    onChange={handleLocationChange}
+                                    required
+                                >
+                                    <option value="">Select Location</option>
+                                    {locations.map(loc => (
+                                        <option key={loc.id} value={loc.id}>{loc.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            
+                            {selectedLocation && (
+                                <div>
+                                    <label className="form-label-new">Select Room</label>
+                                    {rooms.length > 0 ? (
+                                        <div className="room-grid">
+                                            {rooms.map(room => {
+                                                const occupancy = room.current_occupancy || 0
+                                                const capacity = room.capacity || 10
+                                                const percentage = Math.min((occupancy / capacity) * 100, 100)
+                                                const isFull = occupancy >= capacity && room.id !== user.room_id 
+                                                const isSelected = selectedRoom === room.id
+                                                
+                                                return (
+                                                    <div 
+                                                        key={room.id} 
+                                                        className={`room-card ${isSelected ? 'selected' : ''}`}
+                                                        onClick={() => setSelectedRoom(room.id)}
+                                                    >
+                                                        <div className="room-name">{room.name}</div>
+                                                        <div className="room-floor">Floor {room.floor}</div>
+                                                        <div className="progress-container">
+                                                            <div className="progress-label">
+                                                                <span>{occupancy}/{capacity}</span>
+                                                            </div>
+                                                            <div className="progress-bar-bg">
+                                                                <div 
+                                                                    className={`progress-bar-fill ${percentage >= 100 ? 'full' : percentage >= 80 ? 'near-full' : ''}`} 
+                                                                    style={{width: `${percentage}%`}}
+                                                                ></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <p style={{color: '#94a3b8', fontStyle: 'italic'}}>No rooms available in this location.</p>
+                                    )}
+                                </div>
+                            )}
+
+                            <div className="modal-actions">
+                                <button type="button" className="btn-cancel" onClick={() => setShowRoomModal(false)}>
+                                    Cancel
+                                </button>
+                                <button 
+                                    type="submit" 
+                                    className={`btn-save ${selectedLocation && (selectedRoom || rooms.length ===0) ? 'active' : ''}`} 
+                                    disabled={registering || !selectedLocation}
+                                    style={(!selectedLocation) ? {opacity: 0.5, cursor: 'not-allowed'} : {}}
+                                >
+                                    {registering ? "Updating..." : "Update Location"}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

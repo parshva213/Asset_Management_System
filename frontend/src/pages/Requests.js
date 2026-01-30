@@ -160,13 +160,26 @@ const Requests = () => {
     return <div className="loading">Loading requests...</div>
   }
 
+  if ((user?.role === "Supervisor" || user?.role === "Employee") && !user?.room_id) {
+    return (
+      <div className="content">
+        <div className="flex-center h-full">
+           <div className="empty-state">
+             <h3>Set your location first</h3>
+             <p className="text-secondary">You need to be assigned to a room to view requests.</p>
+           </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div>
       <div className="flex-between mb-4">
         <h2>
           {user?.role === "Employee"
             ? "My Requests"
-            : user?.role === "IT Supervisor"
+            : user?.role === "Supervisor"
               ? "Request Management"
               : "All Requests"}
         </h2>
@@ -271,7 +284,7 @@ const Requests = () => {
                         </button>
                       </>
                     )}
-                    {(user?.role === "IT Supervisor" || user?.role === "Super Admin") && (
+                    {(user?.role === "Supervisor" || user?.role === "Super Admin") && (
                       <>
                         {request.status === "Pending" && (
                           <>

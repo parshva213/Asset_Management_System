@@ -9,13 +9,16 @@ router.get("/", verifyToken, async (req, res) => {
       return res.status(403).json({ message: "Access denied" })
     }
     
-    const [org_id_rows] = await db.execute("SELECT org_id FROM users WHERE id = ?", [req.user.id]);
-    const org_id = org_id_rows[0].org_id;
+    const [currentUserRows] = await db.execute("SELECT org_id, ownpk, room_id FROM users WHERE id = ?", [req.user.id]);
+    const currentUser = currentUserRows[0];
+    const org_id = currentUser.org_id;
+    const ownpk = currentUser.ownpk;
 
     const { location_id, role: queryRole } = req.query;
 
     // Special Case: Super Admin viewing unassigned team members (no query params)
     if (req.user.role === "Super Admin" && Object.keys(req.query).length === 0) {
+      // ... (existing code for Super Admin) ...
       const [users] = await db.execute(
         `SELECT u.id, u.name, u.email, u.role, u.department, u.phone, u.created_at,
                GROUP_CONCAT(CONCAT(a.id, ':', a.name, ':', a.serial_number) SEPARATOR '|') as assigned_assets_raw
@@ -30,6 +33,7 @@ router.get("/", verifyToken, async (req, res) => {
         ORDER BY u.id ASC`,
         [org_id]
       )
+      // ... (existing mapping logic) ...
       const usersWithAssets = users.map((u) => {
         const assigned_assets = [];
         if (u.assigned_assets_raw) {
@@ -44,45 +48,33 @@ router.get("/", verifyToken, async (req, res) => {
     }
 
     // Standard Filtering Case
-    let queryParams = [org_id];
-    let query = `
-      SELECT u.id, u.name, u.email, u.role, u.department, u.phone, u.loc_id, l.name as location_name, u.created_at,
-             GROUP_CONCAT(CONCAT(a.id, ':', a.name, ':', a.serial_number) SEPARATOR '|') as assigned_assets_raw
-      FROM users u
-      LEFT JOIN locations l ON u.loc_id = l.id
-      LEFT JOIN asset_assignments aa ON u.id = aa.user_id
-      LEFT JOIN assets a ON aa.asset_id = a.id
-      WHERE u.org_id = ?
-    `
+    if (req.user.role === "Supervisor") {
+      let queryParams = [currentUser.ownpk];
+      let query = `
+        SELECT u.id, u.name, u.email, u.role, u.department, u.phone, u.loc_id, l.name as location_name, u.created_at,
+        GROUP_CONCAT(CONCAT(a.id, ':', a.name, ':', a.serial_number) SEPARATOR '|') as assigned_assets_raw
+        FROM users u
+        LEFT JOIN locations l ON u.loc_id = l.id
+        LEFT JOIN asset_assignments aa ON u.id = aa.user_id
+        LEFT JOIN assets a ON aa.asset_id = a.id
+        WHERE u.role = 'Employee'
+        AND u.unpk = ?
+        GROUP BY u.id ORDER BY u.id ASC
+        `
+      
+      const [users] = await db.execute(query, queryParams)
 
-    if (req.user.role === "IT Supervisor") {
-      query += " AND u.role = 'Employee'"
+      const usersWithAssets = users.map((u) => {
+        const assigned_assets = [];
+        if (u.assigned_assets_raw) {
+          u.assigned_assets_raw.split('|').forEach(str => {
+            const [id, name, sn] = str.split(':');
+            assigned_assets.push({ id: parseInt(id), name, serial_number: sn });
+          });
+        }
+        return { ...u, assigned_assets, location_name: u.location_name, assigned_assets_raw: undefined };
+      });
     }
-
-    if (location_id) {
-      query += ` AND u.loc_id = ?`
-      queryParams.push(location_id)
-    }
-
-    if (queryRole) {
-      query += " AND u.role = ?"
-      queryParams.push(queryRole)
-    }
-
-    query += " GROUP BY u.id ORDER BY u.id ASC"
-
-    const [users] = await db.execute(query, queryParams)
-
-    const usersWithAssets = users.map((u) => {
-      const assigned_assets = [];
-      if (u.assigned_assets_raw) {
-        u.assigned_assets_raw.split('|').forEach(str => {
-          const [id, name, sn] = str.split(':');
-          assigned_assets.push({ id: parseInt(id), name, serial_number: sn });
-        });
-      }
-      return { ...u, assigned_assets, location_name: u.location_name, assigned_assets_raw: undefined };
-    });
 
     res.json(usersWithAssets)
   } catch (error) {
@@ -147,11 +139,7 @@ router.post("/unassign-asset", verifyToken, async (req, res) => {
 
 router.put("/:id", verifyToken, async (req, res) => {
   try {
-    if (req.user.role === "Employee") {
-      return res.status(403).json({ message: "Access denied" })
-    }
-
-    const { loc_id, department, phone } = req.body
+    const { loc_id, room_id } = req.body
     
     // We update only what's provided, focusing on loc_id for the user request
     let query = "UPDATE users SET "
@@ -161,6 +149,11 @@ router.put("/:id", verifyToken, async (req, res) => {
     if (loc_id !== undefined) {
       updates.push("loc_id = ?")
       params.push(loc_id)
+    }
+
+    if (room_id !== undefined) {
+      updates.push("room_id = ?")
+      params.push(room_id)
     }
 
     if (updates.length === 0) {

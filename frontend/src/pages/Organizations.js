@@ -14,7 +14,7 @@ const Organizations = () => {
     const [formData, setFormData] = useState({
         name: "",
         description: "",
-        member: "",
+        member: "1",
     })
     const [submitting, setSubmitting] = useState(false)
     const [error, setError] = useState(null)
@@ -83,7 +83,7 @@ const Organizations = () => {
             name: organization.name || "",
             description: organization.description || "",
             orgpk: organization.orgpk || "",
-            member: organization.member || "",
+            member: organization.member || "1",
             v_opk: organization.v_opk || ""
         })
         setShowModal(true)
@@ -106,7 +106,7 @@ const Organizations = () => {
         name: "",
         description: "",
         orgpk: "",
-        member: "",
+        member: "1",
         v_opk: ""
     })
 
@@ -123,7 +123,7 @@ const Organizations = () => {
                     setFormData({
                         name: "",
                         description: "",
-                        member: "",
+                        member: "1",
                     })
                     setShowModal(true)
                 }}>
@@ -230,7 +230,6 @@ const Organizations = () => {
                                     value={formData.member}
                                     onChange={handleChange}
                                     placeholder="Enter member"
-                                    maxLength={255}
                                 />
                             </div>
 

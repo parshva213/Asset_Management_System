@@ -5,7 +5,9 @@ import { useAuth } from "../contexts/AuthContext"
 import api from "../api"
 
 const Users = () => {
-  useAuth()
+  const { user } = useAuth()
+
+
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   
@@ -174,8 +176,23 @@ const Users = () => {
     )
   }
 
+  if (user?.role === "Supervisor" && !user?.room_id) {
+    return (
+      <div className="content">
+        <div className="flex-center h-full">
+           <div className="empty-state">
+             <h3>Set your location first</h3>
+             <p className="text-secondary">You need to be assigned to a room to view your team members.</p>
+           </div>
+        </div>
+      </div>
+    )
+  }
+
 
   return (
+    <>
+      {}
     <div className="content">
       <div className="flex-between mb-4">
         <h2>Users</h2>
@@ -349,7 +366,8 @@ const Users = () => {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   )
 }
 

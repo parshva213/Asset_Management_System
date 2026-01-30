@@ -144,11 +144,24 @@ const Assets = () => {
 
   if (loading) return <div className="loading">Loading assets...</div>;
 
+  if ((user?.role === "Supervisor" || user?.role === "Employee") && !user?.room_id) {
+    return (
+      <div className="content">
+        <div className="flex-center h-full">
+           <div className="empty-state">
+             <h3>Set your location first</h3>
+             <p className="text-secondary">You need to be assigned to a room to view the assets.</p>
+           </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div>
       <div className="flex-between mb-4">
         <h2>Assets Management</h2>
-        {(user?.role === "Super Admin" || user?.role === "IT Supervisor") && (
+        {(user?.role === "Super Admin" || user?.role === "Supervisor") && (
           <button onClick={() => setShowModal(true)} className="btn btn-primary">
             Add Asset
           </button>
@@ -176,7 +189,7 @@ const Assets = () => {
               <th>Category</th>
               <th>Location</th>
               <th>Purchase Date</th>
-              {(user?.role === "Super Admin" || user?.role === "IT Supervisor") && <th>Actions</th>}
+              {(user?.role === "Super Admin" || user?.role === "Supervisor") && <th>Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -189,7 +202,7 @@ const Assets = () => {
                 <td>{asset.category_name || "N/A"}</td>
                 <td>{asset.location_name || "N/A"}</td>
                 <td>{formatDate(asset.purchase_date) || "N/A"}</td>
-                {(user?.role === "Super Admin" || user?.role === "IT Supervisor") && (
+                {(user?.role === "Super Admin" || user?.role === "Supervisor") && (
                   <td>
                     <div className="flex gap-2">
                       <button onClick={() => handleEdit(asset)} className="btn btn-secondary">Edit</button>

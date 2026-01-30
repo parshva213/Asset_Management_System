@@ -54,7 +54,7 @@ const ICONS = {
 const MENU_ITEMS = {
   "Super Admin": [
     { name: "Dashboard", path: ["/admin-dashboard"], icon: "dashboard" },
-    { name: "Locations", path: ["/locations", "/rooms?locationId=", "/main-users?location_id=", "/assets?location_id="], icon: "locations" },
+    { name: "Locations", path: ["/locations", "/rooms?locationId=", "/main-users?location_id=", "/loc-assets?location_id="], icon: "locations" },
     { name: "Categories", path: ["/categories"], icon: "categories" },
     { name: "Assets", path: ["/assets"], icon: "assets" },
     { name: "Orders", path: ["/purchase-orders"], icon: "orders" },
@@ -64,6 +64,7 @@ const MENU_ITEMS = {
   ],
   "Supervisor": [
     { name: "Dashboard", path: ["/dashboard", "/supervisor-dashboard"], icon: "dashboard" },
+    { name: "My Team", path: ["/users"], icon: "users" },
     { name: "Assets", path: ["/assets"], icon: "assets" },
     { name: "Orders", path: ["/purchase-orders"], icon: "orders" },
     { name: "Requests", path: ["/requests"], icon: "requests" },
@@ -77,6 +78,7 @@ const MENU_ITEMS = {
   ],
   "Vendor": [
     { name: "Dashboard", path: ["/vendor-dashboard"], icon: "dashboard" },
+    { name: "Organizations", path: ["/organizations"], icon: "organizations" },
     { name: "Supply", path: ["/supply-assets"], icon: "assets" },
     { name: "Warranty", path: ["/warranty-docs"], icon: "file" },
     { name: "Products", path: ["/vendor-assets"], icon: "assets" },

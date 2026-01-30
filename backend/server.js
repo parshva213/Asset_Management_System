@@ -317,6 +317,7 @@ app.get("/api/admin/dashboard", authenticate(["Super Admin", "Admin"]), async (r
 // ------------------ SUPERVISOR DASHBOARD ------------------
 app.get("/api/supervisor/dashboard", authenticate(["Supervisor"]), async (req, res) => {
     try {
+        const [totalAssets] = await pool.query("SELECT COUNT(*) as count FROM assets");
         const [assignedAssets] = await pool.query("SELECT COUNT(*) as count FROM assets WHERE status = 'Assigned'");
         const [departmentUsers] = await pool.query("SELECT COUNT(*) as count FROM users WHERE role = 'Employee'");
         const [pendingRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE status = 'Pending'");
@@ -341,6 +342,7 @@ app.get("/api/supervisor/dashboard", authenticate(["Supervisor"]), async (req, r
     `);
 
         res.json({
+            totalAssets: totalAssets[0].count,
             assignedAssets: assignedAssets[0].count,
             departmentUsers: departmentUsers[0].count,
             pendingRequests: pendingRequests[0].count,

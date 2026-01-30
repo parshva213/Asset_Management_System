@@ -87,9 +87,6 @@ const AdminDashboard = () => {
                         <div className="profile-detail-item">
                             <span>📞</span> {user?.phone || 'Not set'}
                         </div>
-                        <div className="profile-detail-item">
-                            <span>📅</span> Joined {user?.created_at ? formatDate(user.created_at) : 'N/A'}
-                        </div>
                     </div>
                     <div className="card-footer">
                         <Link to="/profile">

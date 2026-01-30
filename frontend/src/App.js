@@ -102,7 +102,7 @@ function App() {
 
               {/* Software Developer */}
               <Route path="sd-dashboard" element={<ProtectedRoute roles={['Software Developer']}><SDDashboard /></ProtectedRoute>} />
-              <Route path="organizations" element={<ProtectedRoute roles={['Software Developer']}><Organizations /></ProtectedRoute>} />
+              <Route path="organizations" element={<ProtectedRoute roles={['Software Developer' ,'Vendor']}><Organizations /></ProtectedRoute>} />
 
               {/* Supervisor */}
               <Route path="purchase-orders" element={<ProtectedRoute roles={['Super Admin', 'Supervisor']}><PurchaseOrders /></ProtectedRoute>} />
