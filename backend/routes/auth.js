@@ -56,7 +56,7 @@ router.post("/register", async (req, res) => {
 
     const [result] = await db.query(
       "INSERT INTO users (name, email, password, role, department, phone, unpk, ownpk, org_id, loc_id, room_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      [name, email, hashedPassword, normalizedRole, department || null, phone || null, unpk || null, ownpk, orgId || null, loc_id || null, room_id || null]
+      [name, email, hashedPassword, normalizedRole, department || null, phone || null, unpk || null, ownpk, org_id, loc_id || null, room_id || null]
     );
 console.log(result)
     const userId = result.insertId;
@@ -232,7 +232,7 @@ router.post("/verify-registration-key", async (req, res) => {
   try {
     // check org table for orgpk
     const [orgResult] = await db.query(
-      "SELECT id, name, member FROM organizations WHERE BINARY orgpk = ?",
+      "SELECT id, name, org_member FROM organizations WHERE BINARY orgpk = ?",
       [key]
     );
     if (orgResult.length > 0) {
@@ -256,6 +256,27 @@ router.post("/verify-registration-key", async (req, res) => {
         type: "organization",
         orgId: org.id,
         allowedRoles: ["Super Admin"],
+        unpk: key
+      });
+    }
+    const [venres] = await db.query(
+      "SELECT id, name, v_member FROM organizations WHERE BINARY v_opk = ?",
+      [key]
+    );
+    if (venres.length > 0) {
+      const [count] = await db.query(
+        "SELECT COUNT(*) as count FROM users WHERE BINARY unpk = ?",
+        [key]
+      )
+      if (count[0].count >= venres.member) {
+        return res.status(400).json({ message: "Organization limit reached"+venres.id });
+      }
+      let ven = venres[0];
+      
+      return res.json({
+        type: "organization",
+        orgId: ven.id,
+        allowedRoles: ["Vendor"],
         unpk: key
       });
     }

@@ -133,11 +133,6 @@ const RoleSelection = () => {
         )}
 
         <div className="auth-link">
-          {!verificationData && (
-            <p style={{ marginBottom: '10px' }}>
-              <Link to="/register" state={{ role: 'Vendor' }}>Register as Vendor</Link>
-            </p>
-          )}
           <p>
             Already have an account? <Link to="/login">Login here</Link>
           </p>
