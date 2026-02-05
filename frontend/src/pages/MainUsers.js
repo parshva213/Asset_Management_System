@@ -195,18 +195,16 @@ const MainUsers = () => {
                 <p><strong>Department:</strong> {user.department || "N/A"}</p>
                 <p><strong>Assigned Assets:</strong> {user.assigned_assets?.length || 0}</p>
               </div>
-              <div className="card-footer" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', padding: '12px' }}>
+              <div className="card-footer">
                 <button 
-                  className="btn btn-sm btn-primary" 
+                  className="btn btn-primary" 
                   onClick={() => handleOpenModal(user, 'location')}
-                  style={{ fontSize: '11px', flex: '1', padding: '4px 8px' }}
                 >
                   Change Location
                 </button>
                 <button 
-                  className="btn btn-sm btn-success" 
+                  className="btn btn-success" 
                   onClick={() => handleOpenModal(user, 'assets')}
-                  style={{ fontSize: '11px', flex: '1', padding: '4px 8px' }}
                 >
                   Assets
                 </button>

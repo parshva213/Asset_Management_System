@@ -35,29 +35,57 @@ const SupplyAssets = () => {
   }
 
   return (
-    <div className="page-container">
-      <h2>Supply New Assets</h2>
-      <p>Provide hardware/software assets and update delivery details.</p>
+    <div className="page-container flex-center">
+      <div className="card form-container w-full max-w-lg">
+        <h3>Supply New Assets</h3>
+        <p className="text-secondary mb-6">Provide hardware/software assets and update delivery details.</p>
 
-      <form onSubmit={handleSubmit} className="form">
-        <label>
-          Asset Name:
-          <input type="text" name="assetName" value={form.assetName} onChange={handleChange} required />
-        </label>
-        <label>
-          Asset Type:
-          <input type="text" name="assetType" value={form.assetType} onChange={handleChange} required />
-        </label>
-        <label>
-          Delivery Date:
-          <input type="date" name="deliveryDate" value={form.deliveryDate} onChange={handleChange} required />
-        </label>
-        <label>
-          Notes:
-          <textarea name="notes" value={form.notes} onChange={handleChange}></textarea>
-        </label>
-        <button type="submit">Submit</button>
-      </form>
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label className="form-label">Asset Name</label>
+            <input 
+              type="text" 
+              name="assetName" 
+              value={form.assetName} 
+              onChange={handleChange} 
+              className="form-input"
+              required 
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Asset Type</label>
+            <input 
+              type="text" 
+              name="assetType" 
+              value={form.assetType} 
+              onChange={handleChange} 
+              className="form-input" 
+              required 
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Delivery Date</label>
+            <input 
+              type="date" 
+              name="deliveryDate" 
+              value={form.deliveryDate} 
+              onChange={handleChange} 
+              className="form-input" 
+              required 
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Notes</label>
+            <textarea 
+              name="notes" 
+              value={form.notes} 
+              onChange={handleChange} 
+              className="form-input"
+            ></textarea>
+          </div>
+          <button type="submit" className="btn btn-primary w-full mt-4">Submit</button>
+        </form>
+      </div>
     </div>
   )
 }

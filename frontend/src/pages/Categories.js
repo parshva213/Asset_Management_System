@@ -122,46 +122,48 @@ const Categories = () => {
                     <p>No categories found</p>
                 </div>
             ) : (
-                <table className="table">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Description</th>
-                            <th>Created At</th>
-                            {user?.role === "Super Admin" && <th>Actions</th>}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {categories.map((category) => (
-                            <tr key={category.id} id={`cat-${category.id}`}>
-                                <td>{category.name}</td>
-                                <td>{category.description || "N/A"}</td>
-                                <td>{category.created_at ? formatDate(category.created_at) : "-"}</td>
-                                {user?.role === "Super Admin" && (
-                                    <td>
-                                        <div className="flex gap-2">
-                                            <Button variant="secondary" onClick={() => handleEdit(category)}>
-                                                Edit
-                                            </Button>
-                                            <Button variant="danger" onClick={() => handleDelete(category.id)}>
-                                                Delete
-                                            </Button>
-                                        </div>
-                                    </td>
-                                )}
+                <div className="table-container">
+                    <table className="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Created At</th>
+                                {user?.role === "Super Admin" && <th>Actions</th>}
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {categories.map((category) => (
+                                <tr key={category.id} id={`cat-${category.id}`}>
+                                    <td>{category.name}</td>
+                                    <td>{category.description || "N/A"}</td>
+                                    <td>{category.created_at ? formatDate(category.created_at) : "-"}</td>
+                                    {user?.role === "Super Admin" && (
+                                        <td>
+                                            <div className="flex gap-2">
+                                                <Button variant="secondary" onClick={() => handleEdit(category)}>
+                                                    Edit
+                                                </Button>
+                                                <Button variant="danger" onClick={() => handleDelete(category.id)}>
+                                                    Delete
+                                                </Button>
+                                            </div>
+                                        </td>
+                                    )}
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             )}
 
             {showModal && (
                 <div className="modal-overlay" role="dialog" aria-modal="true">
-                    <div className="modal">
+                    <div className="modal-content">
                         <div className="modal-header">
-                            <h3 className="modal-title">{editingCategory ? "Edit Category" : "Add New Category"}</h3>
+                            <h2>{editingCategory ? "Edit Category" : "Add New Category"}</h2>
                             <button
-                                className="close-btn"
+                                className="close-modal"
                                 aria-label="Close"
                                 onClick={() => {
                                         setShowModal(false)
@@ -174,48 +176,50 @@ const Categories = () => {
                         </div>
 
                         <form onSubmit={handleSubmit}>
-                            <div className="form-group">
-                                <label className="form-label">Category Name</label>
-                                <input
-                                    type="text"
-                                    name="name"
-                                    className="form-input"
-                                    value={formData.name}
-                                    onChange={handleChange}
-                                    required
-                                    minLength={2}
-                                />
-                            </div>
+                             <div className="modal-body">
+                                <div className="form-group">
+                                    <label className="form-label">Category Name</label>
+                                    <input
+                                        type="text"
+                                        name="name"
+                                        className="form-input"
+                                        value={formData.name}
+                                        onChange={handleChange}
+                                        required
+                                        minLength={2}
+                                    />
+                                </div>
 
-                            <div className="form-group">
-                                <label className="form-label">Description</label>
-                                <textarea
-                                    name="description"
-                                    className="form-input"
-                                    value={formData.description}
-                                    onChange={handleChange}
-                                    rows={3}
-                                />
-                            </div>
+                                <div className="form-group">
+                                    <label className="form-label">Description</label>
+                                    <textarea
+                                        name="description"
+                                        className="form-input"
+                                        value={formData.description}
+                                        onChange={handleChange}
+                                        rows={3}
+                                    />
+                                </div>
 
-                            {error && <div className="alert alert-error">{error}</div>}
+                                {error && <div className="alert alert-error">{error}</div>}
 
-                            <div className="flex gap-2">
-                                <Button type="submit" disabled={submitting}>
-                                    {submitting ? (editingCategory ? "Updating..." : "Adding...") : editingCategory ? "Update Category" : "Add Category"}
-                                </Button>
-                                <Button
-                                    type="button"
-                                    variant="secondary"
-                                    onClick={() => {
-                                    setShowModal(false)
-                                    setEditingCategory(null)
-                                    resetForm()
-                                    setError(null)
-                                    }}
-                                >
-                                    Cancel
-                                </Button>
+                                <div className="flex gap-2" style={{marginTop: '1.5rem'}}>
+                                    <Button type="submit" disabled={submitting}>
+                                        {submitting ? (editingCategory ? "Updating..." : "Adding...") : editingCategory ? "Update Category" : "Add Category"}
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="secondary"
+                                        onClick={() => {
+                                        setShowModal(false)
+                                        setEditingCategory(null)
+                                        resetForm()
+                                        setError(null)
+                                        }}
+                                    >
+                                        Cancel
+                                    </Button>
+                                </div>
                             </div>
                         </form>
                     </div>

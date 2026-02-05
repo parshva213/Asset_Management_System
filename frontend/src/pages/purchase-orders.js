@@ -177,75 +177,77 @@ export default function PurchaseOrders() {
           <p>No purchase orders found</p>
         </div>
       ) : (
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Asset</th>
-              <th>Quantity</th>
-              <th>Supervisor</th>
-              <th>Vendor</th>
-              <th>Quote</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredOrders.map((order) => (
-              <tr key={order.id} id={`po-${order.id}`}>
-                <td>{order.asset_name}</td>
-                <td>{order.quantity}</td>
-                <td>{order.supervisor_name || order.supervisor_id}</td>
-                <td>{order.vendor_name || order.vendor_id}</td>
-                <td>{
-                  order.quote ?
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-currency-rupee" viewBox="0 0 16 16">
-                      <path d="M4 3.06h2.726c1.22 0 2.12.575 2.325 1.724H4v1.051h5.051C8.855 7.001 8 7.558 6.788 7.558H4v1.317L8.437 14h2.11L6.095 8.884h.855c2.316-.018 3.465-1.476 3.688-3.049H12V4.784h-1.345c-.08-.778-.357-1.335-.793-1.732H12V2H4z" />
-                    </svg>
-                    {order.quote}
-                  </span>
-                  :
-                  "-"
-                }</td>
-                <td>
-                  <span
-                    style={{
-                      color: getStatusColor(order.status),
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {order.status}
-                  </span>
-                </td>
-                <td>
-                  <div className="flex gap-2">
-                    {/* Vendor can submit quote */}
-                    {user?.role === "Vendor" && order.status === "Requested" && (
-                      <button onClick={() => updateStatus(order.id, "Quoted")} className="btn btn-secondary">
-                        Submit Quote
-                      </button>
-                    )}
+        <div className="table-container">
+            <table className="table">
+            <thead>
+                <tr>
+                <th>Asset</th>
+                <th>Quantity</th>
+                <th>Supervisor</th>
+                <th>Vendor</th>
+                <th>Quote</th>
+                <th>Status</th>
+                <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {filteredOrders.map((order) => (
+                <tr key={order.id} id={`po-${order.id}`}>
+                    <td>{order.asset_name}</td>
+                    <td>{order.quantity}</td>
+                    <td>{order.supervisor_name || order.supervisor_id}</td>
+                    <td>{order.vendor_name || order.vendor_id}</td>
+                    <td>{
+                    order.quote ?
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-currency-rupee" viewBox="0 0 16 16">
+                        <path d="M4 3.06h2.726c1.22 0 2.12.575 2.325 1.724H4v1.051h5.051C8.855 7.001 8 7.558 6.788 7.558H4v1.317L8.437 14h2.11L6.095 8.884h.855c2.316-.018 3.465-1.476 3.688-3.049H12V4.784h-1.345c-.08-.778-.357-1.335-.793-1.732H12V2H4z" />
+                        </svg>
+                        {order.quote}
+                    </span>
+                    :
+                    "-"
+                    }</td>
+                    <td>
+                    <span
+                        style={{
+                        color: getStatusColor(order.status),
+                        fontWeight: "bold",
+                        }}
+                    >
+                        {order.status}
+                    </span>
+                    </td>
+                    <td>
+                    <div className="flex gap-2">
+                        {/* Vendor can submit quote */}
+                        {user?.role === "Vendor" && order.status === "Requested" && (
+                        <button onClick={() => updateStatus(order.id, "Quoted")} className="btn btn-secondary">
+                            Submit Quote
+                        </button>
+                        )}
 
-                    {/* Admin can approve/reject */}
-                    {user?.role === "Super Admin" && order.status === "Quoted" && (
-                      <>
-                        <button onClick={() => updateStatus(order.id, "Approved")} className="btn btn-primary">Approve</button>
-                        <button onClick={() => updateStatus(order.id, "Rejected")} className="btn btn-danger">Reject</button>
-                      </>
-                    )}
+                        {/* Admin can approve/reject */}
+                        {user?.role === "Super Admin" && order.status === "Quoted" && (
+                        <>
+                            <button onClick={() => updateStatus(order.id, "Approved")} className="btn btn-primary">Approve</button>
+                            <button onClick={() => updateStatus(order.id, "Rejected")} className="btn btn-danger">Reject</button>
+                        </>
+                        )}
 
-                    {/* Vendor can mark delivered */}
-                    {user?.role === "Vendor" && order.status === "Approved" && (
-                      <button onClick={() => updateStatus(order.id, "Delivered")} className="btn btn-primary">
-                        Mark Delivered
-                      </button>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                        {/* Vendor can mark delivered */}
+                        {user?.role === "Vendor" && order.status === "Approved" && (
+                        <button onClick={() => updateStatus(order.id, "Delivered")} className="btn btn-primary">
+                            Mark Delivered
+                        </button>
+                        )}
+                    </div>
+                    </td>
+                </tr>
+                ))}
+            </tbody>
+            </table>
+        </div>
       )}
     </div>
   )

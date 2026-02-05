@@ -1,7 +1,6 @@
 import express from "express";
 import db from "../config/database.js";
 import jwt from "jsonwebtoken";
-import { generateKey } from "../utils/keyGenerator.js";
 import { generateUniqueKey } from "../utils/uniqueKeyGenerator.js";
 import bcrypt from "bcryptjs";
 
@@ -232,7 +231,7 @@ router.post("/verify-registration-key", async (req, res) => {
   try {
     // check org table for orgpk
     const [orgResult] = await db.query(
-      "SELECT id, name, org_member FROM organizations WHERE BINARY orgpk = ?",
+      "SELECT id, name, member FROM organizations WHERE BINARY orgpk = ?",
       [key]
     );
     if (orgResult.length > 0) {
@@ -245,38 +244,17 @@ router.post("/verify-registration-key", async (req, res) => {
         return res.json({
           type: "organization",
           orgId: org.id,
-          allowedRoles: ["software developer"],
+          allowedRoles: ["Software Developer"],
           unpk: key
         })
       }
       if (count[0].count >= org.member) {
-        return res.status(400).json({ message: "Organization limit reached"+org.id });
+        return res.status(400).json({ message: "Organization limit reached " +org.id });
       }
       return res.json({
         type: "organization",
         orgId: org.id,
         allowedRoles: ["Super Admin"],
-        unpk: key
-      });
-    }
-    const [venres] = await db.query(
-      "SELECT id, name, v_member FROM organizations WHERE BINARY v_opk = ?",
-      [key]
-    );
-    if (venres.length > 0) {
-      const [count] = await db.query(
-        "SELECT COUNT(*) as count FROM users WHERE BINARY unpk = ?",
-        [key]
-      )
-      if (count[0].count >= venres.member) {
-        return res.status(400).json({ message: "Organization limit reached"+venres.id });
-      }
-      let ven = venres[0];
-      
-      return res.json({
-        type: "organization",
-        orgId: ven.id,
-        allowedRoles: ["Vendor"],
         unpk: key
       });
     }

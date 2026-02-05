@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback } from "react"
 import { useAuth } from "../contexts/AuthContext"
 import { Link } from "react-router-dom"
 import api from "../api"
-import { formatDate } from "../utils/dateUtils"
 
 const AdminDashboard = () => {
     const { user, logout } = useAuth()
@@ -63,32 +62,31 @@ const AdminDashboard = () => {
             <div className="dashboard-top-row">
                 {/* Profile Card */}
                 <div className="profile-card">
-                    <div className="card-header">
-                        <img
-                            src={`https://ui-avatars.com/api/?name=${user?.name}&background=6366f1&color=fff`}
-                            alt="Profile"
-                            className="profile-avatar"
-                        />
-                        <div className="profile-info">
-                            <h3>Hi, {user?.name} 👋</h3>
-                           <span className="badge badge-high">Admin</span>
+                    <div className="profile-header">
+                        <div className="avatar-circle">
+                            {user?.name ? user.name.split(" ").map(n => n[0]).join("").toUpperCase().substring(0, 2) : "AD"}
+                        </div>
+                        <div className="profile-greeting">
+                            <h3>Hi, {user?.name}</h3>
+                            <span className="waving-hand">👋</span>
+                            <span className="role-badge">Admin</span>
                         </div>
                     </div>
-                    <div className="card-body">
-                        <div className="profile-detail-item">
-                            <span>📧</span> {user?.email}
+                    <div className="profile-details">
+                        <div className="info-row">
+                            <span className="info-icon">📧</span> {user?.email}
                         </div>
-                    <div className="profile-detail-item">
-                            <span>🛡️</span> {user?.role}
+                        <div className="info-row">
+                            <span className="info-icon">🛡️</span> {user?.role}
                         </div>
-                        <div className="profile-detail-item">
-                            <span>🔑</span> {user?.ownpk}
+                        <div className="info-row">
+                            <span className="info-icon">🔑</span> {user?.ownpk}
                         </div>
-                        <div className="profile-detail-item">
-                            <span>📞</span> {user?.phone || 'Not set'}
+                        <div className="info-row">
+                            <span className="info-icon">📞</span> {user?.phone || 'Not set'}
                         </div>
                     </div>
-                    <div className="card-footer">
+                    <div className="profile-footer">
                         <Link to="/profile">
                             View full details →
                         </Link>
@@ -98,96 +96,97 @@ const AdminDashboard = () => {
                 {/* Stats Grid */}
                 <div className="stats-grid-3">
                     <div className="stat-widget">
-                    <div>
-                        <div className="stat-icon-wrapper" style={{background: '#6366f1'}}>
-                            📦
-                        </div>
-                        <div className="stat-title">Total Assets</div>
-                        <div className="stat-value">{stats.totalAssets >= 10 ? `${Math.floor(stats.totalAssets / 10) * 10}+` : stats.totalAssets}</div>
-                    </div>
-                    <div className="card-footer">
-                        <Link to="/assets">
-                            View full details →
-                        </Link>
-                    </div>
-                </div>
-                <div className="stat-widget">
-                    <div>
-                        <div className="stat-icon-wrapper" style={{background: '#10b981'}}>
-                            ✅
-                        </div>
-                        <div className="stat-title">Assigned</div>
-                        <div className="stat-value">{stats.assignedAssets}</div>
-                    </div>
-                </div>
-                <div className="stat-widget">
-                    <div>
-                        <div className="stat-icon-wrapper" style={{background: '#f59e0b'}}>
-                            📝
-                        </div>
-                        <div className="stat-title">Pending Req.</div>
-                        <div className="stat-value">{stats.pendingRequests}</div>
-                    </div>
-                    <div className="card-footer">
-                        <Link to="/requests">
-                            View full details →
-                        </Link>
-                    </div>
-                </div>
-                <div className="stat-widget">
-                    <div>
-                        <div className="stat-icon-wrapper" style={{background: '#ec4899'}}>
-                            👥
-                        </div>
-                        <div className="stat-title">Total Users</div>
-                        <div className="stat-value">{stats.totalUsers >= 10 ? `${Math.floor(stats.totalUsers / 10) * 10}+` : stats.totalUsers}</div>
-                    </div>
-                    <div className="card-footer">
-                         <Link to="/employees">
-                            View full details →
-                        </Link>
-                    </div>
-                </div>
-                <div className="stat-widget">
-                    <div>
-                        <div className="stat-icon-wrapper" style={{background: '#8b5cf6'}}>
-                            🏷️
-                        </div>
-                        <div className="stat-title">Categories</div>
-                        <div className="stat-value">{stats.totalCategories || 0}</div>
-                    </div>
-                    <div className="card-footer">
-                         <Link to="/categories">
-                            View full details →
-                        </Link>
-                    </div>
-                </div>
-                <div className="stat-widget split-stats">
-                    <div>
-                        <div className="stat-icon-wrapper" style={{background: '#06b6d4'}}>
-                            📍
-                        </div>
-                        <div className="split-container">
-                            <div className="split-item">
-                                <div className="stat-title">Locations</div>
-                                <div className="stat-value">{stats.totalLocations}</div>
+                        <div>
+                            <div className="stat-icon" style={{background: '#6366f1'}}>
+                                📦
                             </div>
-                            <div className="split-divider"></div>
-                            <div className="split-item">
-                                <div className="stat-title">Rooms</div>
-                                <div className="stat-value">{stats.totalRooms}</div>
-                            </div>
+                            <span className="stat-label">Total Assets</span>
+                            <h3 className="stat-value">{stats.totalAssets >= 10 ? `${Math.floor(stats.totalAssets / 10) * 10}+` : stats.totalAssets}</h3>
+                        </div>
+                        <div className="stat-footer">
+                            <Link to="/assets">
+                                View full details →
+                            </Link>
                         </div>
                     </div>
-                    <div className="card-footer">
-                         <Link to="/locations">
-                            View full details →
-                        </Link>
+                    <div className="stat-widget">
+                        <div>
+                            <div className="stat-icon" style={{background: '#10b981'}}>
+                                ✅
+                            </div>
+                            <span className="stat-label">Assigned</span>
+                            <h3 className="stat-value">{stats.assignedAssets}</h3>
+                        </div>
                     </div>
-                </div>
+                    <div className="stat-widget">
+                        <div>
+                            <div className="stat-icon" style={{background: '#f59e0b'}}>
+                                📝
+                            </div>
+                            <span className="stat-label">Pending Req.</span>
+                            <h3 className="stat-value">{stats.pendingRequests}</h3>
+                        </div>
+                        <div className="stat-footer">
+                            <Link to="/requests">
+                                View full details →
+                            </Link>
+                        </div>
+                    </div>
+                    <div className="stat-widget">
+                        <div>
+                            <div className="stat-icon" style={{background: '#ec4899'}}>
+                                👥
+                            </div>
+                            <span className="stat-label">Total Users</span>
+                            <h3 className="stat-value">{stats.totalUsers >= 10 ? `${Math.floor(stats.totalUsers / 10) * 10}+` : stats.totalUsers}</h3>
+                        </div>
+                        <div className="stat-footer">
+                             <Link to="/employees">
+                                View full details →
+                            </Link>
+                        </div>
+                    </div>
+                    <div className="stat-widget">
+                        <div>
+                            <div className="stat-icon" style={{background: '#8b5cf6'}}>
+                                🏷️
+                            </div>
+                            <span className="stat-label">Categories</span>
+                            <h3 className="stat-value">{stats.totalCategories || 0}</h3>
+                        </div>
+                        <div className="stat-footer">
+                             <Link to="/categories">
+                                View full details →
+                            </Link>
+                        </div>
+                    </div>
+                    <div className="stat-widget split-stats">
+                        <div>
+                            <div className="stat-icon" style={{background: '#06b6d4'}}>
+                                📍
+                            </div>
+                            <div className="split-container">
+                                <div className="split-item">
+                                    <span className="stat-label">Locations</span>
+                                    <h3 className="stat-value" style={{fontSize: '1.5rem'}}>{stats.totalLocations}</h3>
+                                </div>
+                                <div className="split-divider"></div>
+                                <div className="split-item">
+                                    <span className="stat-label">Rooms</span>
+                                    <h3 className="stat-value" style={{fontSize: '1.5rem'}}>{stats.totalRooms}</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="stat-footer">
+                             <Link to="/locations">
+                                View full details →
+                            </Link>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
+
     )
 }
 

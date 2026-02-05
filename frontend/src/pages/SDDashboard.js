@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { useAuth } from "../contexts/AuthContext"
 import { Link } from "react-router-dom"
-import api from "../api"
+// import api from "../api"
 import { formatDate } from "../utils/dateUtils"
 
 const SDDashboard = () => {
@@ -19,7 +19,8 @@ const SDDashboard = () => {
 
     const fetchDashboardData = useCallback(async () => {
         try {
-            const dashboardRes = await api.get("/sd/dashboard")
+            // const dashboardRes = await api.get("/sd/dashboard")
+            const dashboardRes = ""
             setStats({
                 assignedAssets: dashboardRes.data.assignedAssets || 0,
                 pendingRequests: dashboardRes.data.pendingRequests || 0,
@@ -49,35 +50,31 @@ const SDDashboard = () => {
             <div className="dashboard-top-row">
                 {/* Profile Card */}
                 <div className="profile-card">
-                    <div className="card-header">
-                        <img
-                            src={`https://ui-avatars.com/api/?name=${user?.name}&background=10b981&color=fff`}
-                            alt="Profile"
-                            className="profile-avatar"
-                        />
-                        <div className="profile-info">
-                            <h3>Hi, {user?.name} 👋</h3>
-                           <span className="badge badge-high">Software Developer</span>
+                    <div className="profile-header">
+                        <div className="avatar-circle">
+                             {user?.name ? user.name.split(" ").map(n => n[0]).join("").toUpperCase().substring(0, 2) : "SD"}
+                        </div>
+                        <div className="profile-greeting">
+                            <h3>Hi, {user?.name}</h3>
+                            <span className="waving-hand">👋</span>
+                            <span className="role-badge">Software Developer</span>
                         </div>
                     </div>
-                    <div className="card-body">
-                        <div className="profile-detail-item">
-                            <span>📧</span> {user?.email}
+                    <div className="profile-details">
+                        <div className="info-row">
+                            <span className="info-icon">📧</span> {user?.email}
                         </div>
-                        <div className="profile-detail-item">
-                            <span>🏢</span> {user?.department || 'Engineering'}
+                        <div className="info-row">
+                            <span className="info-icon">🏢</span> {user?.department || 'Engineering'}
                         </div>
-                        <div className="profile-detail-item">
-                            <span>🔑</span> {user?.ownpk || 'Not set'}
+                         <div className="info-row">
+                            <span className="info-icon">📞</span> {user?.phone || 'Not set'}
                         </div>
-                         <div className="profile-detail-item">
-                            <span>📞</span> {user?.phone || 'Not set'}
-                        </div>
-                        <div className="profile-detail-item">
-                            <span>📅</span> Joined {user?.created_at ? formatDate(user.created_at) : 'N/A'}
+                        <div className="info-row">
+                            <span className="info-icon">📅</span> Joined {user?.created_at ? formatDate(user.created_at) : 'N/A'}
                         </div>
                     </div>
-                     <div className="card-footer">
+                     <div className="profile-footer">
                          <Link to="/profile">
                             View full profile →
                         </Link>
@@ -88,13 +85,13 @@ const SDDashboard = () => {
                 <div className="stats-grid-2">
                     <div className="stat-widget">
                         <div>
-                            <div className="stat-icon-wrapper" style={{ background: '#10b981' }}>
+                            <div className="stat-icon" style={{background: '#10b981'}}>
                                 💻
                             </div>
-                            <div className="stat-title">My Workstation</div>
-                            <div className="stat-value">{stats.assignedAssets}</div>
+                            <span className="stat-label">My Workstation</span>
+                            <h3 className="stat-value">{stats.assignedAssets}</h3>
                         </div>
-                         <div className="card-footer">
+                         <div className="stat-footer">
                             <Link to="/assets">
                                 View Assets →
                             </Link>
@@ -102,13 +99,13 @@ const SDDashboard = () => {
                     </div>
                     <div className="stat-widget">
                         <div>
-                            <div className="stat-icon-wrapper" style={{ background: '#f59e0b' }}>
+                            <div className="stat-icon" style={{background: '#f59e0b'}}>
                                 ⏳
                             </div>
-                            <div className="stat-title">Pending Tickets</div>
-                            <div className="stat-value">{stats.pendingRequests}</div>
+                            <span className="stat-label">Pending Tickets</span>
+                            <h3 className="stat-value">{stats.pendingRequests}</h3>
                         </div>
-                        <div className="card-footer">
+                        <div className="stat-footer">
                             <Link to="/requests">
                                 Track Requests →
                             </Link>
@@ -116,13 +113,13 @@ const SDDashboard = () => {
                     </div>
                     <div className="stat-widget">
                         <div>
-                            <div className="stat-icon-wrapper" style={{ background: '#3b82f6' }}>
+                            <div className="stat-icon" style={{background: '#3b82f6'}}>
                                 ✅
                             </div>
-                            <div className="stat-title">Approved</div>
-                            <div className="stat-value">{stats.approvedRequests}</div>
+                            <span className="stat-label">Approved</span>
+                            <h3 className="stat-value">{stats.approvedRequests}</h3>
                         </div>
-                         <div className="card-footer">
+                         <div className="stat-footer">
                             <Link to="/requests">
                                 View History →
                             </Link>
@@ -130,13 +127,13 @@ const SDDashboard = () => {
                     </div>
                     <div className="stat-widget">
                         <div>
-                            <div className="stat-icon-wrapper" style={{ background: '#8b5cf6' }}>
+                            <div className="stat-icon" style={{background: '#8b5cf6'}}>
                                  ✨
                             </div>
-                            <div className="stat-title">New Request</div>
-                            <div className="stat-value">{stats.totalRequests}</div>
+                            <span className="stat-label">New Request</span>
+                            <h3 className="stat-value">{stats.totalRequests}</h3>
                         </div>
-                        <div className="card-footer">
+                        <div className="stat-footer">
                              <Link to="/requests">
                                 Request Asset →
                             </Link>

@@ -219,9 +219,8 @@ const Users = () => {
               </div>
               <div className="card-footer">
                  <button 
-                  className="btn btn-primary" 
+                  className="btn btn-primary w-full" 
                   onClick={() => handleOpenModal(user)}
-                  style={{ width: '100%' }}
                  >
                    Set Users Assets and Location
                  </button>
@@ -300,17 +299,17 @@ const Users = () => {
                       Showing available assets at: <strong>{locations.find(l => String(l.id) === String(assignForm.location_id))?.name}</strong>
                     </p>
                     
-                    <div className="asset-checkbox-list" style={{ maxHeight: '250px', overflowY: 'auto', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '10px' }}>
+                    <div className="asset-checkbox-list scrollable-list border rounded p-4">
                       {availableAssets.length === 0 ? (
                         <p className="text-center py-4 text-secondary">No available assets at this location.</p>
                       ) : (
                         availableAssets.map(asset => (
-                          <label key={asset.id} className="asset-checkbox-item" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', cursor: 'pointer', borderBottom: '1px solid var(--border-color)' }}>
+                          <label key={asset.id} className="asset-checkbox-item flex items-center gap-2 border-b last:border-0 py-2 cursor-pointer">
                             <input 
                               type="checkbox" 
+                              className="checkbox-input"
                               checked={assignForm.asset_ids.includes(asset.id)}
                               onChange={() => toggleAssetSelection(asset.id)}
-                              style={{ width: '18px', height: '18px' }}
                             />
                             <div>
                               <div className="font-bold">{asset.name}</div>

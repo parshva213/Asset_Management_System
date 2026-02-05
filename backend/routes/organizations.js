@@ -9,7 +9,6 @@ const router = express.Router();
 // Get all organizations
 router.get("/", verifyToken, async (req, res) => {
   try {
-    console.log("User attempting to access organizations:", req.user);
     const userRole = (req.user.role || "").trim().toLowerCase();
     if (userRole !== "software developer") {
       return res.status(403).json({ 
@@ -53,15 +52,15 @@ router.post("/", verifyToken, async (req, res) => {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    let { name, description, orgpk, member, v_opk } = req.body;
+    let { name, description, member} = req.body;
 
     if (!name || name.trim().length < 2) {
       return res.status(400).json({ message: "Organization name must be at least 2 characters" });
     }
 
     // Generate keys if not provided
-    if (!orgpk) orgpk = await generateUniqueKey();
-    if (!v_opk) v_opk = await generateUniqueKey();
+    let orgpk = await generateUniqueKey();
+    let v_opk = await generateUniqueKey();
 
     const [result] = await pool.query(
       "INSERT INTO organizations (name, description, orgpk, member, v_opk) VALUES (?, ?, ?, ?, ?)",
@@ -72,7 +71,7 @@ router.post("/", verifyToken, async (req, res) => {
     // Log activity safely
     await logActivity(req.user.id, "Created organization", "organization", organizationId, `Created organization: ${name}`);
 
-    res.status(201).json({ message: "Organization created successfully", id: organizationId });
+    res.status(200).json({ message: "Organization created successfully", id: organizationId });
   } catch (error) {
     console.error("Error creating organization:", error);
     res.status(500).json({ message: error.message || "Server error" });
@@ -87,7 +86,7 @@ router.put("/:id", verifyToken, async (req, res) => {
     }
 
     const { id } = req.params;
-    const { name, description, orgpk, member, v_opk } = req.body;
+    const { name, description, member,} = req.body;
 
     if (!name || name.trim().length < 2) {
       return res.status(400).json({ message: "Organization name must be at least 2 characters" });
@@ -100,8 +99,8 @@ router.put("/:id", verifyToken, async (req, res) => {
     }
 
     await pool.query(
-      "UPDATE organizations SET name = ?, description = ?, orgpk = ?, member = ?, v_opk = ? WHERE id = ?",
-      [name, description || null, orgpk || null, member || null, v_opk || null, id]
+      "UPDATE organizations SET name = ?, description = ?, member = ? WHERE id = ?",
+      [name, description || null, member || null, id]
     );
 
     // Log activity safely

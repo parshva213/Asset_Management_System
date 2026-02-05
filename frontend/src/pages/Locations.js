@@ -96,87 +96,89 @@ const Locations = () => {
               <p>No locations found</p>
             </div>
           ) : (
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Address</th>
-                  <th>Rooms</th>
-                  <th>Description</th>
-                  <th>Created At</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {locations.map((location) => (
-                  <tr key={location.id} id={`loc-${location.id}`}>
-                    <td>{location.name}</td>
-                    <td>{location.address || "N/A"}</td>
-                    <td>{location.room_count}</td>
-                    <td>{location.description || "N/A"}</td>
-                    <td>{formatDate(location.created_at)}</td>
-                    <td>
-                      <div className="flex gap-2">
-                        <button onClick={() => handleEditLocation(location)} className="btn btn-secondary">
-                          Edit
-                        </button>
-                        <button onClick={() => handleDeleteLocation(location.id)} className="btn btn-danger">
-                          Delete
-                        </button>
-                        <div className="dropdown-container">
-                          <button 
-                            onClick={() => setOpenDropdownId(openDropdownId === location.id ? null : location.id)} 
-                            className="btn btn-secondary"
-                          >
-                            View ▼
-                          </button>
-                          {openDropdownId === location.id && (
-                            <div className="dropdown-menu">
-                              <button
-                                onClick={() => {
-                                  navigate(`/rooms?location_id=${location.id}`)
-                                  setOpenDropdownId(null)
-                                }}
-                                className="dropdown-item"
-                              >
-                                Rooms
-                              </button>
-                              <button
-                                onClick={() => {
-                                  navigate(`/main-users?location_id=${location.id}`)
-                                  setOpenDropdownId(null)
-                                }}
-                                className="dropdown-item"
-                              >
-                                Maintenance Team
-                              </button>
-                              <button
-                                onClick={() => {
-                                  navigate(`/assets?location_id=${location.id}`)
-                                  setOpenDropdownId(null)
-                                }}
-                                className="dropdown-item"
-                              >
-                                Assets
-                              </button>
+            <div className="table-container">
+                <table className="table">
+                <thead>
+                    <tr>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th>Rooms</th>
+                    <th>Description</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {locations.map((location) => (
+                    <tr key={location.id} id={`loc-${location.id}`}>
+                        <td>{location.name}</td>
+                        <td>{location.address || "N/A"}</td>
+                        <td>{location.room_count}</td>
+                        <td>{location.description || "N/A"}</td>
+                        <td>{formatDate(location.created_at)}</td>
+                        <td>
+                        <div className="flex gap-2">
+                            <button onClick={() => handleEditLocation(location)} className="btn btn-secondary">
+                            Edit
+                            </button>
+                            <button onClick={() => handleDeleteLocation(location.id)} className="btn btn-danger">
+                            Delete
+                            </button>
+                            <div className="dropdown-container">
+                            <button 
+                                onClick={() => setOpenDropdownId(openDropdownId === location.id ? null : location.id)} 
+                                className="btn btn-secondary"
+                            >
+                                View ▼
+                            </button>
+                            {openDropdownId === location.id && (
+                                <div className="dropdown-menu">
+                                <button
+                                    onClick={() => {
+                                    navigate(`/rooms?location_id=${location.id}`)
+                                    setOpenDropdownId(null)
+                                    }}
+                                    className="dropdown-item"
+                                >
+                                    Rooms
+                                </button>
+                                <button
+                                    onClick={() => {
+                                    navigate(`/main-users?location_id=${location.id}`)
+                                    setOpenDropdownId(null)
+                                    }}
+                                    className="dropdown-item"
+                                >
+                                    Maintenance Team
+                                </button>
+                                <button
+                                    onClick={() => {
+                                    navigate(`/lr-assets?lid=${location.id}`)
+                                    setOpenDropdownId(null)
+                                    }}
+                                    className="dropdown-item"
+                                >
+                                    Assets
+                                </button>
+                                </div>
+                            )}
                             </div>
-                          )}
                         </div>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                        </td>
+                    </tr>
+                    ))}
+                </tbody>
+                </table>
+            </div>
           )}
 
       {showLocationModal && (
         <div className="modal-overlay">
-          <div className="modal">
+          <div className="modal-content">
             <div className="modal-header">
-              <h3 className="modal-title">{editingLocation ? "Edit Location" : "Add New Location"}</h3>
+              <h2>{editingLocation ? "Edit Location" : "Add New Location"}</h2>
               <button
-                className="close-btn"
+                className="close-modal"
                 onClick={() => {
                   setShowLocationModal(false)
                   setEditingLocation(null)
@@ -186,55 +188,58 @@ const Locations = () => {
                 ×
               </button>
             </div>
-            <form onSubmit={handleLocationSubmit}>
-              <div className="form-group">
-                <label className="form-label">Location Name</label>
-                <input
-                  type="text"
-                  name="name"
-                  className="form-input"
-                  value={locationFormData.name}
-                  onChange={handleLocationChange}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Address</label>
-                <textarea
-                  name="address"
-                  className="form-input"
-                  value={locationFormData.address}
-                  onChange={handleLocationChange}
-                  rows="2"
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Description</label>
-                <textarea
-                  name="description"
-                  className="form-input"
-                  value={locationFormData.description}
-                  onChange={handleLocationChange}
-                  rows="3"
-                />
-              </div>
-              <div className="flex gap-2">
-                <button type="submit" className="btn btn-primary">
-                  {editingLocation ? "Update Location" : "Add Location"}
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    setShowLocationModal(false)
-                    setEditingLocation(null)
-                    resetLocationForm()
-                  }}
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
+             <div className="modal-body">
+                <form onSubmit={handleLocationSubmit} style={{display: 'flex', flexDirection: 'column', gap: '1.5rem'}}>
+                <div className="form-group">
+                    <label className="form-label">Location Name</label>
+                    <input
+                    type="text"
+                    name="name"
+                    className="form-input"
+                    value={locationFormData.name}
+                    onChange={handleLocationChange}
+                    required
+                    />
+                </div>
+                <div className="form-group">
+                    <label className="form-label">Address</label>
+                    <textarea
+                    name="address"
+                    className="form-input"
+                    value={locationFormData.address}
+                    onChange={handleLocationChange}
+                    rows="2"
+                    />
+                </div>
+                <div className="form-group">
+                    <label className="form-label">Description</label>
+                    <textarea
+                    name="description"
+                    className="form-input"
+                    value={locationFormData.description}
+                    onChange={handleLocationChange}
+                    rows="3"
+                    />
+                </div>
+                <div className="flex gap-2">
+                    <button type="submit" className="btn btn-primary" style={{flex: 1}}>
+                    {editingLocation ? "Update Location" : "Add Location"}
+                    </button>
+                    <button
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{flex: 1}}
+                    onClick={() => {
+                        setShowLocationModal(false)
+                        setEditingLocation(null)
+                        resetLocationForm()
+                    }}
+                    >
+                    Cancel
+                    </button>
+                </div>
+                </form>
+            </div>
           </div>
         </div>
       )}

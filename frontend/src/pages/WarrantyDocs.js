@@ -16,22 +16,26 @@ const WarrantyDocs = () => {
   }
 
   return (
-    <div className="page-container">
-      <h2>Warranty Number</h2>
-      <p>Enter and manage warranty numbers for supplied assets.</p>
+    <div className="page-container flex-center">
+      <div className="card form-container w-full max-w-md">
+        <h3>Warranty Number</h3>
+        <p className="text-secondary mb-6 text-sm">Enter and manage warranty numbers for supplied assets.</p>
 
-      <form onSubmit={handleSubmit} className="form">
-        <label>
-          Warranty Number:
-          <input
-            type="text"
-            value={warrantyNumber}
-            onChange={(e) => setWarrantyNumber(e.target.value)}
-            required
-          />
-        </label>
-        <button type="submit">Submit</button>
-      </form>
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label className="form-label">Warranty Number</label>
+            <input
+              type="text"
+              className="form-input"
+              value={warrantyNumber}
+              onChange={(e) => setWarrantyNumber(e.target.value)}
+              required
+              placeholder="Enter warranty number"
+            />
+          </div>
+          <button type="submit" className="btn btn-primary w-full mt-4">Submit</button>
+        </form>
+      </div>
     </div>
   )
 }

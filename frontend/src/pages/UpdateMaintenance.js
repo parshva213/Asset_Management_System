@@ -21,10 +21,10 @@ const UpdateMaintenance = () => {
   }
 
   return (
-    <div className="page-container" style={{ display: 'flex', justifyContent: 'center', padding: '2rem 0' }}>
-      <div className="card form-container" style={{ width: '100%' }}>
+    <div className="page-container flex-center">
+      <div className="card form-container w-full max-w-lg">
         <h3>Update Maintenance Records</h3>
-        <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+        <p className="text-secondary mb-6 text-sm">
           Record maintenance activities like repairs, replacements, and checks.
         </p>
 
@@ -75,7 +75,7 @@ const UpdateMaintenance = () => {
             ></textarea>
           </div>
 
-          <button type="submit" className="btn btn-primary" style={{ marginTop: '1rem' }}>
+          <button type="submit" className="btn btn-primary w-full mt-4">
             Update Record
           </button>
         </form>

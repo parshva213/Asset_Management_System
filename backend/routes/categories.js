@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.get("/", verifyToken, async (req, res) => {
   try {
-    const [rows] = await db.query("SELECT * FROM categories ORDER BY id ASC")
+    const [rows] = await db.query("SELECT * FROM categories where org_id = ? ORDER BY id ASC", [req.user.org_id])
     res.json(rows)
   } catch (error) {
     console.error("Error fetching categories:", error)
@@ -22,7 +22,7 @@ router.post("/", verifyToken, async (req, res) => {
 
     const { name, description } = req.body
 
-    const [result] = await db.query("INSERT INTO categories (name, description) VALUES (?, ?)", [name, description])
+    const [result] = await db.query("INSERT INTO categories (name, description, org_id) VALUES (?, ?, ?)", [name, description, req.user.org_id])
     const categoryId = result.insertId
 
     // Log activity safely

@@ -88,16 +88,16 @@ const UpdatePassword = () => {
             </div>
             <div className="auth-card">
                  {/* AMS Logo */}
-                 <img src={logo} alt="AMS Logo" className="auth-logo" style={{ width: '80px', height: 'auto', marginBottom: '1.5rem', display:'block', margin:'0 auto 1.5rem auto' }} />
+                 <img src={logo} alt="AMS Logo" className="auth-logo" />
 
                 <h2 className="auth-title">Set New Password</h2>
                 {/* Email display removed per user request */}
 
-                {message && <div className="alert alert-success">{message}</div>}
-                {error && <div className="alert alert-error">{error}</div>}
+                {message && <div className="alert alert-success mb-4">{message}</div>}
+                {error && <div className="alert alert-error mb-4">{error}</div>}
 
                 <form onSubmit={handleSubmit}>
-                    <div className="form-group input-group">
+                    <div className="form-group">
                         <label className="form-label">New Password</label>
                         <input
                             type="password"
@@ -111,7 +111,7 @@ const UpdatePassword = () => {
                         />
                     </div>
 
-                    <div className="form-group input-group">
+                    <div className="form-group">
                         <label className="form-label">Confirm Password</label>
                         <input
                             type="password"
@@ -124,7 +124,7 @@ const UpdatePassword = () => {
                         />
                     </div>
 
-                    <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }} disabled={loading}>
+                    <button type="submit" className="btn btn-primary w-full mt-4" disabled={loading}>
                         {loading ? "Updating..." : "Update Password"}
                     </button>
                 </form>

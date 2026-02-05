@@ -142,48 +142,50 @@ const LocationRooms = () => {
               <p>No rooms found for this location.</p>
             </div>
           ) : (
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Floor</th>
-                  <th>Capacity</th>
-                  <th>Description</th>
-                  {user?.role === "Super Admin" && <th>Actions</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {rooms.map((room) => (
-                  <tr key={room.id} id={`room-${room.id}`}>
-                    <td>{room.name}</td>
-                    <td>{room.floor || "N/A"}</td>
-                    <td>{room.capacity || "N/A"}</td>
-                    <td>{room.description || "N/A"}</td>
-                    {user?.role === "Super Admin" && (
-                    <td>
-                      <div className="flex gap-2">
-                        <button onClick={() => handleEditRoom(room)} className="btn btn-secondary">
-                          Edit
-                        </button>
-                        <button onClick={() => handleDeleteRoom(room.id)} className="btn btn-danger">
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="table-container">
+                <table className="table">
+                <thead>
+                    <tr>
+                    <th>Name</th>
+                    <th>Floor</th>
+                    <th>Capacity</th>
+                    <th>Description</th>
+                    {user?.role === "Super Admin" && <th>Actions</th>}
+                    </tr>
+                </thead>
+                <tbody>
+                    {rooms.map((room) => (
+                    <tr key={room.id} id={`room-${room.id}`}>
+                        <td>{room.name}</td>
+                        <td>{room.floor || "N/A"}</td>
+                        <td>{room.capacity || "N/A"}</td>
+                        <td>{room.description || "N/A"}</td>
+                        {user?.role === "Super Admin" && (
+                        <td>
+                        <div className="flex gap-2">
+                            <button onClick={() => handleEditRoom(room)} className="btn btn-secondary">
+                            Edit
+                            </button>
+                            <button onClick={() => handleDeleteRoom(room.id)} className="btn btn-danger">
+                            Delete
+                            </button>
+                        </div>
+                        </td>
+                        )}
+                    </tr>
+                    ))}
+                </tbody>
+                </table>
+            </div>
           )}
 
       {showRoomModal && (
         <div className="modal-overlay">
-          <div className="modal">
+          <div className="modal-content">
             <div className="modal-header">
-              <h3 className="modal-title">{editingRoom ? "Edit Room" : "Add New Room"}</h3>
+              <h2>{editingRoom ? "Edit Room" : "Add New Room"}</h2>
               <button
-                className="close-btn"
+                className="close-modal"
                 onClick={() => {
                   setShowRoomModal(false)
                   setEditingRoom(null)
@@ -193,66 +195,69 @@ const LocationRooms = () => {
                 ×
               </button>
             </div>
-            <form onSubmit={handleRoomSubmit}>
-                {/* Location is implied, no need to select it */}
-              <div className="form-group">
-                <label className="form-label">Room Name</label>
-                <input
-                  type="text"
-                  name="name"
-                  className="form-input"
-                  value={roomFormData.name}
-                  onChange={handleRoomChange}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Floor</label>
-                <input
-                  type="text"
-                  name="floor"
-                  className="form-input"
-                  value={roomFormData.floor}
-                  onChange={handleRoomChange}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Capacity</label>
-                <input
-                  type="number"
-                  name="capacity"
-                  className="form-input"
-                  value={roomFormData.capacity}
-                  onChange={handleRoomChange}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Description</label>
-                <textarea
-                  name="description"
-                  className="form-input"
-                  value={roomFormData.description}
-                  onChange={handleRoomChange}
-                  rows="3"
-                />
-              </div>
-              <div className="flex gap-2">
-                <button type="submit" className="btn btn-primary">
-                  {editingRoom ? "Update Room" : "Add Room"}
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    setShowRoomModal(false)
-                    setEditingRoom(null)
-                    resetRoomForm()
-                  }}
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
+            <div className="modal-body">
+                <form onSubmit={handleRoomSubmit} style={{display: 'flex', flexDirection: 'column', gap: '1rem'}}>
+                    {/* Location is implied, no need to select it */}
+                <div className="form-group">
+                    <label className="form-label">Room Name</label>
+                    <input
+                    type="text"
+                    name="name"
+                    className="form-input"
+                    value={roomFormData.name}
+                    onChange={handleRoomChange}
+                    required
+                    />
+                </div>
+                <div className="form-group">
+                    <label className="form-label">Floor</label>
+                    <input
+                    type="text"
+                    name="floor"
+                    className="form-input"
+                    value={roomFormData.floor}
+                    onChange={handleRoomChange}
+                    />
+                </div>
+                <div className="form-group">
+                    <label className="form-label">Capacity</label>
+                    <input
+                    type="number"
+                    name="capacity"
+                    className="form-input"
+                    value={roomFormData.capacity}
+                    onChange={handleRoomChange}
+                    />
+                </div>
+                <div className="form-group">
+                    <label className="form-label">Description</label>
+                    <textarea
+                    name="description"
+                    className="form-input"
+                    value={roomFormData.description}
+                    onChange={handleRoomChange}
+                    rows="3"
+                    />
+                </div>
+                <div className="flex gap-2">
+                    <button type="submit" className="btn btn-primary" style={{flex: 1}}>
+                    {editingRoom ? "Update Room" : "Add Room"}
+                    </button>
+                    <button
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{flex: 1}}
+                    onClick={() => {
+                        setShowRoomModal(false)
+                        setEditingRoom(null)
+                        resetRoomForm()
+                    }}
+                    >
+                    Cancel
+                    </button>
+                </div>
+                </form>
+            </div>
           </div>
         </div>
       )}

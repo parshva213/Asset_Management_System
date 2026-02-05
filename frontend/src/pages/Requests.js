@@ -235,101 +235,103 @@ const Requests = () => {
           <p>No requests found</p>
         </div>
       ) : (
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Priority</th>
-              <th>Type</th>
-              <th>Asset</th>
-              <th>Requested By</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredRequests.map((request) => (
-              <tr key={request.id} id={`req-${request.id}`}>
-                <td>
-                  <span
-                    style={{
-                      color: getPriorityColor(request.priority),
-                      fontWeight: "bold",
-                    }}
+        <div className="table-container">
+            <table className="table">
+            <thead>
+                <tr>
+                <th>Priority</th>
+                <th>Type</th>
+                <th>Asset</th>
+                <th>Requested By</th>
+                <th>Status</th>
+                <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {filteredRequests.map((request) => (
+                <tr key={request.id} id={`req-${request.id}`}>
+                    <td>
+                    <span
+                        style={{
+                        color: getPriorityColor(request.priority),
+                        fontWeight: "bold",
+                        }}
+                        >
+                        {request.priority}
+                    </span>
+                    </td>
+                        <td>{request.request_type}</td>
+                        <td>{request.asset_name || "N/A"}</td>
+                        <td>{request.requester_name || "N/A"}</td>
+                    <td>
+                    <span
+                        style={{
+                        color: getStatusColor(request.status),
+                        fontWeight: "bold",
+                        }}
                     >
-                    {request.priority}
-                  </span>
-                </td>
-                    <td>{request.request_type}</td>
-                    <td>{request.asset_name || "N/A"}</td>
-                    <td>{request.requester_name || "N/A"}</td>
-                <td>
-                  <span
-                    style={{
-                      color: getStatusColor(request.status),
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {request.status}
-                  </span>
-                </td>
-                <td>
-                  <div className="flex gap-2">
-                    {user?.role === "Employee" && request.status === "Pending" && (
-                      <>
-                        <button onClick={() => handleEdit(request)} className="btn btn-secondary">
-                          Edit
-                        </button>
-                        <button onClick={() => handleDelete(request.id)} className="btn btn-danger">
-                          Delete
-                        </button>
-                      </>
-                    )}
-                    {(user?.role === "Supervisor" || user?.role === "Super Admin") && (
-                      <>
-                        {request.status === "Pending" && (
-                          <>
-                            <button
-                              onClick={() => handleStatusUpdate(request.id, "In Progress")}
-                              className="btn btn-secondary"
-                            >
-                              Accept
+                        {request.status}
+                    </span>
+                    </td>
+                    <td>
+                    <div className="flex gap-2">
+                        {user?.role === "Employee" && request.status === "Pending" && (
+                        <>
+                            <button onClick={() => handleEdit(request)} className="btn btn-secondary">
+                            Edit
                             </button>
-                            <button
-                              onClick={() => {
-                                const response = prompt("Rejection reason:")
-                                if (response) handleStatusUpdate(request.id, "Rejected", response)
-                              }}
-                              className="btn btn-danger"
-                            >
-                              Reject
+                            <button onClick={() => handleDelete(request.id)} className="btn btn-danger">
+                            Delete
                             </button>
-                          </>
+                        </>
                         )}
-                        {request.status === "In Progress" && (
-                          <button
-                            onClick={() => handleStatusUpdate(request.id, "Completed")}
-                            className="btn btn-primary"
-                          >
-                            Complete
-                          </button>
+                        {(user?.role === "Supervisor" || user?.role === "Super Admin") && (
+                        <>
+                            {request.status === "Pending" && (
+                            <>
+                                <button
+                                onClick={() => handleStatusUpdate(request.id, "In Progress")}
+                                className="btn btn-secondary"
+                                >
+                                Accept
+                                </button>
+                                <button
+                                onClick={() => {
+                                    const response = prompt("Rejection reason:")
+                                    if (response) handleStatusUpdate(request.id, "Rejected", response)
+                                }}
+                                className="btn btn-danger"
+                                >
+                                Reject
+                                </button>
+                            </>
+                            )}
+                            {request.status === "In Progress" && (
+                            <button
+                                onClick={() => handleStatusUpdate(request.id, "Completed")}
+                                className="btn btn-primary"
+                            >
+                                Complete
+                            </button>
+                            )}
+                        </>
                         )}
-                      </>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                    </div>
+                    </td>
+                </tr>
+                ))}
+            </tbody>
+            </table>
+        </div>
       )}
 
       {showModal && (
         <div className="modal-overlay">
-          <div className="modal">
+          <div className="modal-content">
             <div className="modal-header">
-              <h3 className="modal-title">{editingRequest ? "Edit Request" : "Create New Request"}</h3>
+              <h2>{editingRequest ? "Edit Request" : "Create New Request"}</h2>
               <button
-                className="close-btn"
+                className="close-modal"
                 onClick={() => {
                   setShowModal(false)
                   setEditingRequest(null)
@@ -339,81 +341,84 @@ const Requests = () => {
                 ×
               </button>
             </div>
-            <form onSubmit={handleSubmit}>
-              <div className="form-group">
-                <label className="form-label">Asset (Optional)</label>
-                <select name="asset_id" className="form-select" value={formData.asset_id} onChange={handleChange}>
-                  <option value="">Select Asset</option>
-                  {assets.map((asset) => (
-                    <option key={asset.id} value={asset.id}>
-                      {asset.name} - {asset.serial_number}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Request Type</label>
-                <select
-                  name="request_type"
-                  className="form-select"
-                  value={formData.request_type}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="Repair">Repair</option>
-                  <option value="Replacement">Replacement</option>
-                  <option value="New Asset">New Asset</option>
-                </select>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Reason</label>
-                <input
-                  type="text"
-                  name="reason"
-                  className="form-input"
-                  value={formData.reason}
-                  onChange={handleChange}
-                  placeholder="Brief reason for the request"
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Description</label>
-                <textarea
-                  name="description"
-                  className="form-input"
-                  value={formData.description}
-                  onChange={handleChange}
-                  rows="4"
-                  placeholder="Detailed description of the request"
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Priority</label>
-                <select name="priority" className="form-select" value={formData.priority} onChange={handleChange}>
-                  <option value="Low">Low</option>
-                  <option value="Medium">Medium</option>
-                  <option value="High">High</option>
-                  <option value="Critical">Critical</option>
-                </select>
-              </div>
-              <div className="flex gap-2">
-                <button type="submit" className="btn btn-primary">
-                  {editingRequest ? "Update Request" : "Submit Request"}
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    setShowModal(false)
-                    setEditingRequest(null)
-                    resetForm()
-                  }}
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
+            <div className="modal-body">
+                <form onSubmit={handleSubmit} style={{display: 'flex', flexDirection: 'column', gap: '1rem'}}>
+                <div className="form-group">
+                    <label className="form-label">Asset (Optional)</label>
+                    <select name="asset_id" className="form-select" value={formData.asset_id} onChange={handleChange}>
+                    <option value="">Select Asset</option>
+                    {assets.map((asset) => (
+                        <option key={asset.id} value={asset.id}>
+                        {asset.name} - {asset.serial_number}
+                        </option>
+                    ))}
+                    </select>
+                </div>
+                <div className="form-group">
+                    <label className="form-label">Request Type</label>
+                    <select
+                    name="request_type"
+                    className="form-select"
+                    value={formData.request_type}
+                    onChange={handleChange}
+                    required
+                    >
+                    <option value="Repair">Repair</option>
+                    <option value="Replacement">Replacement</option>
+                    <option value="New Asset">New Asset</option>
+                    </select>
+                </div>
+                <div className="form-group">
+                    <label className="form-label">Reason</label>
+                    <input
+                    type="text"
+                    name="reason"
+                    className="form-input"
+                    value={formData.reason}
+                    onChange={handleChange}
+                    placeholder="Brief reason for the request"
+                    />
+                </div>
+                <div className="form-group">
+                    <label className="form-label">Description</label>
+                    <textarea
+                    name="description"
+                    className="form-input"
+                    value={formData.description}
+                    onChange={handleChange}
+                    rows="4"
+                    placeholder="Detailed description of the request"
+                    required
+                    />
+                </div>
+                <div className="form-group">
+                    <label className="form-label">Priority</label>
+                    <select name="priority" className="form-select" value={formData.priority} onChange={handleChange}>
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                    <option value="Critical">Critical</option>
+                    </select>
+                </div>
+                <div className="flex gap-2">
+                    <button type="submit" className="btn btn-primary" style={{flex: 1}}>
+                    {editingRequest ? "Update Request" : "Submit Request"}
+                    </button>
+                    <button
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{flex: 1}}
+                    onClick={() => {
+                        setShowModal(false)
+                        setEditingRequest(null)
+                        resetForm()
+                    }}
+                    >
+                    Cancel
+                    </button>
+                </div>
+                </form>
+            </div>
           </div>
         </div>
       )}

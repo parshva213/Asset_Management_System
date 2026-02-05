@@ -179,111 +179,130 @@ const Assets = () => {
           <p>No assets found</p>
         </div>
       ) : (
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Type</th>
-              <th>Serial Number</th>
-              <th>Warranty Expiry</th>
-              <th>Category</th>
-              <th>Location</th>
-              <th>Purchase Date</th>
-              {(user?.role === "Super Admin" || user?.role === "Supervisor") && <th>Actions</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {assets.map((asset) => (
-              <tr key={asset.id} id={`asset-${asset.id}`}>
-                <td>{asset.name}</td>
-                <td>{asset.asset_type}</td>
-                <td>{asset.serial_number || "N/A"}</td>
-                <td>{formatDate(asset.warranty_expiry) || "N/A"}</td>
-                <td>{asset.category_name || "N/A"}</td>
-                <td>{asset.location_name || "N/A"}</td>
-                <td>{formatDate(asset.purchase_date) || "N/A"}</td>
-                {(user?.role === "Super Admin" || user?.role === "Supervisor") && (
-                  <td>
+        <div className="table-container">
+            <table className="table">
+            <thead>
+                <tr>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Location</th>
+                <th>Status</th>
+                <th>Purchased</th>
+                <th>Warranty</th>
+                <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {assets.map((asset) => (
+                <tr key={asset.id} id={`asset-${asset.id}`}>
+                    <td>
+                    <div className="fw-bold">{asset.name}</div>
+                    <div className="text-muted small">{asset.serial_number}</div>
+                    </td>
+                    <td>{asset.category_name || "N/A"}</td>
+                    <td>{asset.location_name || "Unassigned"}</td>
+                    <td>
+                    <span
+                        className={`badge ${
+                        asset.status === "Available"
+                            ? "badge-success"
+                            : asset.status === "Assigned"
+                            ? "badge-primary"
+                            : "badge-warning"
+                        }`}
+                    >
+                        {asset.status}
+                    </span>
+                    </td>
+                    <td>{formatDate(asset.purchase_date)}</td>
+                    <td>{formatDate(asset.warranty_expiry)}</td>
+                    <td>
                     <div className="flex gap-2">
-                      <button onClick={() => handleEdit(asset)} className="btn btn-secondary">Edit</button>
-                      <button onClick={() => handleDelete(asset.id)} className="btn btn-danger">Delete</button>
+                        <button onClick={() => handleEdit(asset)} className="btn btn-secondary">
+                        Edit
+                        </button>
+                        <button onClick={() => handleDelete(asset.id)} className="btn btn-danger">
+                        Delete
+                        </button>
                     </div>
-                  </td>
-                )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                    </td>
+                </tr>
+                ))}
+            </tbody>
+            </table>
+        </div>
       )}
 
       {showModal && (
         <div className="modal-overlay">
-          <div className="modal">
+          <div className="modal-content">
             <div className="modal-header">
-              <h3>{editingAsset ? "Edit Asset" : "Add Asset"}</h3>
-              <button className="close-btn" onClick={() => { setShowModal(false); resetForm(); }}>×</button>
+              <h2>{editingAsset ? "Edit Asset" : "Add Asset"}</h2>
+              <button className="close-modal" onClick={() => { setShowModal(false); resetForm(); }}>×</button>
             </div>
-            <form onSubmit={handleSubmit}>
-              <div className="form-group">
-                <label>Asset Name</label>
-                <input type="text" name="name" value={formData.name} onChange={handleChange} required />
-              </div>
-
-              <div className="form-group">
-                <label>Asset Type</label>
-                <select name="asset_type" value={formData.asset_type} onChange={handleChange}>
-                  <option value="Hardware">Hardware</option>
-                  <option value="Software">Software</option>
-                </select>
-              </div>
-
-              {formData.asset_type === "Hardware" ? (
+            <div className="modal-body">
+                <form onSubmit={handleSubmit} style={{display: 'flex', flexDirection: 'column', gap: '1rem'}}>
                 <div className="form-group">
-                  <label>Serial Number</label>
-                  <input type="text" name="serial_number" value={formData.serial_number} onChange={handleChange} />
+                    <label className="form-label">Asset Name</label>
+                    <input type="text" className="form-input" name="name" value={formData.name} onChange={handleChange} required />
                 </div>
-              ) : (
+
                 <div className="form-group">
-                  <label>Warranty Expiry</label>
-                  <input type="date" name="warranty_expiry" value={formData.warranty_expiry} onChange={handleChange} />
+                    <label className="form-label">Asset Type</label>
+                    <select className="form-select" name="asset_type" value={formData.asset_type} onChange={handleChange}>
+                    <option value="Hardware">Hardware</option>
+                    <option value="Software">Software</option>
+                    </select>
                 </div>
-              )}
 
-              <div className="form-group">
-                <label>Category</label>
-                <select name="category_id" value={formData.category_id} onChange={handleChange} required>
-                  <option value="">Select category</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-              </div>
+                {formData.asset_type === "Hardware" ? (
+                    <div className="form-group">
+                    <label className="form-label">Serial Number</label>
+                    <input type="text" className="form-input" name="serial_number" value={formData.serial_number} onChange={handleChange} />
+                    </div>
+                ) : (
+                    <div className="form-group">
+                    <label className="form-label">Warranty Expiry</label>
+                    <input type="date" className="form-input" name="warranty_expiry" value={formData.warranty_expiry} onChange={handleChange} />
+                    </div>
+                )}
 
-              <div className="form-group">
-                <label>Location</label>
-                <select name="location_id" value={formData.location_id} onChange={handleChange} required>
-                  <option value="">Select location</option>
-                  {locations.map((l) => (
-                    <option key={l.id} value={l.id}>{l.name}</option>
-                  ))}
-                </select>
-              </div>
+                <div className="form-group">
+                    <label className="form-label">Category</label>
+                    <select className="form-select" name="category_id" value={formData.category_id} onChange={handleChange} required>
+                    <option value="">Select category</option>
+                    {categories.map((c) => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                    </select>
+                </div>
 
-              <div className="form-group">
-                <label>Purchase Date</label>
-                <input type="date" name="purchase_date" value={formData.purchase_date} onChange={handleChange} />
-              </div>
+                <div className="form-group">
+                    <label className="form-label">Location</label>
+                    <select className="form-select" name="location_id" value={formData.location_id} onChange={handleChange} required>
+                    <option value="">Select location</option>
+                    {locations.map((l) => (
+                        <option key={l.id} value={l.id}>{l.name}</option>
+                    ))}
+                    </select>
+                </div>
 
-              <div className="form-group">
-                <label>Description</label>
-                <textarea name="description" value={formData.description} onChange={handleChange} rows="3" />
-              </div>
+                <div className="form-group">
+                    <label className="form-label">Purchase Date</label>
+                    <input type="date" className="form-input" name="purchase_date" value={formData.purchase_date} onChange={handleChange} />
+                </div>
 
-              <div className="flex gap-2 mt-2">
-                <button type="submit" className="btn btn-primary">{editingAsset ? "Update" : "Add"} Asset</button>
-                <button type="button" className="btn btn-secondary" onClick={() => { setShowModal(false); resetForm(); }}>Cancel</button>
-              </div>
-            </form>
+                <div className="form-group">
+                    <label className="form-label">Description</label>
+                    <textarea className="form-input" name="description" value={formData.description} onChange={handleChange} rows="3" />
+                </div>
+
+                <div className="flex gap-2 mt-2">
+                    <button type="submit" className="btn btn-primary" style={{flex: 1}}>{editingAsset ? "Update" : "Add"} Asset</button>
+                    <button type="button" className="btn btn-secondary" style={{flex: 1}} onClick={() => { setShowModal(false); resetForm(); }}>Cancel</button>
+                </div>
+                </form>
+            </div>
           </div>
         </div>
       )}

@@ -67,7 +67,7 @@ const Login = () => {
         )}
 
         <form onSubmit={handleSubmit}>
-          <div className="form-group input-group">
+          <div className="form-group">
             <label className="form-label">Email</label>
             <input
               type="email"
@@ -78,7 +78,7 @@ const Login = () => {
               required
             />
           </div>
-          <div className="form-group input-group">
+          <div className="form-group">
             <label className="form-label">Password</label>
             <input
               type="password"
@@ -91,7 +91,7 @@ const Login = () => {
           </div>
           
           <div className="flex-between mb-4">
-              <label className="remember-me-label">
+              <label className="remember-me-label" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <input 
                     type="checkbox" 
                     checked={rememberMe} 
@@ -100,7 +100,7 @@ const Login = () => {
                   <span>Remember me</span>
               </label>
               
-              <Link to="/reset-password" className="forgot-password-link">
+              <Link to="/reset-password" style={{ color: "var(--primary)", textDecoration: "none", fontSize: "0.9rem" }}>
                   Forgot Password?
               </Link>
           </div>

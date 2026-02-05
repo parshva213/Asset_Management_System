@@ -48,21 +48,21 @@ const ResetPassword = () => {
     };
 
     return (
-        <div className="auth-container" style={{ position: 'relative' }}>
-            <div style={{ position: 'absolute', top: '1rem', right: '1rem' }}>
+        <div className="auth-wrapper">
+             <div className="theme-toggle-wrapper">
                 <ThemeToggle />
             </div>
             
-            <div className="auth-card" style={{textAlign: 'center'}}>
+            <div className="auth-card">
                 {/* AMS Logo */}
-                <img src={logo} alt="AMS Logo" className="auth-logo" style={{ width: '80px', height: 'auto', marginBottom: '1.5rem' }} />
+                <img src={logo} alt="AMS Logo" className="auth-logo" />
                 
-                <h2 className="auth-title">Simple Reset Your Password</h2>
+                <h2 className="auth-title">Reset Your Password</h2>
 
-                {message && <div className="alert alert-success">{message}</div>}
-                {error && <div className="alert alert-error">{error}</div>}
+                {message && <div className="alert alert-success mb-4">{message}</div>}
+                {error && <div className="alert alert-error mb-4">{error}</div>}
 
-                <form onSubmit={handleSubmit} style={{textAlign: 'left'}}>
+                <form onSubmit={handleSubmit}>
                     <div className="form-group">
                         <label className="form-label">Email Address</label>
                         <input
@@ -74,7 +74,7 @@ const ResetPassword = () => {
                             placeholder="Enter your registered email"
                         />
                     </div>
-                    <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }}>
+                    <button type="submit" className="btn btn-primary w-full mt-4">
                         Verify Your Email
                     </button>
                 </form>
@@ -84,7 +84,7 @@ const ResetPassword = () => {
                 </div>
             </div>
 
-            <div style={{ position: 'absolute', bottom: 0, width: '100%' }}>
+            <div className="auth-footer-wrapper">
                 <Footer />
             </div>
         </div>

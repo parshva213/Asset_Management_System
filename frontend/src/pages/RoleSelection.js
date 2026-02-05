@@ -134,6 +134,9 @@ const RoleSelection = () => {
 
         <div className="auth-link">
           <p>
+            Register as <Link to="/register" state={{ role: "Vendor" }}>vendor</Link>
+          </p>
+          <p>
             Already have an account? <Link to="/login">Login here</Link>
           </p>
         </div>

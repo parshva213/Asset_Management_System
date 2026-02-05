@@ -80,11 +80,9 @@ const Organizations = () => {
     const handleEdit = (organization) => {
         setEditingOrganization(organization)
         setFormData({
-            name: organization.name || "",
-            description: organization.description || "",
-            orgpk: organization.orgpk || "",
-            member: organization.member || "1",
-            v_opk: organization.v_opk || ""
+            name: organization.name,
+            description: organization.description,
+            member: organization.member,
         })
         setShowModal(true)
     }
@@ -105,9 +103,7 @@ const Organizations = () => {
     const resetForm = () => setFormData({
         name: "",
         description: "",
-        orgpk: "",
         member: "1",
-        v_opk: ""
     })
 
     const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -115,27 +111,28 @@ const Organizations = () => {
     if (loading) return <div className="loading">Loading organizations...</div>
 
     return (
-        <div>
-            <div className="flex-between mb-4">
-                <h2>Organizations Management</h2>
-                <Button onClick={() => {
-                    setEditingOrganization(null)
-                    setFormData({
-                        name: "",
-                        description: "",
-                        member: "1",
-                    })
-                    setShowModal(true)
-                }}>
-                    Add Organization
-                </Button>
-            </div>
+    <div className="page-container">
+        <div className="flex-between mb-4">
+            <h2>Organizations Management</h2>
+            <Button onClick={() => {
+                setEditingOrganization(null)
+                setFormData({
+                    name: "",
+                    description: "",
+                    member: "1",
+                })
+                setShowModal(true)
+            }}>
+                Add Organization
+            </Button>
+        </div>
 
-            {organizations.length === 0 ? (
-                <div className="empty-state">
-                    <p>No organizations found</p>
-                </div>
-            ) : (
+        {organizations.length === 0 || organizations.filter(org => org.id !== 1).length === 0 ? (
+            <div className="empty-state">
+                <p>No organizations found</p>
+            </div>
+        ) : (
+            <div className="table-container">
                 <table className="table">
                     <thead>
                         <tr>
@@ -149,13 +146,13 @@ const Organizations = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {organizations.map((organization) => (
+                        {organizations.filter(org => org.id !== 1).map((organization) => (
                             <tr key={organization.id} id={`org-${organization.id}`}>
                                 <td>{organization.name}</td>
                                 <td>{organization.description || "N/A"}</td>
-                                <td>{organization.orgpk || "N/A"}</td>
-                                <td>{organization.member || "N/A"}</td>
-                                <td>{organization.v_opk || "N/A"}</td>
+                                <td>{organization.orgpk}</td>
+                                <td>{organization.member}</td>
+                                <td>{organization.v_opk}</td>
                                 <td>{organization.created_at ? formatDate(organization.created_at) : "-"}</td>
                                 <td>
                                     <div className="flex gap-2">
@@ -171,27 +168,29 @@ const Organizations = () => {
                         ))}
                     </tbody>
                 </table>
-            )}
+            </div>
+        )}
 
-            {showModal && (
-                <div className="modal-overlay" role="dialog" aria-modal="true">
-                    <div className="modal">
-                        <div className="modal-header">
-                            <h3 className="modal-title">{editingOrganization ? "Edit Organization" : "Add New Organization"}</h3>
-                            <button
-                                className="close-btn"
-                                aria-label="Close"
-                                onClick={() => {
-                                    setShowModal(false)
-                                    setEditingOrganization(null)
-                                    resetForm()
-                                    setError(null)
-                                }}
-                            >
-                                ×
-                            </button>
-                        </div>
+        {showModal && (
+            <div className="modal-overlay" role="dialog" aria-modal="true">
+                <div className="modal-content">
+                    <div className="modal-header">
+                        <h2 className="modal-title">{editingOrganization ? "Edit Organization" : "Add New Organization"}</h2>
+                        <button
+                            className="close-modal"
+                            aria-label="Close"
+                            onClick={() => {
+                                setShowModal(false)
+                                setEditingOrganization(null)
+                                resetForm()
+                                setError(null)
+                            }}
+                        >
+                            ×
+                        </button>
+                    </div>
 
+                    <div className="modal-body">
                         <form onSubmit={handleSubmit}>
                             <div className="form-group">
                                 <label className="form-label">Organization Name *</label>
@@ -224,18 +223,18 @@ const Organizations = () => {
                             <div className="form-group">
                                 <label className="form-label">Member</label>
                                 <input
-                                    type="text"
+                                    type="number"
                                     name="member"
                                     className="form-input"
                                     value={formData.member}
                                     onChange={handleChange}
-                                    placeholder="Enter member"
+                                    placeholder="Enter Org Member"
                                 />
                             </div>
 
-                            {error && <div className="alert alert-error">{error}</div>}
+                            {error && <div className="alert alert-error mb-4">{error}</div>}
 
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 mt-6">
                                 <Button type="submit" disabled={submitting}>
                                     {submitting ? (editingOrganization ? "Updating..." : "Adding...") : editingOrganization ? "Update Organization" : "Add Organization"}
                                 </Button>
@@ -255,8 +254,9 @@ const Organizations = () => {
                         </form>
                     </div>
                 </div>
-            )}
-        </div>
+            </div>
+        )}
+    </div>
     )
 }
 

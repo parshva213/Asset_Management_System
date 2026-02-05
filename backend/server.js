@@ -285,11 +285,11 @@ app.get("/api/dashboard", authenticate(), async (req, res) => {
 // ------------------ ADMIN DASHBOARD ------------------
 app.get("/api/admin/dashboard", authenticate(["Super Admin", "Admin"]), async (req, res) => {
     try {
-        const [totalAssets] = await pool.query("SELECT COUNT(*) as count FROM assets");
-        const [totalUsers] = await pool.query("SELECT COUNT(*) as count FROM users WHERE role != 'Super Admin' AND role != 'software developer'");
-        const [totalCategories] = await pool.query("SELECT COUNT(*) as count FROM categories");
-        const [totalLocations] = await pool.query("SELECT COUNT(*) as count FROM locations");
-        const [totalRooms] = await pool.query("SELECT COUNT(*) as count FROM rooms");
+        const [totalAssets] = await pool.query("SELECT COUNT(*) as count FROM assets where org_id = ?", [req.user.org_id]);
+        const [totalUsers] = await pool.query("SELECT COUNT(*) as count FROM users WHERE org_id = ? AND role != 'Super Admin'", [req.user.org_id]);
+        const [totalCategories] = await pool.query("SELECT COUNT(*) as count FROM categories WHERE org_id = ?", [req.user.org_id]);
+        const [totalLocations] = await pool.query("SELECT COUNT(*) as count FROM locations WHERE org_id = ?", [req.user.org_id]);
+        const [totalRooms] = await pool.query("SELECT COUNT(*) as count FROM rooms WHERE location_id = (SELECT id from locations where org_id = ?) ", [req.user.org_id]);
         const [pendingRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE status = 'Pending'");
         const [pendingOrders] = await pool.query("SELECT COUNT(*) as count FROM purchase_orders WHERE status = 'Pending'");
         const [completedOrders] = await pool.query("SELECT COUNT(*) as count FROM purchase_orders WHERE status = 'Completed'");

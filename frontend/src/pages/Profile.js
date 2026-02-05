@@ -97,7 +97,7 @@ const Profile = () => {
           </div>
           <div className="card-body">
             {profileMessage && (
-              <div className={`alert ${profileMessage.includes("success") ? "alert-success" : "alert-error"}`} style={{ marginBottom: '1rem' }}>
+              <div className={`alert ${profileMessage.includes("success") ? "alert-success" : "alert-error"} mb-4`}>
                 {profileMessage}
               </div>
             )}
@@ -143,9 +143,8 @@ const Profile = () => {
               {!isReadOnly && (
                 <button
                   type="submit"
-                  className="btn btn-primary"
+                  className="btn btn-primary w-full mt-2"
                   disabled={profileLoading}
-                  style={{ width: '100%', marginTop: '0.5rem' }}
                 >
                   {profileLoading ? "Updating..." : "Update Profile"}
                 </button>
@@ -162,7 +161,7 @@ const Profile = () => {
             </div>
             <div className="card-body">
               {passwordMessage && (
-                <div className={`alert ${passwordMessage.includes("success") ? "alert-success" : "alert-error"}`} style={{ marginBottom: '1rem' }}>
+                <div className={`alert ${passwordMessage.includes("success") ? "alert-success" : "alert-error"} mb-4`}>
                   {passwordMessage}
                 </div>
               )}
@@ -190,7 +189,7 @@ const Profile = () => {
                     required
                     placeholder="Enter new password"
                   />
-                  <small style={{ color: "var(--text-secondary)", fontSize: "0.75rem", marginTop: "0.25rem", display: "block" }}>
+                  <small className="text-secondary text-sm mt-1 block">
                     Password must be at least 6 characters long
                   </small>
                 </div>
@@ -208,9 +207,8 @@ const Profile = () => {
                 </div>
                 <button
                   type="submit"
-                  className="btn btn-primary"
+                  className="btn btn-primary w-full mt-2"
                   disabled={passwordLoading}
-                  style={{ width: '100%', marginTop: '0.5rem' }}
                 >
                   {passwordLoading ? "Changing..." : "Change Password"}
                 </button>

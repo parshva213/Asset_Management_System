@@ -115,18 +115,18 @@ const EmployeeDashboard = () => {
 
             <div className="dashboard-top-row">
                 {/* Profile Card */}
-                <div className="profile-card-new">
-                    <div className="profile-header-new">
+                <div className="profile-card">
+                    <div className="profile-header">
                         <div className="avatar-circle">
                             {getInitials(user?.name)}
                         </div>
                         <div className="profile-greeting">
                             <h3>Hi, {user?.name || "Employee"}</h3>
                             <span className="waving-hand">👋</span>
-                            <span className="role-badge-new">Employee</span>
+                            <span className="role-badge">Employee</span>
                         </div>
                     </div>
-                    <div className="profile-details-new">
+                    <div className="profile-details">
                         <div className="info-row">
                             <span className="info-icon">📧</span> {user?.email}
                         </div>
@@ -143,58 +143,58 @@ const EmployeeDashboard = () => {
                             <span className="info-icon">🏢</span> {user?.location_name || "Not assigned"}
                         </div>
                     </div>
-                    <div className="profile-footer-new" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                    <div className="profile-footer">
                         <Link to="/profile">Update Profile →</Link>
-                        <button onClick={() => setShowRoomModal(true)} style={{background:'none', border:'none', color:'#6366f1', fontWeight:'600', cursor:'pointer', fontSize:'0.9rem'}}>Update Location →</button>
+                        <button onClick={() => setShowRoomModal(true)}>Update Location →</button>
                     </div>
                 </div>
 
                 {/* Stats Grid */}
                 <div className="stats-grid-2">
                     {/* My Assets */}
-                    <div className="stat-widget-new">
+                    <div className="stat-widget">
                         <div>
-                            <div className="stat-icon-new blue">💻</div>
-                            <span className="stat-label-new">My Assets</span>
-                            <h3 className="stat-value-new">{stats.assignedAssets}</h3>
+                            <div className="stat-icon blue">💻</div>
+                            <span className="stat-label">My Assets</span>
+                            <h3 className="stat-value">{stats.assignedAssets}</h3>
                         </div>
-                        <div className="stat-footer-new">
+                        <div className="stat-footer">
                             <Link to="/assets">View full details →</Link>
                         </div>
                     </div>
 
                     {/* Pending Requests */}
-                    <div className="stat-widget-new">
+                    <div className="stat-widget">
                         <div>
-                            <div className="stat-icon-new orange">⏳</div>
-                            <span className="stat-label-new">Pending Req.</span>
-                            <h3 className="stat-value-new">{stats.pendingRequests}</h3>
+                            <div className="stat-icon orange">⏳</div>
+                            <span className="stat-label">Pending Req.</span>
+                            <h3 className="stat-value">{stats.pendingRequests}</h3>
                         </div>
-                        <div className="stat-footer-new">
+                        <div className="stat-footer">
                             <Link to="/requests">View full details →</Link>
                         </div>
                     </div>
 
                     {/* Approved Requests */}
-                    <div className="stat-widget-new">
+                    <div className="stat-widget">
                         <div>
-                            <div className="stat-icon-new green">✅</div>
-                            <span className="stat-label-new">Approved</span>
-                            <h3 className="stat-value-new">{stats.approvedRequests}</h3>
+                            <div className="stat-icon green">✅</div>
+                            <span className="stat-label">Approved</span>
+                            <h3 className="stat-value">{stats.approvedRequests}</h3>
                         </div>
-                        <div className="stat-footer-new">
+                        <div className="stat-footer">
                             <Link to="/requests">View full details →</Link>
                         </div>
                     </div>
 
                     {/* New Request */}
-                    <div className="stat-widget-new">
+                    <div className="stat-widget">
                         <div>
-                            <div className="stat-icon-new purple">✨</div>
-                            <span className="stat-label-new">Total Requests</span>
-                            <h3 className="stat-value-new">{stats.totalRequests}</h3>
+                            <div className="stat-icon purple">✨</div>
+                            <span className="stat-label">Total Requests</span>
+                            <h3 className="stat-value">{stats.totalRequests}</h3>
                         </div>
-                        <div className="stat-footer-new">
+                        <div className="stat-footer">
                             <Link to="/requests">Create New →</Link>
                         </div>
                     </div>

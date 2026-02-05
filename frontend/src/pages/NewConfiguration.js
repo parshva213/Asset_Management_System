@@ -20,10 +20,10 @@ const NewConfiguration = () => {
   }
 
   return (
-    <div className="page-container" style={{ display: 'flex', justifyContent: 'center', padding: '2rem 0' }}>
-      <div className="card form-container" style={{ width: '100%' }}>
+    <div className="page-container flex-center">
+      <div className="card form-container w-full max-w-lg">
         <h3>Configure New Assets</h3>
-        <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+        <p className="text-secondary mb-6 text-sm">
           Maintenance staff can configure new hardware/software here.
         </p>
 
@@ -62,7 +62,7 @@ const NewConfiguration = () => {
             />
           </div>
 
-          <button type="submit" className="btn btn-primary" style={{ marginTop: '1rem' }}>
+          <button type="submit" className="btn btn-primary mt-4 w-full">
             Save Configuration
           </button>
         </form>

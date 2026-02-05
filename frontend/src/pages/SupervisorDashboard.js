@@ -166,15 +166,15 @@ const SupervisorDashboard = () => {
                 {/* Stats Grid */}
                 <div className="stats-grid-3">
                     {/* Team Members */}
-                    <div className="stat-widget-new">
+                    <div className="stat-widget">
                         <div>
-                            <div className="stat-icon-new purple">👥</div>
-                            <span className="stat-label-new">Team Members</span>
-                            <h3 className="stat-value-new" style={!user?.loc_id ? { fontSize: '1.25rem' } : {}}>
+                            <div className="stat-icon purple">👥</div>
+                            <span className="stat-label">Team Members</span>
+                            <h3 className="stat-value" style={!user?.loc_id ? {fontSize: '1.25rem'} : {}}>
                                 {user?.loc_id ? stats.departmentUsers : "Location not set"}
                             </h3>
                         </div>
-                        <div className="stat-footer-new">
+                        <div className="stat-footer">
                             {user?.loc_id ? (
                                 <Link to="/users">View Details →</Link>
                             ) : (
@@ -184,15 +184,15 @@ const SupervisorDashboard = () => {
                     </div>
 
                     {/* Assigned Assets */}
-                    <div className="stat-widget-new">
+                    <div className="stat-widget">
                         <div>
-                            <div className="stat-icon-new green">📦</div>
-                            <span className="stat-label-new">Assigned Assets</span>
-                            <h3 className="stat-value-new" style={!user?.loc_id ? { fontSize: '1.25rem' } : {}}>
+                            <div className="stat-icon green">📦</div>
+                            <span className="stat-label">Assigned Assets</span>
+                            <h3 className="stat-value" style={!user?.loc_id ? {fontSize: '1.25rem'} : {}}>
                                 {user?.loc_id ? stats.assignedAssets : "Location not set"}
                             </h3>
                         </div>
-                        <div className="stat-footer-new">
+                        <div className="stat-footer">
                             {user?.loc_id ? (
                                 <Link to="/assets">View full details →</Link>
                             ) : ""}
@@ -200,15 +200,15 @@ const SupervisorDashboard = () => {
                     </div>
 
                     {/* Location Assets */}
-                    <div className="stat-widget-new">
+                    <div className="stat-widget">
                         <div>
-                            <div className="stat-icon-new blue">🏢</div>
-                            <span className="stat-label-new">Location Assets</span>
-                            <h3 className="stat-value-new" style={!user?.loc_id ? { fontSize: '1.25rem' } : {}}>
+                            <div className="stat-icon blue">🏢</div>
+                            <span className="stat-label">Location Assets</span>
+                            <h3 className="stat-value" style={!user?.loc_id ? {fontSize: '1.25rem'} : {}}>
                                 {user?.loc_id ? stats.totalAssets : "Location not set"}
                             </h3>
                         </div>
-                        <div className="stat-footer-new">
+                        <div className="stat-footer">
                             {user?.loc_id ? (
                                 <Link to="/assets">View full details →</Link>
                             ) : ""}
@@ -216,15 +216,15 @@ const SupervisorDashboard = () => {
                     </div>
 
                     {/* Pending Requests */}
-                    <div className="stat-widget-new">
+                    <div className="stat-widget">
                         <div>
-                            <div className="stat-icon-new orange">📝</div>
-                            <span className="stat-label-new">Pending Req.</span>
-                            <h3 className="stat-value-new" style={!user?.loc_id ? { fontSize: '1.25rem' } : {}}>
+                            <div className="stat-icon orange">📝</div>
+                            <span className="stat-label">Pending Req.</span>
+                            <h3 className="stat-value" style={!user?.loc_id ? {fontSize: '1.25rem'} : {}}>
                                 {user?.loc_id ? stats.pendingRequests : "Location not set"}
                             </h3>
                         </div>
-                        <div className="stat-footer-new">
+                        <div className="stat-footer">
                             {user?.loc_id ? (
                                 <Link to="/requests">View full details →</Link>
                             ) : ""}
@@ -232,15 +232,15 @@ const SupervisorDashboard = () => {
                     </div>
 
                     {/* Orders */}
-                    <div className="stat-widget-new">
+                    <div className="stat-widget">
                         <div>
-                            <div className="stat-icon-new cyan">🛒</div>
-                            <span className="stat-label-new">Orders</span>
-                            <h3 className="stat-value-new" style={!user?.loc_id ? { fontSize: '1.25rem' } : {}}>
+                            <div className="stat-icon cyan">🛒</div>
+                            <span className="stat-label">Orders</span>
+                            <h3 className="stat-value" style={!user?.loc_id ? {fontSize: '1.25rem'} : {}}>
                                 {user?.loc_id ? stats.totalOrders : "Location not set"}
                             </h3>
                         </div>
-                        <div className="stat-footer-new">
+                        <div className="stat-footer">
                             {user?.loc_id ? (
                                 <Link to="/purchase-orders">View full details →</Link>
                             ) : ""}
@@ -248,19 +248,23 @@ const SupervisorDashboard = () => {
                     </div>
 
                     {/* Room Status */}
-                    <div className="stat-widget-new">
+                    <div className="stat-widget">
                         <div>
-                            <div className="stat-icon-new purple">📍</div>
-                            <span className="stat-label-new">Room Status</span>
-                            <h3 className="stat-value-new" style={{ fontSize: '1.5rem' }}>
-                                {user?.room_name || "Not assigned"}
+                            <div className="stat-icon rose">🚪</div>
+                            <span className="stat-label">Total Rooms</span>
+                            <h3 className="stat-value text-xl">
+                                {user?.loc_id ? stats.totalRooms : "Location not set"}
                             </h3>
-                            <span className="stat-label-new" style={{ marginTop: '0.25rem' }}>
-                                {user?.location_name || "No location set"}
-                            </span>
                         </div>
-                        <div className="stat-footer-new">
-                            <button onClick={() => setShowRoomModal(true)}>Register Now →</button>
+                        <div className="stat-footer">
+                             {user?.loc_id ? (
+                                <Link to="#" onClick={(e) => {
+                                    e.preventDefault()
+                                    setShowRoomModal(true)
+                                }}>
+                                    Register Room →
+                                </Link>
+                             ) : ""}
                         </div>
                     </div>
                 </div>

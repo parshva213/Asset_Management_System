@@ -260,7 +260,7 @@ const Register = () => {
           </div>
 
           {role === 'Vendor' && (
-             <div className="form-group input-group">
+             <div className="form-group">
                 <label className="form-label">Company Name</label>
                 <input
                 type="text"
@@ -276,7 +276,7 @@ const Register = () => {
 
           {/* Location Selection for Supervisor */}
           {role === 'Supervisor' && (
-            <div className="form-group input-group">
+            <div className="form-group">
               <label className="form-label">Location</label>
               <select
                 className={`form-input ${selectedLocation === '' ? '' : validations.location ? 'input-valid' : 'input-invalid'}`}
@@ -296,7 +296,7 @@ const Register = () => {
 
           {/* Room Selection for Supervisor - Only shows when location is selected */}
           {role === 'Supervisor' && selectedLocation && (
-            <div className="form-group input-group">
+            <div className="form-group">
               <label className="form-label">Room</label>
               <select
                 className={`form-input ${selectedRoom === '' ? '' : validations.room ? 'input-valid' : 'input-invalid'}`}
@@ -314,7 +314,7 @@ const Register = () => {
             </div>
           )}
           
-          <button type="submit" className="btn btn-primary" style={{ width: "100%", marginTop: '1rem' }} disabled={loading}>
+          <button type="submit" className="btn btn-primary w-full mt-4" disabled={loading}>
             {loading ? "Registering..." : "Register"}
           </button>
         </form>
@@ -323,7 +323,7 @@ const Register = () => {
           <p>
             Already have an account? <Link to="/login">Login here</Link>
           </p> 
-          <p style={{ marginTop: '0.5rem' }}>
+          <p className="mt-2">
              <Link to="/role-selection">Change Role</Link>
           </p>
         </div>

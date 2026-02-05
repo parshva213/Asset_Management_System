@@ -114,16 +114,14 @@ const Employees = () => {
           <p>No employees found</p>
         </div>
       ) : (
-        <div className="employee-grid">
+        <div className="user-grid">
           {employees.map((employee) => (
-            <div key={employee.id} className="card" id={`user-${employee.id}`}>
-              <div className="employee-header">
-                <div>
-                  <h3>{employee.name}</h3>
-                </div>
-                <span className="employee-role">{employee.role}</span>
+            <div key={employee.id} className="user-card" id={`user-${employee.id}`}>
+              <div className="card-header">
+                <h3>{employee.name}</h3>
+                <span className="badge badge-low">{employee.role}</span>
               </div>
-              <div className="employee-info">
+              <div className="card-body">
                 <p>
                   <strong>Email:</strong> {employee.email}
                 </p>
@@ -135,12 +133,12 @@ const Employees = () => {
                 </p>
               </div>
 
-              <div className="employee-actions flex gap-2">
-                <button onClick={() => openDetailsModal(employee)} className="btn btn-secondary flex-1">
+              <div className="card-footer">
+                <button onClick={() => openDetailsModal(employee)} className="btn btn-secondary">
                   View Details
                 </button>
                 {(user?.role === "Super Admin" || user?.role === "Supervisor") && (
-                  <button onClick={() => openAssignModal(employee)} className="btn btn-primary flex-1">
+                  <button onClick={() => openAssignModal(employee)} className="btn btn-primary">
                     Assign Asset
                   </button>
                 )}
@@ -153,11 +151,11 @@ const Employees = () => {
       {/* Details Modal */}
       {showDetailsModal && detailsEmployee && (
         <div className="modal-overlay">
-          <div className="modal">
+          <div className="modal-content">
             <div className="modal-header">
-              <h3 className="modal-title">{detailsEmployee.name} - Details</h3>
+              <h2>{detailsEmployee.name} - Details</h2>
               <button
-                className="close-btn"
+                className="close-modal"
                 onClick={() => {
                   setShowDetailsModal(false)
                   setDetailsEmployee(null)
@@ -166,8 +164,8 @@ const Employees = () => {
                 ×
               </button>
             </div>
-            <div className="employee-details">
-              <div className="mb-4">
+            <div className="modal-body">
+              <div className="modal-details">
                 <p><strong>Email:</strong> {detailsEmployee.email}</p>
                 <p><strong>Role:</strong> {detailsEmployee.role}</p>
                 <p><strong>Department:</strong> {detailsEmployee.department || "N/A"}</p>
@@ -175,9 +173,9 @@ const Employees = () => {
 
               <h4>Assigned Assets ({detailsEmployee.assigned_assets?.length || 0})</h4>
               {detailsEmployee.assigned_assets && detailsEmployee.assigned_assets.length > 0 ? (
-                <ul className="assigned-assets-list">
+                <div className="assigned-assets-list">
                   {detailsEmployee.assigned_assets.map((asset) => (
-                    <li key={asset.id} className="asset-item">
+                    <div key={asset.id} className="assigned-asset-item">
                       <span>
                         {asset.name} - {asset.serial_number}
                       </span>
@@ -185,11 +183,6 @@ const Employees = () => {
                         <button
                           onClick={() => {
                             handleUnassignAsset(detailsEmployee.id, asset.id);
-                            // Update the details view immediately by removing the asset locally or triggering a refetch
-                            // Since handleUnassignAsset calls fetchEmployees, we just need to keep the modal open.
-                            // However, detailsEmployee is a static snapshot. We should probably update it or close modal.
-                            // Better UX: update local state or re-fetch and update detailsEmployee.
-                            // For simplicity/reliability with current structure:
                             setShowDetailsModal(false);
                           }}
                           className="btn btn-danger btn-sm"
@@ -197,14 +190,14 @@ const Employees = () => {
                           Unassign
                         </button>
                       )}
-                    </li>
+                    </div>
                   ))}
-                </ul>
+                </div>
               ) : (
                 <p className="text-muted">No assets assigned.</p>
               )}
             </div>
-            <div className="flex justify-end mt-4">
+            <div className="modal-footer" style={{marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end'}}>
               <button
                 className="btn btn-secondary"
                 onClick={() => setShowDetailsModal(false)}
@@ -218,11 +211,11 @@ const Employees = () => {
 
       {showAssignModal && (
         <div className="modal-overlay">
-          <div className="modal">
+          <div className="modal-content">
             <div className="modal-header">
-              <h3 className="modal-title">Assign Asset to {selectedEmployee?.name}</h3>
+              <h2>Assign Asset to {selectedEmployee?.name}</h2>
               <button
-                className="close-btn"
+                className="close-modal"
                 onClick={() => {
                   setShowAssignModal(false)
                   setSelectedEmployee(null)
@@ -232,118 +225,58 @@ const Employees = () => {
                 ×
               </button>
             </div>
-            <form onSubmit={handleAssignAsset}>
-              <div className="form-group">
-                <label className="form-label">Select Asset</label>
-                <select
-                  name="asset_id"
-                  className="form-select"
-                  value={assignmentData.asset_id}
-                  onChange={handleAssignmentChange}
-                  required
-                >
-                  <option value="">Choose an asset</option>
-                  {getAvailableAssets().map((asset) => (
-                    <option key={asset.id} value={asset.id}>
-                      {asset.name} - {asset.serial_number} ({asset.asset_type})
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Notes (Optional)</label>
-                <textarea
-                  name="notes"
-                  className="form-input"
-                  value={assignmentData.notes}
-                  onChange={handleAssignmentChange}
-                  rows="3"
-                  placeholder="Any additional notes about this assignment"
-                />
-              </div>
-              <div className="flex gap-2">
-                <button type="submit" className="btn btn-primary">
-                  Assign Asset
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    setShowAssignModal(false)
-                    setSelectedEmployee(null)
-                    setAssignmentData({ asset_id: "", notes: "" })
-                  }}
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
+            <div className="modal-body">
+                <form onSubmit={handleAssignAsset} style={{display: 'flex', flexDirection: 'column', gap: '1.5rem'}}>
+                <div className="form-group">
+                    <label className="form-label">Select Asset</label>
+                    <select
+                    name="asset_id"
+                    className="form-select"
+                    value={assignmentData.asset_id}
+                    onChange={handleAssignmentChange}
+                    required
+                    >
+                    <option value="">Choose an asset</option>
+                    {getAvailableAssets().map((asset) => (
+                        <option key={asset.id} value={asset.id}>
+                        {asset.name} - {asset.serial_number} ({asset.asset_type})
+                        </option>
+                    ))}
+                    </select>
+                </div>
+                <div className="form-group">
+                    <label className="form-label">Notes (Optional)</label>
+                    <textarea
+                    name="notes"
+                    className="form-input"
+                    value={assignmentData.notes}
+                    onChange={handleAssignmentChange}
+                    rows="3"
+                    placeholder="Any additional notes about this assignment"
+                    />
+                </div>
+                <div className="flex gap-2">
+                    <button type="submit" className="btn btn-primary" style={{flex: 1}}>
+                    Assign Asset
+                    </button>
+                    <button
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{flex: 1}}
+                    onClick={() => {
+                        setShowAssignModal(false)
+                        setSelectedEmployee(null)
+                        setAssignmentData({ asset_id: "", notes: "" })
+                    }}
+                    >
+                    Cancel
+                    </button>
+                </div>
+                </form>
+            </div>
           </div>
         </div>
       )}
-
-      <style>{`
-        .employee-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-          gap: 20px;
-        }
-
-        .employee-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 15px;
-          padding-bottom: 10px;
-          border-bottom: 1px solid #eee;
-        }
-
-        .employee-role {
-          background: #007bff;
-          color: white;
-          padding: 4px 8px;
-          border-radius: 4px;
-          font-size: 12px;
-        }
-
-        .employee-info p {
-          margin-bottom: 8px;
-        }
-        
-        .assigned-assets-list {
-          list-style: none;
-          padding: 0;
-          margin-top: 10px;
-          max-height: 300px;
-          overflow-y: auto;
-        }
-
-        .asset-item {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 10px;
-          background: var(--bg-primary);
-          border: 1px solid rgba(148,163,184,.15);
-          border-radius: 6px;
-          margin-bottom: 8px;
-        }
-
-        .btn-sm {
-          padding: 4px 8px;
-          font-size: 12px;
-        }
-
-        .employee-actions {
-          margin-top: 15px;
-          padding-top: 15px;
-          border-top: 1px solid rgba(148,163,184,.15);
-        }
-        
-        .flex-1 {
-            flex: 1;
-        }
-      `}</style>
     </div>
   )
 }

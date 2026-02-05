@@ -48,7 +48,7 @@ const MaintenanceTasks = () => {
   }
 
   return (
-    <div>
+    <div className="page-container">
         <div className="page-header">
             <h2>Maintenance Tasks</h2>
             <p>Manage and track all ongoing maintenance activities.</p>
