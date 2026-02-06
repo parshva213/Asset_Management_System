@@ -57,10 +57,24 @@ router.post("/register", async (req, res) => {
       "INSERT INTO users (name, email, password, role, department, phone, unpk, ownpk, org_id, loc_id, room_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
       [name, email, hashedPassword, normalizedRole, department || null, phone || null, unpk || null, ownpk, org_id, loc_id || null, room_id || null]
     );
-console.log(result)
     const userId = result.insertId;
+    let organization_name = null;
+    if (org_id) {
+       const [orgRow] = await db.query("SELECT name FROM organizations WHERE id = ?", [org_id]);
+       if (orgRow.length > 0) organization_name = orgRow[0].name;
+    }
 
-    const user = { id: userId, name, email, role: normalizedRole, department: department || null, phone: phone || null, ownpk, org_id };
+    const user = { 
+      id: userId, 
+      name, 
+      email, 
+      role: normalizedRole, 
+      department: department || null, 
+      phone: phone || null, 
+      ownpk, 
+      org_id,
+      organization_name
+    };
     const token = jwt.sign(user, JWT_SECRET, { expiresIn: "1d" });
 
     res.json({ message: "User registered", user, token });
@@ -260,21 +274,23 @@ router.post("/verify-registration-key", async (req, res) => {
     }
     // Check users table for ownpk
     const [ownpkResult] = await db.query(
-      "SELECT id, name, role, org_id FROM users WHERE BINARY ownpk = ?",
+      "SELECT id, name as userName, email, role, org_id FROM users WHERE BINARY ownpk = ?",
       [key]
     );
     if (ownpkResult.length > 0) {
+      const user = ownpkResult[0];
       const [orgName] = await db.query(
         "SELECT name FROM organizations WHERE id = ?",
-        [ownpkResult[0].org_id]
+        [user.org_id]
       );
-      const user = ownpkResult[0];
-      user.orgName = orgName[0].name; 
-      console.log(`Key recognized as OWNPK for user: ${user.name} (${user.role}). Org: ${user.orgName || 'None'}`);
+      
+      user.orgName = orgName.length > 0 ? orgName[0].name : 'None'; 
+      console.log(`Key recognized as OWNPK for user: ${user.userName} (${user.role}). Org: ${user.orgName}`);
+      
       if (user.role === "Super Admin") {
         return res.json({
           type: "admin_referral",
-        referrerName: user.name,
+          referrerName: user.userName || user.email,
           allowedRoles: ["Supervisor", "Maintenance Staff"],
           orgId: user.org_id,
           unpk: key
@@ -283,7 +299,7 @@ router.post("/verify-registration-key", async (req, res) => {
       if (user.role === "Supervisor") {
         return res.json({
           type: "supervisor_referral",
-        referrerName: user.name || user.email,
+          referrerName: user.userName || user.email,
           allowedRoles: ["Employee"],
           orgId: user.org_id,
           unpk: key

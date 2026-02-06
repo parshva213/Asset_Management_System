@@ -54,7 +54,7 @@ const ICONS = {
 const MENU_ITEMS = {
   "Super Admin": [
     { name: "Dashboard", path: ["/admin-dashboard"], icon: "dashboard" },
-    { name: "Locations", path: ["/locations", "/rooms?locationId=", "/main-users?location_id=", "/loc-assets?location_id="], icon: "locations" },
+    { name: "Locations", path: ["/locations", "/rooms?location_id=","/lr-assets", "/mainusers", "/loc-assets", "/team-user"], icon: "locations" },
     { name: "Categories", path: ["/categories"], icon: "categories" },
     { name: "Assets", path: ["/assets"], icon: "assets" },
     { name: "Orders", path: ["/purchase-orders"], icon: "orders" },

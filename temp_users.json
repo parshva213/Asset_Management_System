@@ -1,0 +1,92 @@
+[
+  {
+    "id": 1,
+    "name": "Dev Rana",
+    "role": "Vendor",
+    "room_id": null
+  },
+  {
+    "id": 2,
+    "name": "Parshva Shah",
+    "role": "Software Developer",
+    "room_id": null
+  },
+  {
+    "id": 3,
+    "name": "LJ Admin",
+    "role": "Super Admin",
+    "room_id": null
+  },
+  {
+    "id": 4,
+    "name": "Rakesh Patel",
+    "role": "Maintenance",
+    "room_id": null
+  },
+  {
+    "id": 5,
+    "name": "Suresh Mehta",
+    "role": "Maintenance",
+    "room_id": null
+  },
+  {
+    "id": 6,
+    "name": "Amit Shah",
+    "role": "Maintenance",
+    "room_id": null
+  },
+  {
+    "id": 7,
+    "name": "Kiran Desai",
+    "role": "Maintenance",
+    "room_id": null
+  },
+  {
+    "id": 8,
+    "name": "Mahesh Joshi",
+    "role": "Maintenance",
+    "room_id": null
+  },
+  {
+    "id": 9,
+    "name": "Vijay Parmar",
+    "role": "Maintenance",
+    "room_id": null
+  },
+  {
+    "id": 10,
+    "name": "Nilesh Chauhan",
+    "role": "Maintenance",
+    "room_id": null
+  },
+  {
+    "id": 11,
+    "name": "Pravin Solanki",
+    "role": "Maintenance",
+    "room_id": null
+  },
+  {
+    "id": 12,
+    "name": "Hitesh Rana",
+    "role": "Maintenance",
+    "room_id": null
+  },
+  {
+    "id": 13,
+    "name": "Jignesh Vyas",
+    "role": "Maintenance",
+    "room_id": null
+  },
+  {
+    "id": 14,
+    "name": "Palak Shah",
+    "role": "Supervisor",
+    "room_id": 1
+  },
+  {
+    "id": 15,
+    "name": "Pathan Khurana",
+    "role": "Employee",
+    "room_id": null
+  }
+]

@@ -2,12 +2,12 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { useSearchParams } from "react-router-dom"
+import { useSearchParams, useNavigate } from "react-router-dom"
 import api from "../api"
 import { formatDate } from "../utils/dateUtils"
 
 const LocationRoomAssets = () => {
-  // Removed unused user
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const lid = searchParams.get("lid")
   const rid = searchParams.get("rid")
@@ -28,8 +28,15 @@ const LocationRoomAssets = () => {
       const response = await api.get(`${endpoint}?${params.toString()}`)
       setAssets(response.data)
       
-      if (lid) setTitle("Location Assets")
-      if (rid) setTitle("Room Assets")
+      if (lid) {
+        const locRes = await api.get(`/locations/${lid}`)
+        setTitle(`Manage Assets for ${locRes.data.name}`)
+      } else if (rid) {
+        const roomRes = await api.get(`/locations/rooms/${rid}`)
+        setTitle(`Manage Assets for ${roomRes.data.name} in ${roomRes.data.location_name}`)
+      } else {
+        setTitle("All Assets")
+      }
       
     } catch (err) {
       console.error("Error fetching assets:", err)
@@ -45,9 +52,18 @@ const LocationRoomAssets = () => {
   if (loading) return <div className="loading">Loading assets...</div>
 
   return (
-    <div>
+    <div className="content">
       <div className="flex-between mb-4">
-        <h2>{title}</h2>
+        <div>
+          <button 
+            onClick={() => navigate("/locations")} 
+            className="btn btn-secondary mb-2"
+            style={{ padding: '0.4rem 0.8rem', fontSize: '13px' }}
+          >
+            ← Back to Locations
+          </button>
+          <h2>{title}</h2>
+        </div>
       </div>
 
       {assets.length === 0 ? (

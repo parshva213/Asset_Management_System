@@ -39,11 +39,7 @@ router.get("/rooms", verifyToken, async (req, res) => {
 router.get("/:id", verifyToken, async (req, res) => {
   try {
     const { id } = req.params
-    if (req.user.org_id && id) {
-      const [rows] = await db.query("SELECT * FROM locations WHERE id = ? AND org_id = ?", [id, req.user.org_id])
-    } else {
-      const [rows] = await db.query("SELECT * FROM locations WHERE org_id = ?", [id])
-    }
+    const [rows] = await db.query("SELECT * FROM locations WHERE id = ?", [id])
     if (rows.length === 0) {
       return res.status(404).json({ message: "Location not found" })
     }
@@ -51,6 +47,27 @@ router.get("/:id", verifyToken, async (req, res) => {
     res.json(rows[0])
   } catch (error) {
     console.error("Error fetching location:", error)
+    res.status(500).json({ message: "Server error" })
+  }
+})
+
+router.get("/rooms/:id", verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params
+    const [rows] = await db.query(`
+      SELECT r.*, l.name as location_name 
+      FROM rooms r 
+      LEFT JOIN locations l ON r.location_id = l.id 
+      WHERE r.id = ?
+    `, [id])
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "Room not found" })
+    }
+    
+    res.json(rows[0])
+  } catch (error) {
+    console.error("Error fetching room:", error)
     res.status(500).json({ message: "Server error" })
   }
 })

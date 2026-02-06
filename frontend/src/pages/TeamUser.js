@@ -4,7 +4,7 @@ import { useSearchParams, useNavigate } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
 import api from "../api"
 
-const MainUsers = () => {
+const TeamUser = () => {
   useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -23,7 +23,10 @@ const MainUsers = () => {
   const [assetsToUnassign, setAssetsToUnassign] = useState([])
 
   const locid = searchParams.get("locid")
+  const roomid = searchParams.get("roomid")
   const role = searchParams.get("role")
+
+  console.log("TeamUser Params - locid:", locid, "roomid:", roomid, "role:", role)
 
   const fetchUsers = useCallback(async () => {
     setLoading(true)
@@ -33,26 +36,37 @@ const MainUsers = () => {
         params.delete("locid")
         params.append("location_id", locid)
       }
+      if (roomid) {
+        params.delete("roomid")
+        params.append("room_id", roomid)
+      }
       const url = `/users?${params.toString()}`
+      console.log("TeamUser Fetching Users URL:", url)
       const response = await api.get(url)
+      console.log("TeamUser Received Users:", response.data)
       setUsers(response.data)
     } catch (error) {
       console.error("Error fetching users:", error)
     } finally {
       setLoading(false)
     }
-  }, [searchParams, locid])
+  }, [searchParams, locid, roomid])
 
   const fetchLocationName = useCallback(async () => {
     try {
       if (locid) {
         const response = await api.get(`/locations/${locid}`)
         setLocationName(response.data.name)
+      } else if (roomid) {
+        console.log("TeamUser Fetching Room Name for ID:", roomid)
+        const response = await api.get(`/locations/rooms/${roomid}`)
+        console.log("TeamUser Room Response:", response.data)
+        setLocationName(`${response.data.name} in ${response.data.location_name}`)
       }
     } catch (error) {
       console.error("Error fetching location name:", error)
     }
-  }, [locid])
+  }, [locid, roomid])
 
   const fetchLocations = useCallback(async () => {
     try {
@@ -80,10 +94,10 @@ const MainUsers = () => {
   useEffect(() => {
     fetchUsers()
     fetchLocations()
-    if (locid) {
+    if (locid || roomid) {
       fetchLocationName()
     }
-  }, [locid, role, fetchUsers, fetchLocationName, fetchLocations])
+  }, [locid, roomid, role, fetchUsers, fetchLocationName, fetchLocations])
 
   const handleOpenModal = (user, type) => {
     setSelectedUser(user)
@@ -161,21 +175,19 @@ const MainUsers = () => {
     )
   }
 
-  const title = locid ? "Maintenance Team at " + locationName : "Users Management"
+  const title = roomid ? "Team (Supervisor & Employees) in " + locationName : "Maintenance Team at " + locationName
 
   return (
     <div className="content">
       <div className="flex-between mb-4">
         <div>
-          {locid && (
-            <button 
-              onClick={() => navigate("/locations")} 
-              className="btn btn-secondary mb-2"
-              style={{ padding: '0.4rem 0.8rem', fontSize: '13px' }}
-            >
-              ← Back to Locations
-            </button>
-          )}
+          <button 
+            onClick={() => navigate(roomid ? `/rooms?location_id=${searchParams.get('lid')}` : "/locations")} 
+            className="btn btn-secondary mb-2"
+            style={{ padding: '0.4rem 0.8rem', fontSize: '13px' }}
+          >
+            ← {roomid ? "Back to Rooms" : "Back to Locations"}
+          </button>
           <h2>{title}</h2>
         </div>
       </div>
@@ -320,4 +332,4 @@ const MainUsers = () => {
   )
 }
 
-export default MainUsers
+export default TeamUser

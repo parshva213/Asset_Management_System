@@ -25,6 +25,7 @@ import Employees from "./pages/Employees"
 import AdminDashboard from "./pages/AdminDashboard"
 import Users from "./pages/Users"
 import MainUsers from "./pages/MainUsers"
+import TeamUser from "./pages/TeamUser"
 import LocationRoomAssets from "./pages/LocationRoomAssets"
 
 // ---------- SUPERVISOR PAGES ----------
@@ -93,7 +94,8 @@ function App() {
               <Route path="locations" element={<ProtectedRoute roles={['Super Admin', 'Supervisor']}><Locations /></ProtectedRoute>} />
               <Route path="rooms" element={<ProtectedRoute roles={['Super Admin', 'Supervisor']}><LocationRooms /></ProtectedRoute>} />
               <Route path="users" element={<ProtectedRoute roles={['Super Admin', 'Supervisor']}><Users /></ProtectedRoute>} />
-              <Route path="main-users" element={<ProtectedRoute roles={['Super Admin', 'Supervisor']}><MainUsers /></ProtectedRoute>} />
+              <Route path="mainusers" element={<ProtectedRoute roles={['Super Admin']}><MainUsers /></ProtectedRoute>} />
+              <Route path="team-user" element={<ProtectedRoute roles={['Super Admin', 'Supervisor']}><TeamUser /></ProtectedRoute>} />
               <Route path="lr-assets" element={<ProtectedRoute roles={['Super Admin', 'Supervisor']}><LocationRoomAssets /></ProtectedRoute>} />
 
               {/* Supervisor */}

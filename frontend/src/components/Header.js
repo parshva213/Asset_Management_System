@@ -20,15 +20,11 @@ const Header = ({ user, logout, toggleSidebar }) => {
       {/* Center div removed as logo moved to left */}
 
       <div className="header-right">
-        {user.role !== 'Vendor' ? (
+        {user.role && user.role.toLowerCase() !== 'software developer' && (
           <span className="organization-name">
-            {user.organization_name ? (
-              user.organization_name
-            ) : (
-              "No Org Assigned"
-            )}
+            {user.organization_name || "No Org Assigned"}
           </span>
-        ) : (<></>)}
+        )}
         <div className="user-profile">
           <span className="user-name">{user.name}</span>
           <span className="user-role">{user.role}</span>

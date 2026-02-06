@@ -6,16 +6,53 @@ import { verifyToken as authenticateToken } from "../middleware/auth.js"; // JWT
 // GET all assets
 router.get("/", authenticateToken, async (req, res) => {
   try {
+    const { status, location_id, category_id, room_id } = req.query;
     let query = "SELECT * FROM assets";
     let params = [];
-    if (req.user.role === "Super Admin") {
-      if (req.query.length === 0) {
-        query = "SELECT *,count(*) as count FROM assets where category_id in (select id from categories where org_id = ?) ORDER BY id ASC Group by name";
-        params = [req.user.org_id];
-      } 
-      const [result] = await pool.query(query, params);
-      res.json(result);
+    let whereClauses = [];
+
+    // All roles (except maybe SD but that's handled elsewhere) 
+    // should be restricted by their organization's categories
+    if (req.user.role !== "Software Developer") {
+        whereClauses.push("category_id IN (SELECT id FROM categories WHERE org_id = ?)");
+        params.push(req.user.org_id);
     }
+
+    if (status) {
+        whereClauses.push("status = ?");
+        params.push(status);
+    }
+    if (location_id) {
+        whereClauses.push("location_id = ?");
+        params.push(location_id);
+    }
+    if (category_id) {
+        whereClauses.push("category_id = ?");
+        params.push(category_id);
+    }
+    if (room_id) {
+        whereClauses.push("room_id = ?");
+        params.push(room_id);
+    }
+
+    if (whereClauses.length > 0) {
+        query += " WHERE " + whereClauses.join(" AND ");
+    }
+
+    // Special Case: Super Admin viewing grouped summary if NO query params 
+    // (This was original intent from user's earlier code, but might interfere with generic GET)
+    // Actually, looking at the code, the original intent was:
+    // query = "SELECT *,count(*) as count FROM assets where category_id in (select id from categories where org_id = ?) ORDER BY id ASC Group by name";
+    // If we want to keep that exact behavior when NO params:
+    if (req.user.role === "Super Admin" && Object.keys(req.query).length === 0) {
+      query = "SELECT *, count(*) as count FROM assets WHERE category_id IN (SELECT id FROM categories WHERE org_id = ?) GROUP BY name ORDER BY id ASC";
+      params = [req.user.org_id];
+    } else {
+      query += " ORDER BY id ASC";
+    }
+
+    const [result] = await pool.query(query, params);
+    res.json(result);
 
   } catch (err) {
     console.error(err);

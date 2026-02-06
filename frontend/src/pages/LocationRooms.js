@@ -17,6 +17,7 @@ const LocationRooms = () => {
   const [loading, setLoading] = useState(true)
   const [showRoomModal, setShowRoomModal] = useState(false)
   const [editingRoom, setEditingRoom] = useState(null)
+  const [openDropdownId, setOpenDropdownId] = useState(null)
   
   const [roomFormData, setRoomFormData] = useState({
     name: "",
@@ -150,7 +151,7 @@ const LocationRooms = () => {
                     <th>Floor</th>
                     <th>Capacity</th>
                     <th>Description</th>
-                    {user?.role === "Super Admin" && <th>Actions</th>}
+                    <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -160,18 +161,50 @@ const LocationRooms = () => {
                         <td>{room.floor || "N/A"}</td>
                         <td>{room.capacity || "N/A"}</td>
                         <td>{room.description || "N/A"}</td>
-                        {user?.role === "Super Admin" && (
                         <td>
-                        <div className="flex gap-2">
-                            <button onClick={() => handleEditRoom(room)} className="btn btn-secondary">
-                            Edit
-                            </button>
-                            <button onClick={() => handleDeleteRoom(room.id)} className="btn btn-danger">
-                            Delete
-                            </button>
-                        </div>
+                          <div className="flex gap-2">
+                            {user?.role === "Super Admin" && (
+                              <>
+                                <button onClick={() => handleEditRoom(room)} className="btn btn-secondary">
+                                  Edit
+                                </button>
+                                <button onClick={() => handleDeleteRoom(room.id)} className="btn btn-danger">
+                                  Delete
+                                </button>
+                              </>
+                            )}
+                            <div className="dropdown-container">
+                              <button 
+                                onClick={() => setOpenDropdownId(openDropdownId === room.id ? null : room.id)} 
+                                className="btn btn-secondary"
+                              >
+                                View ▼
+                              </button>
+                              {openDropdownId === room.id && (
+                                <div className="dropdown-menu">
+                                  <button
+                                    onClick={() => {
+                                      navigate(`/team-user?roomid=${room.id}`)
+                                      setOpenDropdownId(null)
+                                    }}
+                                    className="dropdown-item"
+                                  >
+                                    Team
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      navigate(`/lr-assets?rid=${room.id}`)
+                                      setOpenDropdownId(null)
+                                    }}
+                                    className="dropdown-item"
+                                  >
+                                    Assets
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         </td>
-                        )}
                     </tr>
                     ))}
                 </tbody>

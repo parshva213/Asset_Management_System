@@ -144,7 +144,7 @@ const Locations = () => {
                                 </button>
                                 <button
                                     onClick={() => {
-                                    navigate(`/main-users?location_id=${location.id}`)
+                                    navigate(`/mainusers?locid=${location.id}`)
                                     setOpenDropdownId(null)
                                     }}
                                     className="dropdown-item"

@@ -612,17 +612,13 @@ body.dark .role-option:hover {
     color: var(--primary);
     font-size: 0.95rem;
     margin-right: 0.5rem;
+    display: block; /* Ensure it shows by default */
 }
 
 .dark .organization-name {
     color: orange;
 }
 
-@media (min-width: 768px) {
-    .organization-name {
-        display: block;
-    }
-}
 
 .user-profile {
     display: flex;
