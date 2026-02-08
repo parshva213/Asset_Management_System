@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from "react"
 import { useAuth } from "../contexts/AuthContext"
+import { useToast } from "../contexts/ToastContext"
 
 const Profile = () => {
   const { user, updateProfile, changePassword } = useAuth()
+  const { showSuccess, showError } = useToast()
   const [profileData, setProfileData] = useState({
     name: "",
     email: "",
@@ -15,8 +17,6 @@ const Profile = () => {
     newPassword: "",
     confirmPassword: "",
   })
-  const [profileMessage, setProfileMessage] = useState("")
-  const [passwordMessage, setPasswordMessage] = useState("")
   const [profileLoading, setProfileLoading] = useState(false)
   const [passwordLoading, setPasswordLoading] = useState(false)
 
@@ -33,48 +33,44 @@ const Profile = () => {
   const handleProfileSubmit = async (e) => {
     e.preventDefault()
     setProfileLoading(true)
-    setProfileMessage("")
 
     const result = await updateProfile(profileData)
-    setProfileMessage(result.message)
+    if (result.success) {
+      showSuccess(result.message)
+    } else {
+      showError(result.message)
+    }
     setProfileLoading(false)
-
-    // Clear message after 3 seconds
-    setTimeout(() => setProfileMessage(""), 3000)
   }
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault()
-    setPasswordLoading(true)
-    setPasswordMessage("")
 
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setPasswordMessage("New passwords do not match")
-      setPasswordLoading(false)
+      showError("New passwords do not match")
       return
     }
 
     if (passwordData.newPassword.length < 6) {
-      setPasswordMessage("New password must be at least 6 characters long")
-      setPasswordLoading(false)
+      showError("New password must be at least 6 characters long")
       return
     }
 
+    setPasswordLoading(true)
     const result = await changePassword(passwordData.currentPassword, passwordData.newPassword)
-    setPasswordMessage(result.message)
-
+    
     if (result.success) {
+      showSuccess(result.message)
       setPasswordData({
         currentPassword: "",
         newPassword: "",
         confirmPassword: "",
       })
+    } else {
+      showError(result.message)
     }
 
     setPasswordLoading(false)
-
-    // Clear message after 3 seconds
-    setTimeout(() => setPasswordMessage(""), 3000)
   }
 
   const handleProfileChange = (e) => {
@@ -96,11 +92,6 @@ const Profile = () => {
             <h3>Profile Information</h3>
           </div>
           <div className="card-body">
-            {profileMessage && (
-              <div className={`alert ${profileMessage.includes("success") ? "alert-success" : "alert-error"} mb-4`}>
-                {profileMessage}
-              </div>
-            )}
             <form onSubmit={handleProfileSubmit}>
               <div className="form-group">
                 <label className="form-label">Full Name</label>
@@ -160,11 +151,6 @@ const Profile = () => {
               <h3>Change Password</h3>
             </div>
             <div className="card-body">
-              {passwordMessage && (
-                <div className={`alert ${passwordMessage.includes("success") ? "alert-success" : "alert-error"} mb-4`}>
-                  {passwordMessage}
-                </div>
-              )}
               <form onSubmit={handlePasswordSubmit}>
                 <div className="form-group">
                   <label className="form-label">Current Password</label>

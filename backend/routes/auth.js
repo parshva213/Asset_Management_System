@@ -113,7 +113,7 @@ router.post("/login", async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user.id, name: user.name, email: user.email, role: user.role },
+      { id: user.id, name: user.name, email: user.email, role: user.role, org_id: user.org_id, loc_id: user.loc_id, room_id: user.room_id },
       JWT_SECRET,
       { expiresIn: "1d" }
     );
@@ -274,7 +274,7 @@ router.post("/verify-registration-key", async (req, res) => {
     }
     // Check users table for ownpk
     const [ownpkResult] = await db.query(
-      "SELECT id, name as userName, email, role, org_id FROM users WHERE BINARY ownpk = ?",
+      "SELECT id, name as userName, email, role, org_id, loc_id, room_id FROM users WHERE BINARY ownpk = ?",
       [key]
     );
     if (ownpkResult.length > 0) {
@@ -302,6 +302,8 @@ router.post("/verify-registration-key", async (req, res) => {
           referrerName: user.userName || user.email,
           allowedRoles: ["Employee"],
           orgId: user.org_id,
+          locId: user.loc_id,
+          roomId: user.room_id,
           unpk: key
         });
       }

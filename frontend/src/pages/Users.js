@@ -2,10 +2,12 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useAuth } from "../contexts/AuthContext"
+import { useToast } from "../contexts/ToastContext"
 import api from "../api"
 
 const Users = () => {
   const { user } = useAuth()
+  const { showSuccess, showError } = useToast()
 
 
   const [users, setUsers] = useState([])
@@ -134,6 +136,7 @@ const Users = () => {
       }
       setSelectedUser(updatedUser)
       setUsers(users.map(u => u.id === selectedUser.id ? updatedUser : u))
+      showSuccess("Asset unassigned successfully")
       if (modalStep === 2) {
         fetchAvailableAssets(assignForm.location_id);
       } else {
@@ -141,6 +144,7 @@ const Users = () => {
       }
     } catch (error) {
       console.error("Error unassigning asset:", error)
+      showError("Error unassigning asset")
     } finally {
       setModalLoading(false)
     }
@@ -161,8 +165,10 @@ const Users = () => {
 
       await fetchUsers()
       handleCloseModal()
+      showSuccess("Assets assigned successfully")
     } catch (error) {
       console.error("Error saving assignment:", error)
+      showError("Error saving assignment")
     } finally {
       setModalLoading(false)
     }
@@ -313,7 +319,7 @@ const Users = () => {
                             />
                             <div>
                               <div className="font-bold">{asset.name}</div>
-                              <div className="text-sm text-secondary">{asset.serial_number}</div>
+                              <div className="text-sm text-secondary">Qty: {asset.quantity || "N/A"}</div>
                             </div>
                           </label>
                         ))
@@ -321,13 +327,13 @@ const Users = () => {
                     </div>
                   </div>
 
-                  {selectedUser.assigned_assets.length > 0 && (
+                  {selectedUser.assigned_assets?.length > 0 && (
                     <div className="mt-6">
                       <h4 className="mb-2 text-secondary">Currently Assigned Assets</h4>
                       <div className="assigned-assets-list">
                         {selectedUser.assigned_assets.map(asset => (
                           <div key={asset.id} className="assigned-asset-item">
-                            <span className="text-sm">{asset.name}</span>
+                            <span className="text-sm">{asset.name} (SN: {asset.serial_number || "N/A"})</span>
                             <button 
                               className="btn btn-danger btn-sm" 
                               onClick={() => handleUnassignAsset(asset.id)}

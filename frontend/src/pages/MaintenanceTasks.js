@@ -2,9 +2,11 @@
 import { useState, useEffect } from "react"
 import api from "../api"
 import { useAuth } from "../contexts/AuthContext"
+import { useToast } from "../contexts/ToastContext"
 
 const MaintenanceTasks = () => {
   const { user } = useAuth()
+  const { showSuccess, showError } = useToast()
   const [tasks, setTasks] = useState([])
   const [stats, setStats] = useState({ pending: 0, completed: 0, totalAssets: 0 })
 
@@ -42,8 +44,10 @@ const MaintenanceTasks = () => {
       setTasks(tasks.filter((task) => task.id !== id)) // Remove from list if completed? Or update.
       fetchStats() // Refresh stats
       fetchTasks() // Refresh tasks
+      showSuccess(`Task marked as ${status}`)
     } catch (err) {
       console.error(err)
+      showError("Error updating task")
     }
   }
 

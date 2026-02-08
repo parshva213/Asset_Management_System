@@ -3,10 +3,12 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import useCrud from "../hooks/useCrud"
+import { useToast } from "../contexts/ToastContext"
 import { formatDate } from "../utils/dateUtils"
 
 const Locations = () => {
   const navigate = useNavigate()
+  const { showSuccess, showError } = useToast()
   const { items: locations, loading: locationsLoading, create: createLocation, update: updateLocation, remove: removeLocation, list: listLocations } = useCrud("locations")
   const [loading, setLoading] = useState(true)
   const [showLocationModal, setShowLocationModal] = useState(false)
@@ -31,16 +33,20 @@ const Locations = () => {
     try {
       if (editingLocation) {
         await updateLocation(editingLocation.id, locationFormData)
+        showSuccess("Location updated successfully")
       } else {
         await createLocation(locationFormData)
+        showSuccess("Location created successfully")
       }
       setShowLocationModal(false)
       setEditingLocation(null)
       resetLocationForm()
+      // Refresh locations list instead of reload if possible, but the original used reload
+      listLocations() 
     } catch (error) {
       console.error("Error saving location:", error)
+      showError("Error saving location")
     }
-    window.location.reload()
   }
 
   const handleEditLocation = (location) => {
@@ -57,8 +63,11 @@ const Locations = () => {
     if (window.confirm("Are you sure you want to delete this location?")) {
       try {
         await removeLocation(id)
+        showSuccess("Location deleted successfully")
+        listLocations()
       } catch (error) {
         console.error("Error deleting location:", error)
+        showError("Error deleting location")
       }
     }
   }

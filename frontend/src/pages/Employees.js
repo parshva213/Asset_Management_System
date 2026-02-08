@@ -165,7 +165,7 @@ const Employees = () => {
               </button>
             </div>
             <div className="modal-body">
-              <div className="modal-details">
+              <div className="modal-details mb-4">
                 <p><strong>Email:</strong> {detailsEmployee.email}</p>
                 <p><strong>Role:</strong> {detailsEmployee.role}</p>
                 <p><strong>Department:</strong> {detailsEmployee.department || "N/A"}</p>
@@ -173,11 +173,11 @@ const Employees = () => {
 
               <h4>Assigned Assets ({detailsEmployee.assigned_assets?.length || 0})</h4>
               {detailsEmployee.assigned_assets && detailsEmployee.assigned_assets.length > 0 ? (
-                <div className="assigned-assets-list">
+                <div className="assigned-assets-list mb-6">
                   {detailsEmployee.assigned_assets.map((asset) => (
                     <div key={asset.id} className="assigned-asset-item">
                       <span>
-                        {asset.name} - {asset.serial_number}
+                        {asset.name} - SN: {asset.serial_number || "N/A"}
                       </span>
                       {(user?.role === "Super Admin" || user?.role === "Supervisor") && (
                         <button
@@ -194,16 +194,17 @@ const Employees = () => {
                   ))}
                 </div>
               ) : (
-                <p className="text-muted">No assets assigned.</p>
+                <p className="text-muted mb-6">No assets assigned.</p>
               )}
-            </div>
-            <div className="modal-footer" style={{marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end'}}>
-              <button
-                className="btn btn-secondary"
-                onClick={() => setShowDetailsModal(false)}
-              >
-                Close
-              </button>
+              
+              <div className="flex justify-end">
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setShowDetailsModal(false)}
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -239,7 +240,7 @@ const Employees = () => {
                     <option value="">Choose an asset</option>
                     {getAvailableAssets().map((asset) => (
                         <option key={asset.id} value={asset.id}>
-                        {asset.name} - {asset.serial_number} ({asset.asset_type})
+                        {asset.name} - Qty: {asset.quantity || "N/A"} ({asset.asset_type})
                         </option>
                     ))}
                     </select>

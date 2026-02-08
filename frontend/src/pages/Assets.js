@@ -1,35 +1,38 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useToast } from "../contexts/ToastContext";
 import api from "../api";
 import { formatDate } from "../utils/dateUtils";
 
 const Assets = () => {
   const { user } = useAuth();
-
+  const { showSuccess, showError } = useToast();
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingAsset, setEditingAsset] = useState(null);
   const [categories, setCategories] = useState([]);
   const [locations, setLocations] = useState([]);
-  const [message, setMessage] = useState("");
-  const [messageType, setMessageType] = useState("info");
+  const [rooms, setRooms] = useState([]);
 
   const [formData, setFormData] = useState({
+    company_name: "",
     name: "",
     description: "",
-    serial_number: "",
+    quantity: "1",
+    purchase_cost: "",
     warranty_expiry: "",
-    asset_type: "Hardware",
+    asset_type: "",
     category_id: "",
     location_id: "",
+    room_id: "",
     purchase_date: "",
   });
 
   const fetchInitial = useCallback(async () => {
     try {
       setLoading(true);
-      await Promise.all([fetchAssets(), fetchCategories(), fetchLocations()]);
+      await Promise.all([fetchAssets(), fetchCategories(), fetchLocations(), fetchRooms()]);
     } finally {
       setLoading(false);
     }
@@ -66,15 +69,27 @@ const Assets = () => {
     }
   };
 
+  const fetchRooms = async () => {
+    try {
+      const res = await api.get("/locations/rooms");
+      setRooms(res.data);
+    } catch (err) {
+      console.error("Error fetching rooms:", err);
+    }
+  };
+
   const resetForm = () => {
     setFormData({
+      company_name: "",
       name: "",
       description: "",
-      serial_number: "",
+      quantity: "1",
+      purchase_cost: "",
       warranty_expiry: "",
-      asset_type: "Hardware",
+      asset_type: "",
       category_id: "",
       location_id: "",
+      room_id: "",
       purchase_date: "",
     });
     setEditingAsset(null);
@@ -86,43 +101,48 @@ const Assets = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage("");
     try {
+      const finalName = `${formData.company_name} ${formData.name}`.trim();
       const payload = {
         ...formData,
+        name: finalName,
         category_id: formData.category_id ? Number(formData.category_id) : null,
         location_id: formData.location_id ? Number(formData.location_id) : null,
+        room_id: formData.room_id ? Number(formData.room_id) : null,
+        purchase_cost: formData.purchase_cost ? Number(formData.purchase_cost) : null,
       };
 
       if (editingAsset) {
         await api.put(`/assets/${editingAsset.id}`, payload);
-        setMessageType("success");
-        setMessage("Asset updated successfully");
+        showSuccess("Asset updated successfully");
       } else {
         await api.post("/assets", payload);
-        setMessageType("success");
-        setMessage("Asset created successfully");
+        showSuccess("Asset created successfully");
       }
       setShowModal(false);
       resetForm();
       fetchAssets();
     } catch (err) {
       console.error("Error saving asset:", err);
-      setMessageType("error");
-      setMessage(err.response?.data?.message || "Error saving asset");
+      showError(err.response?.data?.message || "Error saving asset");
     }
   };
 
   const handleEdit = (asset) => {
     setEditingAsset(asset);
+    // For edit, we might want to split the name back into company and asset name if possible, 
+    // but for now let's just populate the asset name field with the full name to avoid complexity.
     setFormData({
+      company_name: "", // Leave empty for edits or logic to extract it
       name: asset.name,
       description: asset.description || "",
-      serial_number: asset.serial_number || "",
+      quantity: asset.quantity || "1",
+      purchase_cost: asset.purchase_cost || "",
       warranty_expiry: asset.warranty_expiry || "",
       asset_type: asset.asset_type,
       category_id: asset.category_id || "",
       location_id: asset.location_id || "",
+      room_id: asset.room_id || "",
       purchase_date: asset.purchase_date || "",
     });
     setShowModal(true);
@@ -133,12 +153,10 @@ const Assets = () => {
     try {
       await api.delete(`/assets/${id}`);
       fetchAssets();
-      setMessageType("success");
-      setMessage("Asset deleted successfully");
+      showSuccess("Asset deleted successfully");
     } catch (err) {
       console.error("Error deleting asset:", err);
-      setMessageType("error");
-      setMessage("Error deleting asset");
+      showError("Error deleting asset");
     }
   };
 
@@ -168,12 +186,6 @@ const Assets = () => {
         )}
       </div>
 
-      {message && (
-        <div className={`alert ${messageType === "success" ? "alert-success" : messageType === "error" ? "alert-error" : "alert-info"}`}>
-          {message}
-        </div>
-      )}
-
       {assets.length === 0 ? (
         <div className="empty-state">
           <p>No assets found</p>
@@ -197,7 +209,7 @@ const Assets = () => {
                 <tr key={asset.id} id={`asset-${asset.id}`}>
                     <td>
                     <div className="fw-bold">{asset.name}</div>
-                    <div className="text-muted small">{asset.serial_number}</div>
+                    <div className="text-muted small">SN: {asset.serial_number || "N/A"}</div>
                     </td>
                     <td>{asset.category_name || "N/A"}</td>
                     <td>{asset.location_name || "Unassigned"}</td>
@@ -242,66 +254,111 @@ const Assets = () => {
             </div>
             <div className="modal-body">
                 <form onSubmit={handleSubmit} style={{display: 'flex', flexDirection: 'column', gap: '1rem'}}>
-                <div className="form-group">
-                    <label className="form-label">Asset Name</label>
-                    <input type="text" className="form-input" name="name" value={formData.name} onChange={handleChange} required />
-                </div>
-
+                
+                {/* Step 1: Asset Type */}
                 <div className="form-group">
                     <label className="form-label">Asset Type</label>
-                    <select className="form-select" name="asset_type" value={formData.asset_type} onChange={handleChange}>
+                    <select className="form-select" name="asset_type" value={formData.asset_type} onChange={handleChange} required>
+                    <option value="">Select Type</option>
                     <option value="Hardware">Hardware</option>
                     <option value="Software">Software</option>
                     </select>
                 </div>
 
-                {formData.asset_type === "Hardware" ? (
+                {/* Step 2: Category */}
+                {formData.asset_type && (
+                  <>
                     <div className="form-group">
-                    <label className="form-label">Serial Number</label>
-                    <input type="text" className="form-input" name="serial_number" value={formData.serial_number} onChange={handleChange} />
+                        <label className="form-label">Category</label>
+                        <select className="form-select" name="category_id" value={formData.category_id} onChange={handleChange} required>
+                        <option value="">Select category</option>
+                        {categories.filter(c => c.type === formData.asset_type).map((c) => (
+                            <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
+                        </select>
                     </div>
-                ) : (
                     <div className="form-group">
-                    <label className="form-label">Warranty Expiry</label>
-                    <input type="date" className="form-input" name="warranty_expiry" value={formData.warranty_expiry} onChange={handleChange} />
+                        <label className="form-label">Location</label>
+                        <select className="form-select" name="location_id" value={formData.location_id} onChange={handleChange} required>
+                        <option value="">Select location</option>
+                        {locations.map((l) => (
+                            <option key={l.id} value={l.id}>{l.name}</option>
+                        ))}
+                        </select>
+                    </div>
+                  </>
+                )}
+
+                {/* Step 3: Room */}
+                {formData.location_id && (
+                    <div className="form-group">
+                        <label className="form-label">Room</label>
+                        <select className="form-select" name="room_id" value={formData.room_id} onChange={handleChange} required>
+                        <option value="">Select room</option>
+                        {rooms.filter(r => r.location_id === Number(formData.location_id)).map((r) => (
+                            <option key={r.id} value={r.id}>{r.name}</option>
+                        ))}
+                        </select>
                     </div>
                 )}
 
-                <div className="form-group">
-                    <label className="form-label">Category</label>
-                    <select className="form-select" name="category_id" value={formData.category_id} onChange={handleChange} required>
-                    <option value="">Select category</option>
-                    {categories.map((c) => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                    </select>
-                </div>
+                {/* Step 4: Company Name */}
+                {formData.asset_type && (
+                    <div className="form-group">
+                        <label className="form-label">Company Name</label>
+                        <input type="text" className="form-input" name="company_name" value={formData.company_name} onChange={handleChange} placeholder="e.g. Apple" />
+                    </div>
+                )}
 
-                <div className="form-group">
-                    <label className="form-label">Location</label>
-                    <select className="form-select" name="location_id" value={formData.location_id} onChange={handleChange} required>
-                    <option value="">Select location</option>
-                    {locations.map((l) => (
-                        <option key={l.id} value={l.id}>{l.name}</option>
-                    ))}
-                    </select>
-                </div>
+                {/* Step 5: Name, Purchase Date, Quantity */}
+                {formData.company_name && (
+                  <>
+                    <div className="form-group">
+                        <label className="form-label">Asset Name</label>
+                        <input type="text" className="form-input" name="name" value={formData.name} onChange={handleChange} placeholder="e.g. MacBook Pro" required />
+                    </div>
 
-                <div className="form-group">
-                    <label className="form-label">Purchase Date</label>
-                    <input type="date" className="form-input" name="purchase_date" value={formData.purchase_date} onChange={handleChange} />
-                </div>
+                    <div className="form-group">
+                        <label className="form-label">Purchase Date</label>
+                        <input type="date" className="form-input" name="purchase_date" value={formData.purchase_date} onChange={handleChange} />
+                    </div>
 
-                <div className="form-group">
-                    <label className="form-label">Description</label>
-                    <textarea className="form-input" name="description" value={formData.description} onChange={handleChange} rows="3" />
-                </div>
+                    <div className="form-group">
+                        <label className="form-label">Quantity</label>
+                        <input type="number" className="form-input" name="quantity" value={formData.quantity} onChange={handleChange} placeholder="e.g. 1 or 5" />
+                    </div>
+                  </>
+                )}
 
-                <div className="flex gap-2 mt-2">
-                    <button type="submit" className="btn btn-primary" style={{flex: 1}}>{editingAsset ? "Update" : "Add"} Asset</button>
-                    <button type="button" className="btn btn-secondary" style={{flex: 1}} onClick={() => { setShowModal(false); resetForm(); }}>Cancel</button>
-                </div>
+                {/* Step 6: Cost, Warranty Expiry, Description */}
+                {formData.name && formData.purchase_date && (
+                   <>
+                    <div className="form-group">
+                        <label className="form-label">Purchase Cost for single unit</label>
+                        <input type="number" className="form-input" name="purchase_cost" value={formData.purchase_cost} onChange={handleChange} placeholder="e.g. 1200" />
+                    </div>
+
+                    <div className="form-group">
+                        <label className="form-label">Warranty Expiry</label>
+                        <input type="date" className="form-input" name="warranty_expiry" value={formData.warranty_expiry} onChange={handleChange} />
+                    </div>
+
+                    <div className="form-group">
+                        <label className="form-label">Description</label>
+                        <textarea className="form-input" name="description" value={formData.description} onChange={handleChange} rows="3" />
+                    </div>
+
+                   </>
+                )}
                 </form>
+            </div>
+            <div className="modal-footer">
+              <div className="flex gap-2 mt-2">
+                {formData.purchase_cost && (
+                  <button type="submit" className="btn btn-primary" style={{flex: 1}}>{editingAsset ? "Update" : "Add"} Asset</button>
+                )}
+                <button type="button" className="btn btn-secondary" style={{flex: 1}} onClick={() => { setShowModal(false); resetForm(); }}>Cancel</button>
+              </div>
             </div>
           </div>
         </div>

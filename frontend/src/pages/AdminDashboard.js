@@ -11,10 +11,15 @@ const AdminDashboard = () => {
         assignedAssets: 0,
         availableAssets: 0,
         pendingRequests: 0,
-        totalUsers: 0,
-        totalCategories: 0,
+        activeUsers: 0,
+        inactiveUsers: 0,
+        hwCategories: 0,
+        swCategories: 0,
         totalLocations: 0,
         totalRooms: 0,
+        pendingOrders: 0,
+        completedOrders: 0,
+        approvedRequests: 0,
     })
     const [loading, setLoading] = useState(true)
     const fetchDashboardData = useCallback(async () => {
@@ -28,14 +33,21 @@ const AdminDashboard = () => {
             if (dashboardRes.status === 'fulfilled') {
                 const data = dashboardRes.value.data
                 setStats({
-                    totalAssets: data.totalAssets || 0,
-                    assignedAssets: data.assignedAssets || 0,
-                    availableAssets: data.availableAssets || 0,
-                    pendingRequests: data.pendingRequests || 0,
-                    totalUsers: data.totalUsers || 0,
-                    totalCategories: data.totalCategories || 0,
+                    totalAssets: data.totalAssets,
+                    assignedAssets: data.assignedAssets,
+                    availableAssets: data.availableAssets,
+                    pendingRequests: data.pendingRequests,
+                    totalUsers: data.totalUsers,
+                    activeUsers: data.activeUsers || 0,
+                    inactiveUsers: data.inactiveUsers || 0,
+                    teamMembers: data.teamMembers || 0,
+                    hwCategories: data.hwCategories || 0,
+                    swCategories: data.swCategories || 0,
                     totalLocations: data.totalLocations || 0,
                     totalRooms: data.totalRooms || 0,
+                    pendingOrders: data.pendingOrders || 0,
+                    completedOrders: data.completedOrders || 0,
+                    approvedRequests: data.approvedRequests || 0,
                 })
             }
 
@@ -95,92 +107,135 @@ const AdminDashboard = () => {
 
                 {/* Stats Grid */}
                 <div className="stats-grid-3">
+                    {/* Assets Card */}
                     <div className="stat-widget">
-                        <div>
-                            <div className="stat-icon" style={{background: '#6366f1'}}>
-                                📦
+                        <div className="widget-header">
+                            <div className="stat-icon bg-indigo">📦</div>
+                            <span className="widget-title">Assets</span>
+                        </div>
+                        <div className="split-container">
+                            <div className="split-item left">
+                                <span className="stat-label">Total</span>
+                                <h3 className="stat-value">{stats.totalAssets >= 10 ? `${Math.floor(stats.totalAssets / 10) * 10}+` : stats.totalAssets}</h3>
                             </div>
-                            <span className="stat-label">Total Assets</span>
-                            <h3 className="stat-value">{stats.totalAssets >= 10 ? `${Math.floor(stats.totalAssets / 10) * 10}+` : stats.totalAssets}</h3>
-                        </div>
-                        <div className="stat-footer">
-                            <Link to="/assets">
-                                View full details →
-                            </Link>
-                        </div>
-                    </div>
-                    <div className="stat-widget">
-                        <div>
-                            <div className="stat-icon" style={{background: '#10b981'}}>
-                                ✅
-                            </div>
-                            <span className="stat-label">Assigned</span>
-                            <h3 className="stat-value">{stats.assignedAssets}</h3>
-                        </div>
-                    </div>
-                    <div className="stat-widget">
-                        <div>
-                            <div className="stat-icon" style={{background: '#f59e0b'}}>
-                                📝
-                            </div>
-                            <span className="stat-label">Pending Req.</span>
-                            <h3 className="stat-value">{stats.pendingRequests}</h3>
-                        </div>
-                        <div className="stat-footer">
-                            <Link to="/requests">
-                                View full details →
-                            </Link>
-                        </div>
-                    </div>
-                    <div className="stat-widget">
-                        <div>
-                            <div className="stat-icon" style={{background: '#ec4899'}}>
-                                👥
-                            </div>
-                            <span className="stat-label">Total Users</span>
-                            <h3 className="stat-value">{stats.totalUsers >= 10 ? `${Math.floor(stats.totalUsers / 10) * 10}+` : stats.totalUsers}</h3>
-                        </div>
-                        <div className="stat-footer">
-                             <Link to="/employees">
-                                View full details →
-                            </Link>
-                        </div>
-                    </div>
-                    <div className="stat-widget">
-                        <div>
-                            <div className="stat-icon" style={{background: '#8b5cf6'}}>
-                                🏷️
-                            </div>
-                            <span className="stat-label">Categories</span>
-                            <h3 className="stat-value">{stats.totalCategories || 0}</h3>
-                        </div>
-                        <div className="stat-footer">
-                             <Link to="/categories">
-                                View full details →
-                            </Link>
-                        </div>
-                    </div>
-                    <div className="stat-widget split-stats">
-                        <div>
-                            <div className="stat-icon" style={{background: '#06b6d4'}}>
-                                📍
-                            </div>
-                            <div className="split-container">
-                                <div className="split-item">
-                                    <span className="stat-label">Locations</span>
-                                    <h3 className="stat-value" style={{fontSize: '1.5rem'}}>{stats.totalLocations}</h3>
-                                </div>
-                                <div className="split-divider"></div>
-                                <div className="split-item">
-                                    <span className="stat-label">Rooms</span>
-                                    <h3 className="stat-value" style={{fontSize: '1.5rem'}}>{stats.totalRooms}</h3>
-                                </div>
+                            <div className="split-divider"></div>
+                            <div className="split-item right">
+                                <span className="stat-label">Assigned</span>
+                                <h3 className="stat-value">{stats.assignedAssets}</h3>
                             </div>
                         </div>
                         <div className="stat-footer">
-                             <Link to="/locations">
-                                View full details →
-                            </Link>
+                            <Link to="/assets">View full details →</Link>
+                        </div>
+                    </div>
+
+                    {/* Orders Card */}
+                    <div className="stat-widget">
+                        <div className="widget-header">
+                            <div className="stat-icon bg-green">🛒</div>
+                            <span className="widget-title">Orders</span>
+                        </div>
+                        <div className="split-container">
+                            <div className="split-item left">
+                                <span className="stat-label">Pending</span>
+                                <h3 className="stat-value">{stats.pendingOrders}</h3>
+                            </div>
+                            <div className="split-divider"></div>
+                            <div className="split-item right">
+                                <span className="stat-label">Completed</span>
+                                <h3 className="stat-value">{stats.completedOrders}</h3>
+                            </div>
+                        </div>
+                        <div className="stat-footer">
+                            <Link to="/purchase-orders">View full details →</Link>
+                        </div>
+                    </div>
+
+                    {/* Requests Card */}
+                    <div className="stat-widget">
+                        <div className="widget-header">
+                            <div className="stat-icon bg-amber">📝</div>
+                            <span className="widget-title">Requests</span>
+                        </div>
+                        <div className="split-container">
+                            <div className="split-item left">
+                                <span className="stat-label">Pending</span>
+                                <h3 className="stat-value">{stats.pendingRequests}</h3>
+                            </div>
+                            <div className="split-divider"></div>
+                            <div className="split-item right">
+                                <span className="stat-label">Approved</span>
+                                <h3 className="stat-value">{stats.approvedRequests}</h3>
+                            </div>
+                        </div>
+                        <div className="stat-footer">
+                            <Link to="/requests">View full details →</Link>
+                        </div>
+                    </div>
+
+                    {/* Users Card */}
+                    <div className="stat-widget">
+                        <div className="widget-header">
+                            <div className="stat-icon bg-rose">👥</div>
+                            <span className="widget-title">Users</span>
+                        </div>
+                        <div className="split-container">
+                            <div className="split-item left">
+                                <span className="stat-label">Active</span>
+                                <h3 className="stat-value">{stats.activeUsers || 0}</h3>
+                            </div>
+                            <div className="split-divider"></div>
+                            <div className="split-item right">
+                                <span className="stat-label">Inactive</span>
+                                <h3 className="stat-value">{stats.inactiveUsers || 0}</h3>
+                            </div>
+                        </div>
+                        <div className="stat-footer">
+                             <Link to="/employees">View full details →</Link>
+                        </div>
+                    </div>
+
+                    {/* Categories Card */}
+                    <div className="stat-widget">
+                        <div className="widget-header">
+                            <div className="stat-icon bg-purple">🏷️</div>
+                            <span className="widget-title">Categories</span>
+                        </div>
+                        <div className="split-container">
+                            <div className="split-item left">
+                                <span className="stat-label">Hardware</span>
+                                <h3 className="stat-value">{stats.hwCategories || 0}</h3>
+                            </div>
+                            <div className="split-divider"></div>
+                            <div className="split-item right">
+                                <span className="stat-label">Software</span>
+                                <h3 className="stat-value">{stats.swCategories || 0}</h3>
+                            </div>
+                        </div>
+                        <div className="stat-footer">
+                             <Link to="/categories">View full details →</Link>
+                        </div>
+                    </div>
+
+                    {/* Locations Card */}
+                    <div className="stat-widget">
+                        <div className="widget-header">
+                            <div className="stat-icon bg-cyan">📍</div>
+                            <span className="widget-title">Locations</span>
+                        </div>
+                        <div className="split-container">
+                            <div className="split-item left">
+                                <span className="stat-label">Locations</span>
+                                <h3 className="stat-value">{stats.totalLocations}</h3>
+                            </div>
+                            <div className="split-divider"></div>
+                            <div className="split-item right">
+                                <span className="stat-label">Rooms</span>
+                                <h3 className="stat-value">{stats.totalRooms}</h3>
+                            </div>
+                        </div>
+                        <div className="stat-footer">
+                             <Link to="/locations">View full details →</Link>
                         </div>
                     </div>
                 </div>

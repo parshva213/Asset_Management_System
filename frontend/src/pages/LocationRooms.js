@@ -5,12 +5,14 @@ import { useState, useEffect, useCallback } from "react"
 import { useSearchParams, useNavigate } from "react-router-dom"
 import api from "../api"
 import { useAuth } from "../contexts/AuthContext"
+import { useToast } from "../contexts/ToastContext"
 
 const LocationRooms = () => {
   const [searchParams] = useSearchParams()
   const locationId = searchParams.get("location_id")
   const navigate = useNavigate()
   const { user } = useAuth()
+  const { showSuccess, showError } = useToast()
   
   const [location, setLocation] = useState(null)
   const [rooms, setRooms] = useState([])
@@ -71,8 +73,10 @@ const LocationRooms = () => {
       
       if (editingRoom) {
         await api.put(`/locations/rooms/${editingRoom.id}`, payload)
+        showSuccess("Room updated successfully")
       } else {
         await api.post("/locations/rooms", payload)
+        showSuccess("Room created successfully")
       }
       setShowRoomModal(false)
       setEditingRoom(null)
@@ -80,6 +84,7 @@ const LocationRooms = () => {
       fetchRooms()
     } catch (error) {
       console.error("Error saving room:", error)
+      showError("Error saving room")
     }
   }
 
@@ -99,9 +104,11 @@ const LocationRooms = () => {
     if (window.confirm("Are you sure you want to delete this room?")) {
       try {
         await api.delete(`/locations/rooms/${id}`)
+        showSuccess("Room deleted successfully")
         fetchRooms()
       } catch (error) {
         console.error("Error deleting room:", error)
+        showError("Error deleting room")
       }
     }
   }

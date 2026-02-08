@@ -211,6 +211,14 @@ const authenticate = (roles = []) => {
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
             req.user = decoded;
 
+            // Ensure org_id is present if not in token
+            if (!req.user.org_id) {
+                const [rows] = await pool.query("SELECT org_id FROM users WHERE id = ?", [req.user.id]);
+                if (rows.length > 0) {
+                    req.user.org_id = rows[0].org_id;
+                }
+            }
+
             if (roles.length && !roles.some(role => role.toLowerCase() === (req.user.role || "").toLowerCase())) {
                 return res.status(403).json({ error: "Forbidden" });
             }
@@ -286,27 +294,34 @@ app.get("/api/dashboard", authenticate(), async (req, res) => {
 app.get("/api/admin/dashboard", authenticate(["Super Admin", "Admin"]), async (req, res) => {
     try {
         const [totalAssets] = await pool.query("SELECT COUNT(*) as count FROM assets where org_id = ?", [req.user.org_id]);
-        const [totalUsers] = await pool.query("SELECT COUNT(*) as count FROM users WHERE org_id = ? AND role != 'Super Admin'", [req.user.org_id]);
-        const [totalCategories] = await pool.query("SELECT COUNT(*) as count FROM categories WHERE org_id = ?", [req.user.org_id]);
+        const [assignedAssets] = await pool.query("SELECT COUNT(*) as count FROM assets WHERE org_id = ? AND status = 'Assigned'", [req.user.org_id]);
+        const [activeUsers] = await pool.query("SELECT COUNT(*) as count FROM users WHERE org_id = ? AND role != 'Super Admin' AND status IN ('Active', 'On Leave')", [req.user.org_id]);
+        const [inactiveUsers] = await pool.query("SELECT COUNT(*) as count FROM users WHERE org_id = ? AND role != 'Super Admin' AND status NOT IN ('Active', 'On Leave')", [req.user.org_id]);
+        
+        // Separate category counts by type
+        const [hwCategories] = await pool.query("SELECT COUNT(*) as count FROM categories WHERE org_id = ? AND type = 'Hardware'", [req.user.org_id]);
+        const [swCategories] = await pool.query("SELECT COUNT(*) as count FROM categories WHERE org_id = ? AND type = 'Software'", [req.user.org_id]);
+        
         const [totalLocations] = await pool.query("SELECT COUNT(*) as count FROM locations WHERE org_id = ?", [req.user.org_id]);
-        const [totalRooms] = await pool.query("SELECT COUNT(*) as count FROM rooms WHERE location_id = (SELECT id from locations where org_id = ?) ", [req.user.org_id]);
-        const [pendingRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE status = 'Pending'");
-        const [pendingOrders] = await pool.query("SELECT COUNT(*) as count FROM purchase_orders WHERE status = 'Pending'");
-        const [completedOrders] = await pool.query("SELECT COUNT(*) as count FROM purchase_orders WHERE status = 'Completed'");
-        const [recentUsers] = await pool.query("SELECT id, name, role FROM users WHERE role != 'Super Admin' AND role != 'software developer' ORDER BY id ASC LIMIT 5");
-        const [pendingApprovals] = await pool.query("SELECT id, description FROM asset_requests WHERE status = 'Pending' ORDER BY id ASC LIMIT 5");
+        const [totalRooms] = await pool.query("SELECT COUNT(*) as count FROM rooms WHERE location_id IN (SELECT id from locations where org_id = ?) ", [req.user.org_id]);
+        const [pendingRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE status = 'Pending' and asset_id IN (SELECT id from assets where org_id = ?)", [req.user.org_id]);
+        const [approvedRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE status = 'Approved' and asset_id IN (SELECT id from assets where org_id = ?)", [req.user.org_id]);
+        const [pendingOrders] = await pool.query("SELECT COUNT(*) as count FROM purchase_orders WHERE status = 'Pending' and admin_id IN (SELECT id from users where org_id = ? and role = 'Super Admin')", [req.user.org_id]);
+        const [completedOrders] = await pool.query("SELECT COUNT(*) as count FROM purchase_orders WHERE status = 'Completed' and admin_id IN (SELECT id from users where org_id = ? and role = 'Super Admin')", [req.user.org_id]);
 
         res.json({
             totalAssets: totalAssets[0].count,
-            totalUsers: totalUsers[0].count,
-            totalCategories: totalCategories[0].count,
+            assignedAssets: assignedAssets[0].count,
+            activeUsers: activeUsers[0].count,
+            inactiveUsers: inactiveUsers[0].count,
+            hwCategories: hwCategories[0].count,
+            swCategories: swCategories[0].count,
             totalLocations: totalLocations[0].count,
             totalRooms: totalRooms[0].count,
             pendingRequests: pendingRequests[0].count,
+            approvedRequests: approvedRequests[0].count,
             pendingOrders: pendingOrders[0].count,
             completedOrders: completedOrders[0].count,
-            recentUsers,
-            pendingApprovals,
         });
     } catch (err) {
         console.error(err);

@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from "react"
 import { useAuth } from "../contexts/AuthContext"
+import { useToast } from "../contexts/ToastContext"
 import api from "../api"
 
 const Requests = () => {
   const { user } = useAuth()
+  const { showSuccess, showError } = useToast()
   const [requests, setRequests] = useState([])
   const [assets, setAssets] = useState([])
   const [loading, setLoading] = useState(true)
@@ -54,8 +56,10 @@ const Requests = () => {
     try {
       if (editingRequest) {
         await api.put(`/requests/${editingRequest.id}`, formData)
+        showSuccess("Request updated successfully")
       } else {
         await api.post("/requests", formData)
+        showSuccess("Request submitted successfully")
       }
       setShowModal(false)
       setEditingRequest(null)
@@ -63,6 +67,7 @@ const Requests = () => {
       fetchRequests()
     } catch (error) {
       console.error("Error saving request:", error)
+      showError("Error saving request")
     }
   }
 
@@ -70,8 +75,10 @@ const Requests = () => {
     try {
       await api.put(`/requests/${requestId}/status`, { status, response })
       fetchRequests()
+      showSuccess(`Request status updated to ${status}`)
     } catch (error) {
       console.error("Error updating request status:", error)
+      showError("Error updating request status")
     }
   }
 
@@ -92,8 +99,10 @@ const Requests = () => {
       try {
         await api.delete(`/requests/${id}`)
         fetchRequests()
+        showSuccess("Request deleted successfully")
       } catch (error) {
         console.error("Error deleting request:", error)
+        showError("Error deleting request")
       }
     }
   }

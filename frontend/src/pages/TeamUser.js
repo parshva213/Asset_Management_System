@@ -275,7 +275,7 @@ const TeamUser = () => {
                               checked={!assetsToUnassign.includes(asset.id)}
                               onChange={() => toggleUnassignAsset(asset.id)}
                             />
-                            <span className="text-sm">{asset.name} ({asset.serial_number})</span>
+                            <span className="text-sm">{asset.name} (Qty: {asset.quantity || "N/A"})</span>
                           </label>
                         ))}
                       </div>
@@ -295,7 +295,7 @@ const TeamUser = () => {
                               checked={assetsToAssign.includes(asset.id)}
                               onChange={() => toggleAssignAsset(asset.id)}
                             />
-                            <span className="text-sm">{asset.name} ({asset.serial_number})</span>
+                            <span className="text-sm">{asset.name} (Qty: {asset.quantity || "N/A"})</span>
                           </label>
                         ))}
                       </div>

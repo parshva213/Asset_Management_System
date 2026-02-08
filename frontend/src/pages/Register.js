@@ -295,7 +295,7 @@ const Register = () => {
           )}
 
           {/* Room Selection for Supervisor - Only shows when location is selected */}
-          {role === 'Supervisor' && selectedLocation && (
+          {selectedLocation && (
             <div className="form-group">
               <label className="form-label">Room</label>
               <select

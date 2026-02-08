@@ -55,7 +55,7 @@ router.get("/", verifyToken, async (req, res) => {
       }
     }
 
-    query += " GROUP BY u.id ORDER BY u.id ASC";
+    query += " GROUP BY u.id, u.name, u.email, u.role, u.department, u.phone, u.loc_id, l.name, u.created_at ORDER BY u.id ASC";
     
     console.log("Users Query:", query);
     console.log("Params:", params);

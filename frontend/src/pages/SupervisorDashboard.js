@@ -270,84 +270,85 @@ const SupervisorDashboard = () => {
                 </div>
             </div>
 
-            {/* Room Registration Modal New Design */}
             {showRoomModal && (
                 <div className="modal-overlay">
-                    <div className="modal-new">
-                        <div className="modal-header-new">
-                            <h3 className="modal-title-new">Register to Location & Room</h3>
-                            <button className="close-btn-new" onClick={() => setShowRoomModal(false)}>×</button>
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h2 className="modal-title">Register to Location & Room</h2>
+                            <button className="close-modal" onClick={() => setShowRoomModal(false)}>×</button>
                         </div>
-                        <form onSubmit={handleRegisterRoom}>
-                            <div style={{marginBottom: '1.5rem'}}>
-                                <label className="form-label-new">Select Location</label>
-                                <select 
-                                    className="form-select-new" 
-                                    value={selectedLocation} 
-                                    onChange={handleLocationChange}
-                                    required
-                                >
-                                    <option value="">Select Location</option>
-                                    {locations.map(loc => (
-                                        <option key={loc.id} value={loc.id}>{loc.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            
-                            {selectedLocation && (
-                                <div>
-                                    <label className="form-label-new">Select Room</label>
-                                    {rooms.length > 0 ? (
-                                        <div className="room-grid">
-                                            {rooms.map(room => {
-                                                const occupancy = room.current_occupancy || 0
-                                                const capacity = room.capacity || 10
-                                                const percentage = Math.min((occupancy / capacity) * 100, 100)
-                                                const isSelected = selectedRoom === room.id
-                                                
-                                                return (
-                                                    <div 
-                                                        key={room.id} 
-                                                        className={`room-card ${isSelected ? 'selected' : ''}`}
-                                                        onClick={() => setSelectedRoom(room.id)}
-                                                    >
-                                                        <div className="room-name">{room.name}</div>
-                                                        <div className="room-floor">Floor {room.floor}</div>
-                                                        <div className="progress-container">
-                                                            <div className="progress-label">
-                                                                <span>{occupancy}/{capacity}</span>
-                                                            </div>
-                                                            <div className="progress-bar-bg">
-                                                                <div 
-                                                                    className={`progress-bar-fill ${percentage >= 100 ? 'full' : percentage >= 80 ? 'near-full' : ''}`} 
-                                                                    style={{width: `${percentage}%`}}
-                                                                ></div>
+                        <div className="modal-body">
+                            <form onSubmit={handleRegisterRoom}>
+                                <div style={{marginBottom: '1.5rem'}}>
+                                    <label className="form-label">Select Location</label>
+                                    <select 
+                                        className="form-input" 
+                                        value={selectedLocation} 
+                                        onChange={handleLocationChange}
+                                        required
+                                    >
+                                        <option value="">Select Location</option>
+                                        {locations.map(loc => (
+                                            <option key={loc.id} value={loc.id}>{loc.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                
+                                {selectedLocation && (
+                                    <div>
+                                        <label className="form-label">Select Room</label>
+                                        {rooms.length > 0 ? (
+                                            <div className="room-grid">
+                                                {rooms.map(room => {
+                                                    const occupancy = room.current_occupancy || 0
+                                                    const capacity = room.capacity || 10
+                                                    const percentage = Math.min((occupancy / capacity) * 100, 100)
+                                                    const isSelected = selectedRoom === room.id
+                                                    
+                                                    return (
+                                                        <div 
+                                                            key={room.id} 
+                                                            className={`room-card ${isSelected ? 'selected' : ''}`}
+                                                            onClick={() => setSelectedRoom(room.id)}
+                                                        >
+                                                            <div className="room-name">{room.name}</div>
+                                                            <div className="room-floor">Floor {room.floor}</div>
+                                                            <div className="progress-container">
+                                                                <div className="progress-label">
+                                                                    <span>{occupancy}/{capacity}</span>
+                                                                </div>
+                                                                <div className="progress-bar-bg">
+                                                                    <div 
+                                                                        className={`progress-bar-fill ${percentage >= 100 ? 'full' : percentage >= 80 ? 'near-full' : ''}`} 
+                                                                        style={{width: `${percentage}%`}}
+                                                                    ></div>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                )
-                                            })}
-                                        </div>
-                                    ) : (
-                                        <p style={{color: '#94a3b8', fontStyle: 'italic'}}>No rooms available in this location.</p>
-                                    )}
-                                </div>
-                            )}
+                                                    )
+                                                })}
+                                            </div>
+                                        ) : (
+                                            <p style={{color: '#94a3b8', fontStyle: 'italic'}}>No rooms available in this location.</p>
+                                        )}
+                                    </div>
+                                )}
 
-                            <div className="modal-actions">
-                                <button type="button" className="btn-cancel" onClick={() => setShowRoomModal(false)}>
-                                    Cancel
-                                </button>
-                                <button 
-                                    type="submit" 
-                                    className={`btn-save ${selectedLocation && (selectedRoom || rooms.length ===0) ? 'active' : ''}`} 
-                                    disabled={registering || !selectedLocation}
-                                    style={(!selectedLocation) ? {opacity: 0.5, cursor: 'not-allowed'} : {}}
-                                >
-                                    {registering ? "Updating..." : "Update Location"}
-                                </button>
-                            </div>
-                        </form>
+                                <div className="flex gap-2 mt-6">
+                                    <button type="button" className="btn btn-secondary flex-1" onClick={() => setShowRoomModal(false)}>
+                                        Cancel
+                                    </button>
+                                    <button 
+                                        type="submit" 
+                                        className="btn btn-primary flex-1"
+                                        disabled={registering || !selectedLocation}
+                                        style={(!selectedLocation) ? {opacity: 0.5, cursor: 'not-allowed'} : {}}
+                                    >
+                                        {registering ? "Updating..." : "Update Location"}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             )}
