@@ -1,196 +1,221 @@
 # Asset Management System (AMS)
 
-A comprehensive web-based Asset Management System built with React.js, Node.js, Express.js, and MySQL. The system provides role-based access control for managing organizational assets, tracking requests, and maintaining inventory.
+A comprehensive web-based Asset Management System built with React.js, Node.js, Express.js, and MySQL. The system provides role-based access control for managing organizational assets, locations, rooms, teams, and tracking with hierarchical navigation.
 
-## Features
+## 🚀 Features
 
 ### Role-Based Access Control
-- **Super Admin**: Full system access and management capabilities
-- **IT Supervisor**: Asset assignment, room management, and employee supervision
-- **Employee**: View assigned assets and submit requests
+- **Super Admin**: Full system access including organizations, locations, rooms, assets, categories, and user management
+- **IT Supervisor**: Location-specific asset management, room supervision, and team coordination
+- **Employee**: View assigned assets, submit requests, and manage personal profile
+- **Maintenance Team**: Maintenance task management and asset servicing
+- **Vendor**: Supply management and vendor-specific operations
 
 ### Core Functionality
-- **Asset Management**: Complete CRUD operations for hardware and software assets
-- **Category Management**: Organize assets by categories
-- **Location & Room Management**: Hierarchical location and room structure
-- **Request System**: Submit, track, and manage asset requests with workflow
-- **User Management**: Employee management with asset assignment capabilities
-- **Activity Logging**: Comprehensive audit trail for all system activities
+
+#### 📦 Asset Management
+- Complete CRUD operations for hardware and software assets
+- Bulk asset creation with smart serial number generation
+- Asset assignment to users with tracking
+- Serial number format: `{CompanyName}-{AssetName}-{Type}-{Category}-{Location}-{SequentialNumber}`
+- Filter assets by location, room, category, type, and status
+- Warranty tracking and expiry management
+
+#### 🏢 Organization & Location Management
+- Multi-level hierarchy: Organizations → Locations → Rooms
+- Location-based asset and user organization
+- Room capacity and occupancy tracking
+- Asset count per location and room
+- Navigation drill-down from locations to rooms to assets/teams
+
+#### 👥 User & Team Management
+- User assignment to locations and rooms
+- Asset assignment/unassignment to users
+- Team view by location or room
+- Maintenance team management per location
+- Employee management with department tracking
+
+#### 📋 Request System
+- Submit, track, and manage asset requests
+- Request status workflow (Pending, Approved, Rejected, Completed)
+- Role-based request visibility and management
+
+#### 🏷️ Category Management
+- Organize assets by custom categories
+- Category-based filtering and reporting
+
+### Navigation Features
+- **Hierarchical Navigation**: 
+  - Locations → Rooms → (Team/Assets)
+  - Back navigation with context preservation
+  - Query parameter-based filtering
+- **Dropdown Actions**: View team members or assets for specific locations/rooms
+- **Breadcrumb Navigation**: Clear path indication with back buttons
 
 ### Authentication Features
-- Role-based registration with auto-approval for valid credentials
+- Role-based registration with validation
 - JWT-based authentication
-- Password management (plain text storage as configured)
-- Forgot password functionality with email simulation
+- Password management and reset functionality
+- Forgot password with email simulation
 - Profile management for all users
+- Auto-approval system for valid credentials
 
-## Technology Stack
+## 🛠️ Technology Stack
 
 ### Backend
-- **Node.js** - Runtime environment
+- **Node.js** (v18+) - Runtime environment
 - **Express.js** - Web framework
-- **MySQL** - Database
+- **MySQL** (v8+) - Relational database
 - **JWT** - Authentication tokens
-- **Axios** - HTTP client
+- **bcryptjs** - Password hashing
+- **Joi** - Input validation
+- **Helmet** - Security headers
+- **Morgan** - HTTP request logging
+- **CORS** - Cross-origin resource sharing
 
 ### Frontend
-- **React.js** - UI framework
-- **React Router** - Client-side routing
-- **Axios** - API communication
-- **CSS3** - Styling and responsive design
+- **React.js** (v18.2) - UI framework
+- **React Router DOM** (v6.8) - Client-side routing
+- **Axios** (v1.3) - API communication
+- **Context API** - State management (Auth, Theme, Toast)
+- **CSS3** - Modern styling with custom design system
+- **clsx** - Conditional class names
 
-## Branding & Design
-
-### Logo Color Palette
-The official color palette for the Asset Management System logo and branding is defined in `logo_color_palette.txt`. The palette includes:
-
-- **Primary Colors**: Professional blue (#007bff) and success green (#28a745)
-- **Secondary Colors**: Accent yellow (#ffc107) and dark gray (#333333)
-- **Neutral Colors**: White (#ffffff), light gray (#f8f9fa), and medium gray (#6c757d)
-
-### Design Guidelines
-- Use primary colors for main branding elements and UI components
-- Apply secondary colors for highlights, warnings, and interactive states
-- Maintain WCAG AA accessibility standards for color contrast
-- Ensure consistent application across all user interfaces and documentation
-
-## Project Structure
+## 📁 Project Structure
 
 ```
-AMS/
-├── backend/                    # Node.js + Express.js API
+Asset_Management_System/
+├── backend/
 │   ├── config/
-│   │   └── database.js        # MySQL connection configuration
+│   │   └── database.js              # MySQL connection pool
 │   ├── middleware/
-│   │   ├── auth.js           # JWT authentication middleware
-│   │   ├── errorHandler.js   # Error handling middleware
-│   │   └── validate.js       # Input validation middleware
+│   │   ├── auth.js                  # JWT authentication
+│   │   ├── errorHandler.js          # Global error handler
+│   │   └── validate.js              # Request validation
 │   ├── routes/
-│   │   ├── assets.js         # Asset management endpoints
-│   │   ├── auth.js           # Authentication endpoints
-│   │   ├── categories.js     # Category management endpoints
-│   │   ├── locations.js      # Location and room endpoints
-│   │   ├── maintenance.js    # Maintenance task endpoints
-│   │   ├── purchaseOrders.js # Purchase order endpoints
-│   │   ├── requests.js       # Request management endpoints
-│   │   └── users.js          # User management endpoints
+│   │   ├── assets.js                # Asset CRUD + filtering
+│   │   ├── auth.js                  # Login, register, profile
+│   │   ├── categories.js            # Category management
+│   │   ├── locations.js             # Locations + rooms
+│   │   ├── maintenance.js           # Maintenance tasks
+│   │   ├── organizations.js         # Organization management
+│   │   ├── purchaseOrders.js        # Purchase orders
+│   │   ├── requests.js              # Asset requests
+│   │   └── users.js                 # User + asset assignment
 │   ├── scripts/
-│   │   └── checkAdminUser.js # Admin user verification script
+│   │   ├── checkAdminUser.js        # Admin verification
+│   │   ├── setupDatabase.js         # DB initialization
+│   │   └── testConnection.js        # DB connection test
 │   ├── utils/
-│   │   └── activityLogger.js # Activity logging utility
-│   ├── package.json          # Backend dependencies
-│   ├── server.js            # Express server configuration
-│   └── .env                 # Environment variables (create if needed)
-├── frontend/                  # React.js Application
+│   │   └── activityLogger.js        # Audit logging
+│   ├── .env                         # Environment variables
+│   ├── package.json
+│   └── server.js                    # Express app entry
+├── frontend/
 │   ├── public/
-│   │   └── index.html       # HTML template
+│   │   └── index.html
 │   ├── src/
-│   │   ├── components/      # Reusable components
-│   │   │   ├── Button.js
+│   │   ├── components/
 │   │   │   ├── Footer.js
-│   │   │   ├── Layout.js
+│   │   │   ├── Layout.js            # Main layout with sidebar
 │   │   │   ├── Loading.js
-│   │   │   ├── ProtectedRoute.js
+│   │   │   ├── ProtectedRoute.js    # Route guards
 │   │   │   ├── ThemeToggle.js
 │   │   │   ├── Toast.js
 │   │   │   └── ToastContainer.js
-│   │   ├── contexts/        # React contexts
-│   │   │   ├── AuthContext.js
-│   │   │   ├── ThemeContext.js
-│   │   │   └── ToastContext.js
-│   │   ├── hooks/           # Custom hooks
-│   │   │   └── useCrud.js
-│   │   ├── pages/          # Page components
-│   │   │   ├── AdminDashboard.js
-│   │   │   ├── Assets.js
-│   │   │   ├── Categories.js
-│   │   │   ├── Dashboard.js
-│   │   │   ├── EmployeeDashboard.js
-│   │   │   ├── Employees.js
-│   │   │   ├── Locations.js
+│   │   ├── contexts/
+│   │   │   ├── AuthContext.js       # User authentication state
+│   │   │   ├── ThemeContext.js      # Light/dark theme
+│   │   │   └── ToastContext.js      # Toast notifications
+│   │   ├── hooks/
+│   │   │   └── useCrud.js           # Reusable CRUD operations
+│   │   ├── pages/
+│   │   │   ├── AdminDashboard.js    # Super Admin dashboard
+│   │   │   ├── Assets.js            # Asset management
+│   │   │   ├── Categories.js        # Category management
+│   │   │   ├── Dashboard.js         # Role-based dashboard router
+│   │   │   ├── EmployeeDashboard.js # Employee dashboard
+│   │   │   ├── Employees.js         # Employee list
+│   │   │   ├── LocationRoomAssets.js # Assets by location/room
+│   │   │   ├── LocationRooms.js     # Rooms in location
+│   │   │   ├── Locations.js         # Location management
 │   │   │   ├── Login.js
+│   │   │   ├── MainUsers.js         # Maintenance team
 │   │   │   ├── MaintenanceDashboard.js
 │   │   │   ├── MaintenanceTasks.js
-│   │   │   ├── NewConfiguration.js
-│   │   │   ├── Profile.js
-│   │   │   ├── purchase-orders.js
-│   │   │   ├── Register.js
-│   │   │   ├── RegistrationRequests.js
-│   │   │   ├── Requests.js
+│   │   │   ├── Organizations.js     # Organization management
+│   │   │   ├── Profile.js           # User profile
+│   │   │   ├── purchase-orders.js   # Purchase orders
+│   │   │   ├── Register.js          # User registration
+│   │   │   ├── Requests.js          # Asset requests
 │   │   │   ├── ResetPassword.js
 │   │   │   ├── RoleSelection.js
-│   │   │   ├── SupervisorDashboard.js
-│   │   │   ├── SupplyAssets.js
-│   │   │   ├── UpdateMaintenance.js
-│   │   │   ├── VendorAssets.js
+│   │   │   ├── SDDashboard.js       # SD Dashboard
+│   │   │   ├── SupervisorDashboard.js # IT Supervisor dashboard
+│   │   │   ├── TeamUser.js          # Team members view
+│   │   │   ├── UpdatePassword.js
+│   │   │   ├── Users.js             # User management
 │   │   │   ├── VendorDashboard.js
-│   │   │   ├── VendorRequests.js
-│   │   │   └── WarrantyDocs.js
-│   │   ├── utils/           # Utility functions
-│   │   │   └── dateUtils.js
-│   │   ├── api.js          # API configuration
-│   │   ├── App.js          # Main application component
-│   │   ├── App.css         # Application styles
-│   │   ├── index.css       # Global styles
-│   │   └── index.js        # Application entry point
-│   ├── build/              # Production build output
-│   └── package.json        # Frontend dependencies
-├── database/                 # MySQL Database
-│   ├── schema.sql          # Database structure
-│   └── seed.sql           # Initial data (empty)
-├── img/                     # Images and documentation
-└── README.md              # Project documentation
+│   │   │   └── VendorRequests.js
+│   │   ├── utils/
+│   │   │   └── dateUtils.js         # Date formatting
+│   │   ├── api.js                   # Axios instance
+│   │   ├── App.js                   # Route definitions
+│   │   ├── App.css                  # Component styles
+│   │   ├── index.css                # Global styles + design system
+│   │   └── index.js                 # React entry point
+│   └── package.json
+├── database/
+│   ├── schema.sql                   # Complete DB schema
+│   └── seed.sql                     # Sample data
+├── .gitignore
+├── package.json                     # Root package (concurrently)
+└── README.md
 ```
 
-## Quick Start
+## 🚦 Quick Start
 
-1. Clone the repository:
+### Prerequisites
+- Node.js (v18 or higher)
+- MySQL (v8 or higher)
+- npm or yarn
+
+### Installation
+
+1. **Clone the repository**
    ```bash
    git clone https://github.com/parshva213/Asset_Management_System.git
    cd Asset_Management_System
    ```
 
-2. Set up the database (see Database Setup section below).
-
-3. Install dependencies and start the application:
+2. **Database Setup**
    ```bash
-   npm install
-   npm run dev
+   # Login to MySQL
+   mysql -u root -p
+   
+   # Create database
+   CREATE DATABASE asset_management;
+   USE asset_management;
+   
+   # Import schema
+   SOURCE database/schema.sql;
+   
+   # (Optional) Import seed data
+   SOURCE database/seed.sql;
    ```
 
-   This will start both the backend server (http://localhost:5000) and frontend application (http://localhost:3000) concurrently.
-
-## Installation & Setup
-
-### Database Setup
-1. Create a MySQL database:
-   \`\`\`sql
-   CREATE DATABASE asset_management;
-   \`\`\`
-
-2. Import the database schema:
-   \`\`\`bash
-   mysql -u root -p asset_management < database/schema.sql
-   \`\`\`
-
-3. (Optional) Import seed data:
-   \`\`\`bash
-   mysql -u root -p asset_management < database/seed.sql
-   \`\`\`
-
-### Backend Setup
-1. Navigate to the backend directory:
-   \`\`\`bash
+3. **Backend Setup**
+   ```bash
    cd backend
-   \`\`\`
-
-2. Install dependencies:
-   \`\`\`bash
    npm install
-   \`\`\`
+   
+   # Create .env file
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
 
-3. Configure environment variables in `.env`:
-   \`\`\`env
+   **`.env` Configuration:**
+   ```env
    PORT=5000
    DB_HOST=localhost
    DB_USER=root
@@ -198,173 +223,383 @@ AMS/
    DB_NAME=asset_management
    JWT_SECRET=your_super_secret_jwt_key_here
    JWT_EXPIRES_IN=24h
-   \`\`\`
+   NODE_ENV=development
+   ```
 
-4. Start the backend server:
-   \`\`\`bash
-   npm run dev
-   \`\`\`
-
-### Frontend Setup
-1. Navigate to the frontend directory:
-   \`\`\`bash
-   cd frontend
-   \`\`\`
-
-2. Install dependencies:
-   \`\`\`bash
+4. **Frontend Setup**
+   ```bash
+   cd ../frontend
    npm install
-   \`\`\`
+   ```
 
-3. Start the development server:
-   \`\`\`bash
+5. **Start the Application**
+   
+   **Option 1: Run both servers concurrently (from root)**
+   ```bash
+   cd ..
+   npm install
+   npm run dev
+   ```
+   
+   **Option 2: Run separately**
+   ```bash
+   # Terminal 1 - Backend
+   cd backend
+   npm run dev
+   
+   # Terminal 2 - Frontend
+   cd frontend
    npm start
-   \`\`\`
+   ```
 
-The application will be available at:
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:5000
+6. **Access the Application**
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:5000
 
-## User Registration
+## 👤 User Roles & Registration
 
 ### Registration Process
-1. Visit the application and click "Register here"
-2. Select your role (Super Admin, IT Supervisor, or Employee)
-3. Fill out the registration form with role-specific requirements:
+1. Navigate to http://localhost:3000
+2. Click "Register here"
+3. Select your role
+4. Fill out the registration form with role-specific requirements
 
-### Role-Specific Requirements
-- **Super Admin**: No special requirements - immediate access
-- **IT Supervisor**: Requires valid authorization key
-  - Valid keys: `SUP2024`, `ADMIN123`, `SUPERVISOR001`
-- **Employee**: Requires valid employee ID format
-  - Format: `EMP` followed by 4 digits (e.g., `EMP1234`)
+### Role Requirements
+
+#### Super Admin
+- **Requirements**: None - immediate access
+- **Capabilities**: Full system access, manage all resources
+
+#### IT Supervisor
+- **Requirements**: Valid authorization key
+- **Valid Keys**: `SUP2024`, `ADMIN123`, `SUPERVISOR001`
+- **Capabilities**: Location/room management, asset assignment, team supervision
+
+#### Employee
+- **Requirements**: Valid employee ID format
+- **Format**: `EMP` followed by 4 digits (e.g., `EMP1234`, `EMP5678`)
+- **Capabilities**: View assigned assets, submit requests
 
 ### Auto-Approval System
-Users with valid credentials are automatically approved and logged in. Invalid credentials are rejected with appropriate error messages.
+Users with valid credentials are automatically approved and logged in. Invalid credentials are rejected with error messages.
 
-## API Endpoints
+## 🔌 API Endpoints
 
-### Authentication
-- `POST /api/auth/login` - User login
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/forgot-password` - Password reset
-- `GET /api/auth/profile` - Get user profile
-- `PUT /api/auth/profile` - Update user profile
-- `PUT /api/auth/change-password` - Change password
+### Authentication (`/api/auth`)
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/login` | User login | No |
+| POST | `/register` | User registration | No |
+| POST | `/forgot-password` | Password reset request | No |
+| GET | `/profile` | Get current user profile | Yes |
+| PUT | `/profile` | Update user profile | Yes |
+| PUT | `/change-password` | Change password | Yes |
 
-### Assets
-- `GET /api/assets` - Get assets (filtered by role)
-- `POST /api/assets` - Create new asset
-- `PUT /api/assets/:id` - Update asset
-- `DELETE /api/assets/:id` - Delete asset
+### Assets (`/api/assets`)
+| Method | Endpoint | Description | Auth Required | Role |
+|--------|----------|-------------|---------------|------|
+| GET | `/` | Get assets (filtered by role) | Yes | All |
+| GET | `/:id` | Get single asset | Yes | All |
+| POST | `/` | Create new asset | Yes | Admin, Supervisor |
+| PUT | `/:id` | Update asset | Yes | Admin, Supervisor |
+| DELETE | `/:id` | Delete asset | Yes | Admin |
 
-### Categories
-- `GET /api/categories` - Get all categories
-- `POST /api/categories` - Create category (Super Admin only)
-- `PUT /api/categories/:id` - Update category (Super Admin only)
-- `DELETE /api/categories/:id` - Delete category (Super Admin only)
+**Query Parameters for GET `/`:**
+- `location_id` - Filter by location
+- `room_id` - Filter by room
+- `category_id` - Filter by category
+- `asset_type` - Filter by type (Hardware/Software)
+- `status` - Filter by status (Available/Assigned/Under Maintenance)
 
-### Locations & Rooms
-- `GET /api/locations` - Get all locations
-- `GET /api/locations/rooms` - Get all rooms
-- `POST /api/locations` - Create location (Super Admin only)
-- `POST /api/locations/rooms` - Create room
-- `PUT /api/locations/:id` - Update location (Super Admin only)
-- `PUT /api/locations/rooms/:id` - Update room
-- `DELETE /api/locations/:id` - Delete location (Super Admin only)
-- `DELETE /api/locations/rooms/:id` - Delete room
+### Categories (`/api/categories`)
+| Method | Endpoint | Description | Auth Required | Role |
+|--------|----------|-------------|---------------|------|
+| GET | `/` | Get all categories | Yes | All |
+| POST | `/` | Create category | Yes | Admin |
+| PUT | `/:id` | Update category | Yes | Admin |
+| DELETE | `/:id` | Delete category | Yes | Admin |
 
-### Users
-- `GET /api/users` - Get users (role-based access)
-- `POST /api/users/assign-asset` - Assign asset to user
-- `POST /api/users/unassign-asset` - Unassign asset from user
-- `GET /api/users/assigned-assets` - Get all assets assigned to all users (Admin/Supervisor only)
-- `GET /api/users/my-assets` - Get assets assigned to current user (Employee)
+### Locations & Rooms (`/api/locations`)
+| Method | Endpoint | Description | Auth Required | Role |
+|--------|----------|-------------|---------------|------|
+| GET | `/` | Get all locations | Yes | All |
+| GET | `/:id` | Get single location | Yes | All |
+| GET | `/rooms` | Get all rooms | Yes | All |
+| GET | `/rooms/:id` | Get single room | Yes | All |
+| POST | `/` | Create location | Yes | Admin |
+| POST | `/rooms` | Create room | Yes | Admin, Supervisor |
+| PUT | `/:id` | Update location | Yes | Admin |
+| PUT | `/rooms/:id` | Update room | Yes | Admin, Supervisor |
+| DELETE | `/:id` | Delete location | Yes | Admin |
+| DELETE | `/rooms/:id` | Delete room | Yes | Admin, Supervisor |
 
-### Requests
-- `GET /api/requests` - Get requests (filtered by role)
-- `POST /api/requests` - Create new request
-- `PUT /api/requests/:id` - Update request
-- `PUT /api/requests/:id/status` - Update request status
-- `DELETE /api/requests/:id` - Delete request
+### Users (`/api/users`)
+| Method | Endpoint | Description | Auth Required | Role |
+|--------|----------|-------------|---------------|------|
+| GET | `/` | Get users (filtered by role) | Yes | Admin, Supervisor |
+| GET | `/:id` | Get single user | Yes | All |
+| POST | `/assign-asset` | Assign asset to user | Yes | Admin, Supervisor |
+| POST | `/unassign-asset` | Unassign asset from user | Yes | Admin, Supervisor |
+| GET | `/assigned-assets` | Get all assigned assets | Yes | Admin, Supervisor |
+| GET | `/my-assets` | Get current user's assets | Yes | Employee |
+| PUT | `/:id` | Update user | Yes | Admin, Supervisor |
 
-## Database Schema
+**Query Parameters for GET `/`:**
+- `location_id` or `locid` - Filter by location
+- `room_id` or `roomid` - Filter by room
+- `role` - Filter by user role
 
-### Tables Overview
-- **users**: User accounts with role-based access
-- **categories**: Asset categories for organization
-- **locations**: Physical locations
-- **rooms**: Rooms within locations
-- **assets**: Hardware and software assets
-- **asset_requests**: Request workflow system
-- **activity_logs**: Audit trail for all activities
-- **registration_requests**: Pending user registrations (unused with auto-approval)
+### Requests (`/api/requests`)
+| Method | Endpoint | Description | Auth Required | Role |
+|--------|----------|-------------|---------------|------|
+| GET | `/` | Get requests (filtered by role) | Yes | All |
+| POST | `/` | Create new request | Yes | All |
+| PUT | `/:id` | Update request | Yes | All |
+| PUT | `/:id/status` | Update request status | Yes | Admin, Supervisor |
+| DELETE | `/:id` | Delete request | Yes | Admin |
+
+### Organizations (`/api/organizations`)
+| Method | Endpoint | Description | Auth Required | Role |
+|--------|----------|-------------|---------------|------|
+| GET | `/` | Get all organizations | Yes | Admin |
+| POST | `/` | Create organization | Yes | Admin |
+| PUT | `/:id` | Update organization | Yes | Admin |
+| DELETE | `/:id` | Delete organization | Yes | Admin |
+
+## 🗄️ Database Schema
+
+### Core Tables
+
+#### `users`
+```sql
+- id (PK)
+- name
+- email (UNIQUE)
+- password
+- role (Super Admin, IT Supervisor, Employee, Maintenance, Vendor)
+- department
+- employee_id
+- loc_id (FK → locations)
+- room_id (FK → rooms)
+- created_at
+- updated_at
+```
+
+#### `organizations`
+```sql
+- id (PK)
+- name
+- description
+- created_at
+```
+
+#### `locations`
+```sql
+- id (PK)
+- org_id (FK → organizations)
+- name
+- address
+- description
+- created_at
+```
+
+#### `rooms`
+```sql
+- id (PK)
+- location_id (FK → locations)
+- name
+- floor
+- capacity
+- description
+- created_at
+```
+
+#### `categories`
+```sql
+- id (PK)
+- name
+- description
+- created_at
+```
+
+#### `assets`
+```sql
+- id (PK)
+- name
+- asset_type (Hardware/Software)
+- serial_number (UNIQUE)
+- category_id (FK → categories)
+- location_id (FK → locations)
+- room_id (FK → rooms)
+- status (Available, Assigned, Under Maintenance)
+- purchase_date
+- warranty_expiry
+- assigned_to (FK → users)
+- quantity
+- created_at
+- updated_at
+```
+
+#### `asset_requests`
+```sql
+- id (PK)
+- user_id (FK → users)
+- asset_id (FK → assets)
+- request_type (New, Repair, Replace)
+- status (Pending, Approved, Rejected, Completed)
+- description
+- created_at
+- updated_at
+```
+
+#### `activity_logs`
+```sql
+- id (PK)
+- user_id (FK → users)
+- action
+- details
+- created_at
+```
 
 ### Key Relationships
-- Assets belong to categories and locations
-- Assets can be assigned to users
-- Requests are linked to assets and users
-- Rooms belong to locations
-- Activity logs track all user actions
+- Organizations have many Locations
+- Locations have many Rooms
+- Assets belong to Categories, Locations, and Rooms
+- Assets can be assigned to Users
+- Users can have many Requests
+- Requests reference Assets and Users
 
-## Security Features
+## 🔐 Security Features
 
-- JWT-based authentication with configurable expiration
-- Role-based access control throughout the application
-- Input validation and sanitization
-- SQL injection prevention through parameterized queries
-- CORS configuration for cross-origin requests
-- Password storage without encryption (as configured)
+- **JWT Authentication**: Secure token-based authentication
+- **Role-Based Access Control (RBAC)**: Granular permissions per role
+- **Input Validation**: Joi schema validation on all inputs
+- **SQL Injection Prevention**: Parameterized queries with MySQL2
+- **CORS Configuration**: Controlled cross-origin access
+- **Helmet**: Security headers for Express
+- **Password Hashing**: bcryptjs for secure password storage
+- **Rate Limiting**: Express rate limiter for API protection
 
-## Deployment
+## 🎨 UI/UX Features
 
-### Production Deployment
-1. **Database**: Set up MySQL database on your hosting provider
-2. **Backend**: Deploy to platforms like Railway, Render, or Heroku
-3. **Frontend**: Deploy to Vercel, Netlify, or similar static hosting
-4. **Environment**: Configure production environment variables
+- **Responsive Design**: Mobile-first approach
+- **Dark/Light Theme**: Toggle between themes
+- **Toast Notifications**: User-friendly feedback
+- **Loading States**: Smooth loading indicators
+- **Modal Dialogs**: Inline editing and forms
+- **Dropdown Actions**: Context-specific actions
+- **Breadcrumb Navigation**: Clear navigation paths
+- **Sidebar Navigation**: Role-based menu items
+- **Empty States**: Helpful messages when no data
+
+## 🧪 Testing
+
+### Backend Testing
+```bash
+cd backend
+npm run test-db    # Test database connection
+```
+
+### Frontend Testing
+```bash
+cd frontend
+npm test
+```
+
+## 📦 Deployment
+
+### Production Build
+
+**Frontend:**
+```bash
+cd frontend
+npm run build
+# Build output in frontend/build/
+```
+
+**Backend:**
+```bash
+cd backend
+npm start
+```
 
 ### Environment Variables for Production
-\`\`\`env
+```env
 NODE_ENV=production
 PORT=5000
 DB_HOST=your_production_db_host
 DB_USER=your_production_db_user
 DB_PASSWORD=your_production_db_password
 DB_NAME=asset_management
-JWT_SECRET=your_production_jwt_secret
+JWT_SECRET=your_production_jwt_secret_minimum_32_characters
 JWT_EXPIRES_IN=24h
-\`\`\`
+```
 
-## Contributing
+### Deployment Platforms
+
+**Backend Options:**
+- Railway
+- Render
+- Heroku
+- AWS EC2
+- DigitalOcean
+
+**Frontend Options:**
+- Vercel
+- Netlify
+- AWS S3 + CloudFront
+- GitHub Pages
+
+**Database Options:**
+- AWS RDS (MySQL)
+- PlanetScale
+- Railway (MySQL)
+- DigitalOcean Managed Databases
+
+## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-## License
+## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Support
+## 👨‍💻 Authors
+
+- **Parshva Shah** - [parshva213](https://github.com/parshva213)
+
+## 🙏 Acknowledgments
+
+- React.js team for the amazing framework
+- Express.js community
+- MySQL team
+- All contributors and testers
+
+## 📞 Support
 
 For support and questions:
-1. Check the documentation
-2. Review the API endpoints
-3. Examine the database schema
-4. Test with the provided demo credentials
+- 📧 Email: [Create an issue](https://github.com/parshva213/Asset_Management_System/issues)
+- 📖 Documentation: This README
+- 🐛 Bug Reports: [GitHub Issues](https://github.com/parshva213/Asset_Management_System/issues)
 
-## Development Status
+## 🗺️ Roadmap
 
-The project is actively maintained with ongoing improvements. Current focus areas include:
+- [ ] Email notifications for requests
+- [ ] Advanced reporting and analytics
+- [ ] Asset depreciation tracking
+- [ ] Barcode/QR code scanning
+- [ ] Mobile application
+- [ ] Export to PDF/Excel
+- [ ] Advanced search and filters
+- [ ] Asset maintenance scheduling
+- [ ] Multi-language support
+- [ ] API documentation with Swagger
 
-- Completing API integration for all frontend components
-- Testing and validation of all forms and data storage
-- UI/UX refinements based on user feedback
-- Security enhancements for production deployment
+---
 
-For the latest updates, check the TODO.md file in the repository.
-
-## Version History
+**Version:** 1.0.0  
+**Last Updated:** February 2026
