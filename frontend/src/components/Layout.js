@@ -54,7 +54,7 @@ const ICONS = {
 const MENU_ITEMS = {
   "Super Admin": [
     { name: "Dashboard", path: ["/admin-dashboard"], icon: "dashboard" },
-    { name: "Locations", path: ["/locations", "/rooms?locationId=", "/main-users?location_id=", "/assets?location_id="], icon: "locations" },
+    { name: "Locations", path: ["/locations", "/rooms?locationId=", "/main-users?location_id=", "/assets-location"], icon: "locations" },
     { name: "Categories", path: ["/categories"], icon: "categories" },
     { name: "Assets", path: ["/assets"], icon: "assets" },
     { name: "Orders", path: ["/purchase-orders"], icon: "orders" },
@@ -64,7 +64,7 @@ const MENU_ITEMS = {
   ],
   "Supervisor": [
     { name: "Dashboard", path: ["/dashboard", "/supervisor-dashboard"], icon: "dashboard" },
-    { name: "My Team Report", path: ["/supervisor-report"], icon: "users" },
+    { name: "My Team", path: ["/supervisor-report"], icon: "users" },
     { name: "Assets", path: ["/assets"], icon: "assets" },
     { name: "Orders", path: ["/purchase-orders"], icon: "orders" },
     { name: "Requests", path: ["/requests"], icon: "requests" },

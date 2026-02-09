@@ -8,7 +8,8 @@ const router = express.Router();
 // GET - Employee/Supervisor own details with location and room
 router.get("/my-details", verifyToken, async (req, res) => {
   try {
-    if (!["Employee", "Supervisor"].includes(req.user.role)) {
+    const userRole = (req.user.role || "").toLowerCase();
+    if (!["employee", "supervisor"].includes(userRole)) {
       return res.status(403).json({ message: "Access denied. Only employees and supervisors can access this." });
     }
 
@@ -53,7 +54,8 @@ router.get("/my-details", verifyToken, async (req, res) => {
 // GET - Employee's assets with details
 router.get("/my-assets", verifyToken, async (req, res) => {
   try {
-    if (req.user.role !== "Employee") {
+    const userRole = (req.user.role || "").toLowerCase();
+    if (userRole !== "employee") {
       return res.status(403).json({ message: "Access denied. Only employees can access this." });
     }
 
@@ -90,7 +92,8 @@ router.get("/my-assets", verifyToken, async (req, res) => {
 // GET - All employees assigned to this supervisor
 router.get("/supervisor/my-employees", verifyToken, async (req, res) => {
   try {
-    if (req.user.role !== "Supervisor") {
+    const userRole = (req.user.role || "").toLowerCase();
+    if (userRole !== "supervisor") {
       return res.status(403).json({ message: "Access denied. Only supervisors can access this." });
     }
 
@@ -280,7 +283,8 @@ router.put("/employee/:employeeId/location", verifyToken, async (req, res) => {
 // GET - All locations with rooms for organization
 router.get("/locations-and-rooms", verifyToken, async (req, res) => {
   try {
-    if (!["Employee", "Supervisor"].includes(req.user.role)) {
+    const userRole = (req.user.role || "").toLowerCase();
+    if (!["employee", "supervisor"].includes(userRole)) {
       return res.status(403).json({ message: "Access denied. Only employees and supervisors can access this." });
     }
 
@@ -327,7 +331,8 @@ router.get("/locations-and-rooms", verifyToken, async (req, res) => {
 // POST - Register employee to room with supervisor key verification
 router.post("/register-to-room", verifyToken, async (req, res) => {
   try {
-    if (req.user.role !== "Employee") {
+    const userRole = (req.user.role || "").toLowerCase();
+    if (userRole !== "employee") {
       return res.status(403).json({ message: "Access denied. Only employees can register." });
     }
 
