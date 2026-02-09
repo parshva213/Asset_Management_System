@@ -44,8 +44,10 @@ const Assets = () => {
 
   const fetchAssets = async () => {
     try {
+      console.log("asset")
       const res = await api.get("/assets");
-      setAssets(res.data);
+      setAssets(res.data) ? console.log("asset success") : console.log("asset Error");
+      
     } catch (err) {
       console.error("Error fetching assets:", err);
     }
@@ -53,8 +55,9 @@ const Assets = () => {
 
   const fetchCategories = async () => {
     try {
+      console.log("categories");
       const res = await api.get("/categories");
-      setCategories(res.data);
+      setCategories(res.data) ? console.log("cat success") : console.log("cat Error");
     } catch (err) {
       console.error("Error fetching categories:", err);
     }
@@ -62,23 +65,32 @@ const Assets = () => {
 
   const fetchLocations = async () => {
     try {
+      console.log("locations")
       const res = await api.get("/locations");
-      setLocations(res.data);
+      setLocations(res.data) ? console.log("loc success") : console.log("loc Error");
     } catch (err) {
       console.error("Error fetching locations:", err);
     }
   };
 
-  const fetchRooms = async () => {
+  const fetchRooms = async (locId) => {
+    console.log("rooms")
+    const targetLocId = locId || formData.location_id;
+    if (!targetLocId) {
+        setRooms([]);
+        return;
+    }
     try {
-      const res = await api.get("/locations/rooms");
-      setRooms(res.data);
+      const res = await api.get(`/locations/${targetLocId}/rooms`);
+      console.log("Assets.js: fetchRooms response length:", res.data.length);
+      setRooms(res.data) ? console.log("rooms success") : console.log("rooms Error");
     } catch (err) {
       console.error("Error fetching rooms:", err);
     }
   };
 
   const resetForm = () => {
+    console.log("resetForm")
     setFormData({
       company_name: "",
       name: "",
@@ -96,7 +108,13 @@ const Assets = () => {
   };
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    if (name === "location_id") {
+        setFormData((prev) => ({ ...prev, room_id: "" })); // Reset room selection
+        fetchRooms(value);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -295,7 +313,7 @@ const Assets = () => {
                         <label className="form-label">Room</label>
                         <select className="form-select" name="room_id" value={formData.room_id} onChange={handleChange} required>
                         <option value="">Select room</option>
-                        {rooms.filter(r => r.location_id === Number(formData.location_id)).map((r) => (
+                        {rooms.map((r) => (
                             <option key={r.id} value={r.id}>{r.name}</option>
                         ))}
                         </select>
@@ -355,7 +373,7 @@ const Assets = () => {
             <div className="modal-footer">
               <div className="flex gap-2 mt-2">
                 {formData.purchase_cost && (
-                  <button type="submit" className="btn btn-primary" style={{flex: 1}}>{editingAsset ? "Update" : "Add"} Asset</button>
+                  <button type="submit" onClick={handleSubmit} className="btn btn-primary" style={{flex: 1}}>{editingAsset ? "Update" : "Add"} Asset</button>
                 )}
                 <button type="button" className="btn btn-secondary" style={{flex: 1}} onClick={() => { setShowModal(false); resetForm(); }}>Cancel</button>
               </div>

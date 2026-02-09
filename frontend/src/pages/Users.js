@@ -219,7 +219,7 @@ const Users = () => {
               </div>
               <div className="card-body">
                 <p><strong>Email:</strong> {user.email}</p>
-                <p><strong>Location:</strong> {user.location_name || "Unassigned"}</p>
+                <p><strong>Location:</strong> {user.location_name}</p>
                 <p><strong>Department:</strong> {user.department || "N/A"}</p>
                 <p><strong>Assigned Assets:</strong> {user.assigned_assets?.length || 0}</p>
               </div>

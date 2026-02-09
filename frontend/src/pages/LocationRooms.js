@@ -156,7 +156,10 @@ const LocationRooms = () => {
                     <tr>
                     <th>Name</th>
                     <th>Floor</th>
-                    <th>Capacity</th>
+                    <th>Capacity </th>
+                    <th>Users</th>
+                    <th>Assets</th>
+                    <th>Assigned</th>
                     <th>Description</th>
                     <th>Actions</th>
                     </tr>
@@ -165,8 +168,11 @@ const LocationRooms = () => {
                     {rooms.map((room) => (
                     <tr key={room.id} id={`room-${room.id}`}>
                         <td>{room.name}</td>
-                        <td>{room.floor || "N/A"}</td>
-                        <td>{room.capacity || "N/A"}</td>
+                        <td>{room.floor}</td>
+                        <td>{room.capacity}</td>
+                        <td>{room.current_occupancy}</td>
+                        <td>{room.asset_count}</td>
+                        <td>{room.assigned_count}</td>
                         <td>{room.description || "N/A"}</td>
                         <td>
                           <div className="flex gap-2">
@@ -191,7 +197,7 @@ const LocationRooms = () => {
                                 <div className="dropdown-menu">
                                   <button
                                     onClick={() => {
-                                      navigate(`/team-user?roomid=${room.id}`)
+                                      navigate(`/team-user?locid=${locationId}&roomid=${room.id}`)
                                       setOpenDropdownId(null)
                                     }}
                                     className="dropdown-item"
@@ -200,7 +206,7 @@ const LocationRooms = () => {
                                   </button>
                                   <button
                                     onClick={() => {
-                                      navigate(`/lr-assets?rid=${room.id}`)
+                                      navigate(`/lr-assets?locid=${locationId}&roomid=${room.id}`)
                                       setOpenDropdownId(null)
                                     }}
                                     className="dropdown-item"

@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import useCrud from "../hooks/useCrud"
 import { useToast } from "../contexts/ToastContext"
-import { formatDate } from "../utils/dateUtils"
 
 const Locations = () => {
   const navigate = useNavigate()
@@ -112,8 +111,8 @@ const Locations = () => {
                     <th>Name</th>
                     <th>Address</th>
                     <th>Rooms</th>
+                    <th> Assets</th>
                     <th>Description</th>
-                    <th>Created At</th>
                     <th>Actions</th>
                     </tr>
                 </thead>
@@ -122,9 +121,8 @@ const Locations = () => {
                     <tr key={location.id} id={`loc-${location.id}`}>
                         <td>{location.name}</td>
                         <td>{location.address || "N/A"}</td>
-                        <td>{location.room_count}</td>
+                        <td>{location.room_count} </td><td> {location.asset_count}</td>
                         <td>{location.description || "N/A"}</td>
-                        <td>{formatDate(location.created_at)}</td>
                         <td>
                         <div className="flex gap-2">
                             <button onClick={() => handleEditLocation(location)} className="btn btn-secondary">
@@ -198,7 +196,7 @@ const Locations = () => {
               </button>
             </div>
              <div className="modal-body">
-                <form onSubmit={handleLocationSubmit} style={{display: 'flex', flexDirection: 'column', gap: '1.5rem'}}>
+              <form onSubmit={handleLocationSubmit} style={{display: 'flex', flexDirection: 'column', gap: '1.5rem'}}>
                 <div className="form-group">
                     <label className="form-label">Location Name</label>
                     <input
@@ -227,27 +225,27 @@ const Locations = () => {
                     className="form-input"
                     value={locationFormData.description}
                     onChange={handleLocationChange}
-                    rows="3"
+                    rows="1"
                     />
                 </div>
-                <div className="flex gap-2">
-                    <button type="submit" className="btn btn-primary" style={{flex: 1}}>
-                    {editingLocation ? "Update Location" : "Add Location"}
-                    </button>
-                    <button
-                    type="button"
-                    className="btn btn-secondary"
-                    style={{flex: 1}}
-                    onClick={() => {
-                        setShowLocationModal(false)
-                        setEditingLocation(null)
-                        resetLocationForm()
-                    }}
-                    >
-                    Cancel
-                    </button>
-                </div>
-                </form>
+              </form>
+            </div>
+            <div className="flex gap-2 modal-footer">
+              <button type="submit" className="btn btn-primary" style={{flex: 1}}>
+              {editingLocation ? "Update Location" : "Add Location"}
+              </button>
+              <button
+              type="button"
+              className="btn btn-secondary"
+              style={{flex: 1}}
+              onClick={() => {
+                  setShowLocationModal(false)
+                  setEditingLocation(null)
+                  resetLocationForm()
+              }}
+              >
+              Cancel
+              </button>
             </div>
           </div>
         </div>

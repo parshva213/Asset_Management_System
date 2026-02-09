@@ -10,6 +10,7 @@ const TeamUser = () => {
   const [searchParams] = useSearchParams()
   const [users, setUsers] = useState([])
   const [locationName, setLocationName] = useState("")
+  const [derivedLocationId, setDerivedLocationId] = useState(null)
   const [loading, setLoading] = useState(true)
 
   // Granular Modal States
@@ -57,11 +58,14 @@ const TeamUser = () => {
       if (locid) {
         const response = await api.get(`/locations/${locid}`)
         setLocationName(response.data.name)
+        setDerivedLocationId(locid)
       } else if (roomid) {
         console.log("TeamUser Fetching Room Name for ID:", roomid)
         const response = await api.get(`/locations/rooms/${roomid}`)
         console.log("TeamUser Room Response:", response.data)
         setLocationName(`${response.data.name} in ${response.data.location_name}`)
+        // Store the location_id from the room data for back navigation
+        setDerivedLocationId(response.data.location_id)
       }
     } catch (error) {
       console.error("Error fetching location name:", error)
@@ -182,7 +186,7 @@ const TeamUser = () => {
       <div className="flex-between mb-4">
         <div>
           <button 
-            onClick={() => navigate(roomid ? `/rooms?location_id=${searchParams.get('lid')}` : "/locations")} 
+            onClick={() => navigate(roomid ? `/rooms?location_id=${locid || derivedLocationId}` : "/locations")} 
             className="btn btn-secondary mb-2"
             style={{ padding: '0.4rem 0.8rem', fontSize: '13px' }}
           >

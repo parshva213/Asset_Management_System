@@ -2,15 +2,15 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { useSearchParams, useNavigate } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import api from "../api"
 import { formatDate } from "../utils/dateUtils"
 
 const LocationRoomAssets = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const lid = searchParams.get("lid")
-  const rid = searchParams.get("rid")
+  const lid = searchParams.get("locid")
+  const rid = searchParams.get("roomid")
 
   const [assets, setAssets] = useState([])
   const [loading, setLoading] = useState(true)
@@ -56,11 +56,11 @@ const LocationRoomAssets = () => {
       <div className="flex-between mb-4">
         <div>
           <button 
-            onClick={() => navigate("/locations")} 
+            onClick={() => navigate(`/rooms?location_id=${lid}`)} 
             className="btn btn-secondary mb-2"
             style={{ padding: '0.4rem 0.8rem', fontSize: '13px' }}
           >
-            ← Back to Locations
+            ← Back to Room
           </button>
           <h2>{title}</h2>
         </div>

@@ -7,7 +7,7 @@ const router = express.Router();
 router.get("/", verifyToken, async (req, res) => {
   try {
     const [rows] = await db.query(`
-      SELECT l.*, (SELECT COUNT(*) FROM rooms r WHERE r.location_id = l.id) as room_count
+      SELECT l.*, (SELECT COUNT(*) FROM rooms r WHERE r.location_id = l.id) as room_count, (select count(*) from assets a where a.location_id = l.id) as asset_count
       FROM locations l
       WHERE l.org_id = ?
       ORDER BY l.id ASC
@@ -23,11 +23,13 @@ router.get("/rooms", verifyToken, async (req, res) => {
   try {
     const [rows] = await db.query(`
       SELECT r.*, l.name as location_name,
-      (SELECT COUNT(*) FROM users u WHERE u.room_id = r.id) as current_occupancy
+      (SELECT COUNT(*) FROM users u WHERE u.room_id = r.id) as current_occupancy,
+      (select count(*) From assets a where a.room_id = r.id) as asset_count,
+      (select count(*) from assets a where a.room_id = r.id and a.status = "Assigned") as assigned_count
       FROM rooms r 
       LEFT JOIN locations l ON r.location_id = l.id 
       WHERE l.org_id = ?
-      ORDER BY r.id ASC
+      ORDER BY r.id ASC;
     `, [req.user.org_id])
     res.json(rows)
   } catch (error) {
@@ -55,7 +57,7 @@ router.get("/rooms/:id", verifyToken, async (req, res) => {
   try {
     const { id } = req.params
     const [rows] = await db.query(`
-      SELECT r.*, l.name as location_name 
+      SELECT r.*, l.name as location_name , (select count(*) from users u where u.room_id = r.id) as user_count, (select count(*) from assets a where a.room_id = r.id) as asset_count, (select count(*) from assets a where a.room_id = r.id and a.status = "Assigned") as assigned_count
       FROM rooms r 
       LEFT JOIN locations l ON r.location_id = l.id 
       WHERE r.id = ?
@@ -71,6 +73,22 @@ router.get("/rooms/:id", verifyToken, async (req, res) => {
     res.status(500).json({ message: "Server error" })
   }
 })
+
+// New endpoint to fetch all rooms for a specific location
+router.get("/:id/rooms", verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log(`Fetching rooms for location ID: ${id}`);
+    const [rows] = await db.query(`
+      SELECT * FROM rooms WHERE location_id = ?
+    `, [id]);
+    console.log(`Found ${rows.length} rooms for location ID ${id}`);
+    res.json(rows);
+  } catch (error) {
+    console.error("Error fetching rooms for location:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 router.post("/", verifyToken, async (req, res) => {
   try {

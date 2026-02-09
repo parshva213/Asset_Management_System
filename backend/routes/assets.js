@@ -46,7 +46,7 @@ router.get("/", authenticateToken, async (req, res) => {
     // query = "SELECT *,count(*) as count FROM assets where category_id in (select id from categories where org_id = ?) ORDER BY id ASC Group by name";
     // If we want to keep that exact behavior when NO params:
     if (req.user.role === "Super Admin" && Object.keys(req.query).length === 0) {
-      query = "SELECT name, count(*) as count FROM assets WHERE category_id IN (SELECT id FROM categories WHERE org_id = ?) GROUP BY name ORDER BY id ASC";
+      query = "SELECT name, count(*) as count FROM assets WHERE category_id IN (SELECT id FROM categories WHERE org_id = ?) GROUP BY name ORDER BY name ASC";
       params = [req.user.org_id];
     } else {
       query += " ORDER BY id ASC";
