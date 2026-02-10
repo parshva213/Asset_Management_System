@@ -116,7 +116,7 @@ const AdminDashboard = () => {
                         <div className="split-container">
                             <div className="split-item left">
                                 <span className="stat-label">Total</span>
-                                <h3 className="stat-value">{stats.totalAssets >= 10 ? `${Math.floor(stats.totalAssets / 10) * 10}+` : stats.totalAssets}</h3>
+                                <h3 className="stat-value">{stats.totalAssets}</h3>
                             </div>
                             <div className="split-divider"></div>
                             <div className="split-item right">

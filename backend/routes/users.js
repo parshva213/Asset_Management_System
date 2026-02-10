@@ -46,12 +46,15 @@ router.get("/", verifyToken, async (req, res) => {
         query += " AND u.role = 'Maintenance'";
       }
     } else if (req.user.role === "Supervisor") {
-      // Supervisor can only see their referred team
-      if (currentUser.ownpk) {
-        query += " AND u.unpk = ? and u.role = 'Employee'";
-        params.push(currentUser.ownpk);
+      // Supervisor can only see employees in the same room
+      const [supervisorRows] = await db.execute("SELECT room_id FROM users WHERE id = ?", [req.user.id]);
+      const supervisorRoomId = supervisorRows[0]?.room_id;
+      if (supervisorRoomId) {
+        query += " AND u.room_id = ? AND u.role = 'Employee'";
+        params.push(supervisorRoomId);
       } else {
-        return res.status(403).json({ message: "Access denied" }) 
+        // If supervisor has no room, show no employees
+        query += " AND 1=0";
       }
     }
 

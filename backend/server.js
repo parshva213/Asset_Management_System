@@ -339,14 +339,6 @@ app.get("/api/supervisor/dashboard", authenticate(["Supervisor"]), async (req, r
         const [maintenanceRequests] = await pool.query("SELECT COUNT(*) as count FROM maintenance_records WHERE status = 'Pending'");
         const [totalRooms] = await pool.query("SELECT COUNT(*) as count FROM rooms");
         const [totalOrders] = await pool.query("SELECT COUNT(*) as count FROM purchase_orders");
-        const [assignedAssetsList] = await pool.query(`
-      SELECT a.id, a.name, u.name as assigned_to_name
-      FROM assets a
-      LEFT JOIN users u ON a.assigned_to = u.id
-      WHERE a.status = 'Assigned'
-      ORDER BY a.id ASC
-      LIMIT 5
-    `);
         const [pendingRequestsList] = await pool.query(`
       SELECT ar.id, ar.description, u.name as requested_by_name
       FROM asset_requests ar
@@ -364,7 +356,6 @@ app.get("/api/supervisor/dashboard", authenticate(["Supervisor"]), async (req, r
             maintenanceRequests: maintenanceRequests[0].count,
             totalRooms: totalRooms[0].count,
             totalOrders: totalOrders[0].count,
-            assignedAssetsList,
             pendingRequestsList,
         });
     } catch (err) {
