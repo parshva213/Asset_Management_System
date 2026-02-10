@@ -20,12 +20,17 @@ router.get("/", verifyToken, async (req, res) => {
 
     let query = `
       SELECT u.id, u.name, u.email, u.role, u.department, u.phone, u.status, u.loc_id, u.room_id, l.name as location_name, r.name as room_name, u.created_at,
-             GROUP_CONCAT(CONCAT(a.id, ':', a.name, ':', a.serial_number) SEPARATOR '|') AS assigned_assets_raw
+             GROUP_CONCAT(CONCAT(a.id, ':', a.name, ':', a.serial_number, ':', COALESCE(asum.quantity, 0), ':', COALESCE(asum.assigned_total, 0), ':', COALESCE(asum.available_total, 0)) SEPARATOR '|') AS assigned_assets_raw
       FROM users u
       LEFT JOIN locations l ON u.loc_id = l.id
       LEFT JOIN rooms r ON u.room_id = r.id
       LEFT JOIN asset_assignments aa ON u.id = aa.assigned_to AND aa.unassigned_at IS NULL
       LEFT JOIN assets a ON aa.asset_id = a.id
+      LEFT JOIN (
+        SELECT name, location_id, COUNT(*) as quantity, SUM(status = 'Assigned') as assigned_total, SUM(status = 'Available') as available_total
+        FROM assets
+        GROUP BY name, location_id
+      ) asum ON a.name = asum.name AND a.location_id = asum.location_id
       WHERE 1=1
     `;
     let params = [];
@@ -54,12 +59,9 @@ router.get("/", verifyToken, async (req, res) => {
         query += " AND u.room_id = ? AND u.role = 'Employee'";
         params.push(supervisorRoomId);
       } else {
-<<<<<<< HEAD
         // If supervisor has no room, show no employees
         query += " AND 1=0";
-=======
         return res.status(403).json({ message: "Access denied" })
->>>>>>> 5618f10ec87921f047d9f5792783016fdacb7b35
       }
     }
 
@@ -80,8 +82,23 @@ router.get("/", verifyToken, async (req, res) => {
         u.assigned_assets_raw.split('|').forEach(str => {
           if (!assetsSeen.has(str)) {
             assetsSeen.add(str);
-            const [id, name, sn] = str.split(':');
-            if (id) assigned_assets.push({ id: parseInt(id), name, serial_number: sn });
+            const bits = str.split(':');
+            const id = bits[0];
+            const name = bits[1];
+            const sn = bits[2];
+            const qty = bits[3];
+            const assigned = bits[4];
+            const available = bits[5];
+            if (id) {
+                assigned_assets.push({ 
+                    id: parseInt(id), 
+                    name, 
+                    serial_number: sn,
+                    quantity: parseInt(qty) || 0,
+                    assign: parseInt(assigned) || 0,
+                    available: parseInt(available) || 0
+                });
+            }
           }
         });
       }
@@ -103,12 +120,17 @@ router.get("/maintenance", verifyToken, async (req, res) => {
 
     let query = `
       SELECT u.id, u.name, u.email, u.role, u.department, u.phone, u.status, u.loc_id, u.room_id, l.name as location_name, r.name as room_name, u.created_at,
-             GROUP_CONCAT(CONCAT(a.id, ':', a.name, ':', a.serial_number) SEPARATOR '|') AS assigned_assets_raw
+             GROUP_CONCAT(CONCAT(a.id, ':', a.name, ':', a.serial_number, ':', COALESCE(asum.quantity, 0), ':', COALESCE(asum.assigned_total, 0), ':', COALESCE(asum.available_total, 0)) SEPARATOR '|') AS assigned_assets_raw
       FROM users u
       LEFT JOIN locations l ON u.loc_id = l.id
       LEFT JOIN rooms r ON u.room_id = r.id
       LEFT JOIN asset_assignments aa ON u.id = aa.assigned_to AND aa.unassigned_at IS NULL
       LEFT JOIN assets a ON aa.asset_id = a.id
+      LEFT JOIN (
+        SELECT name, location_id, COUNT(*) as quantity, SUM(status = 'Assigned') as assigned_total, SUM(status = 'Available') as available_total
+        FROM assets
+        GROUP BY name, location_id
+      ) asum ON a.name = asum.name AND a.location_id = asum.location_id
       WHERE u.role = 'Maintenance' AND u.org_id = ?
     `;
     let params = [req.user.org_id];
@@ -131,8 +153,23 @@ router.get("/maintenance", verifyToken, async (req, res) => {
         u.assigned_assets_raw.split('|').forEach(str => {
           if (!assetsSeen.has(str)) {
             assetsSeen.add(str);
-            const [id, name, sn] = str.split(':');
-            if (id) assigned_assets.push({ id: parseInt(id), name, serial_number: sn });
+            const bits = str.split(':');
+            const id = bits[0];
+            const name = bits[1];
+            const sn = bits[2];
+            const qty = bits[3];
+            const assigned = bits[4];
+            const available = bits[5];
+            if (id) {
+                assigned_assets.push({ 
+                    id: parseInt(id), 
+                    name, 
+                    serial_number: sn,
+                    quantity: parseInt(qty) || 0,
+                    assign: parseInt(assigned) || 0,
+                    available: parseInt(available) || 0
+                });
+            }
           }
         });
       }
@@ -201,42 +238,74 @@ router.post("/unassign-asset", verifyToken, async (req, res) => {
 })
 
 router.put("/:id", verifyToken, async (req, res) => {
+  let conn;
   try {
-    const { loc_id, room_id } = req.body
+    const { loc_id, room_id } = req.body;
+    conn = await db.getConnection();
+    await conn.query(`START TRANSACTION`);
 
+    let [[oldUser]] = await conn.execute(`SELECT loc_id FROM users WHERE id = ?`, [req.params.id]);
+    
     // We update only what's provided, focusing on loc_id for the user request
-    let query = "UPDATE users SET "
-    let params = []
-    let updates = []
+    let updates = [];
+    let params = [];
 
     if (loc_id !== undefined) {
-      updates.push("loc_id = ?")
-      params.push(loc_id)
+      updates.push("loc_id = ?");
+      params.push(loc_id);
     }
 
     if (room_id !== undefined) {
-      updates.push("room_id = ?")
-      params.push(room_id)
+      updates.push("room_id = ?");
+      params.push(room_id);
     }
 
     if (req.body.role !== undefined) {
-      updates.push("role = ?")
-      params.push(req.body.role)
+      updates.push("role = ?");
+      params.push(req.body.role);
     }
 
-    if (updates.length === 0) {
-      return res.status(400).json({ message: "No fields to update" })
+    if (updates.length > 0) {
+      let updateQuery = "UPDATE users SET " + updates.join(", ") + " WHERE id = ?";
+      params.push(req.params.id);
+      await conn.execute(updateQuery, params);
     }
 
-    query += updates.join(", ") + " WHERE id = ?"
-    params.push(req.params.id)
+    // If location has changed, unassign all current assets
+    if (loc_id !== undefined && oldUser && String(loc_id) !== String(oldUser.loc_id)) {
+      // 1. Get all currently assigned asset IDs for this user
+      const [assignments] = await conn.execute(
+        "SELECT asset_id FROM asset_assignments WHERE assigned_to = ? AND unassigned_at IS NULL",
+        [req.params.id]
+      );
 
-    await db.execute(query, params)
-    res.json({ message: "User updated successfully" })
+      if (assignments.length > 0) {
+        const assetIds = assignments.map(a => a.asset_id);
+        
+        // 2. Mark assignments as ended
+        await conn.execute(
+          "UPDATE asset_assignments SET unassigned_by = ?, unassigned_at = CURRENT_TIMESTAMP WHERE assigned_to = ? AND unassigned_at IS NULL",
+          [req.user.id, req.params.id]
+        );
+
+        // 3. Update assets status to Available
+        const placeholders = assetIds.map(() => "?").join(",");
+        await conn.execute(
+          `UPDATE assets SET status = 'Available' WHERE id IN (${placeholders})`,
+          assetIds
+        );
+      }
+    }
+
+    await conn.query(`COMMIT`);
+    res.json({ message: "User updated successfully" });
   } catch (error) {
-    console.error("Error updating user:", error)
-    res.status(500).json({ message: "Server error" })
+    console.error("Error updating user:", error);
+    if (conn) await conn.query(`ROLLBACK`).catch(err => console.error("Rollback failed:", err));
+    res.status(500).json({ message: "Server error" });
+  } finally {
+    if (conn) conn.release();
   }
-})
+});
 
 export default router

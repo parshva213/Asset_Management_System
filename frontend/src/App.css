@@ -1606,18 +1606,57 @@ body.dark .transform-input {
     }
 }
 
-.profile-card,
-.password-card {
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.modal-content {
     background: var(--panel);
-    border-radius: 1rem;
-    padding: 2rem;
-    box-shadow: var(--shadow-lg);
-    border: 1px solid var(--border);
-    transition: all 0.3s ease;
-    max-width: 700px;
+    border-radius: 1.5rem;
     width: 100%;
-    min-height: 500px;
-    height: auto;
+    max-width: 600px;
+    max-height: 90vh; /* Limit height to 90% of viewport */
+    display: flex;
+    flex-direction: column; /* Vertical layout */
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--border);
+    animation: modal-in 0.3s ease-out;
+    position: relative;
+    overflow: hidden; /* Contain children */
+}
+
+.modal-header {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0; /* Don't shrink header */
+}
+
+.modal-body {
+    padding: 2rem;
+    overflow-y: auto; /* Enable vertical scrolling */
+    flex-grow: 1; /* Take up available space */
+}
+
+.modal-footer {
+    padding: 1.5rem 2rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 1rem;
+    flex-shrink: 0; /* Don't shrink footer */
 }
 
 .profile-card:hover,

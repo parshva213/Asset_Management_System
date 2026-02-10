@@ -113,15 +113,10 @@ const AdminDashboard = () => {
                         </div>
                         <div className="split-container">
                             <div className="split-item left">
-<<<<<<< HEAD
-                                <span className="stat-label">Total</span>
-                                <h3 className="stat-value">{stats.totalAssets}</h3>
-=======
                                 <span className="stat-label">Available</span>
                                 <h3 className="stat-value">{stats.availableAssets}</h3>
->>>>>>> 5618f10ec87921f047d9f5792783016fdacb7b35
                             </div>
-                            <div className="split-item right">
+                            <div className="split-item center">
                                 <span className="stat-label">Assigned</span>
                                 <h3 className="stat-value">{stats.assignedAssets}</h3>
                             </div>

@@ -17,6 +17,7 @@ router.get("/", authenticateToken, async (req, res) => {
         query = `
             SELECT MIN(a.id) AS id, a.name, a.name AS aname, COUNT(a.id) AS quantity,
             SUM(a.status = 'Assigned') AS assigned_total, 
+            SUM(a.status = 'Available') AS available_total,
             SUM(a.status IN ('Available','Assigned')) AS active,
             SUM(a.status NOT IN ('Available','Assigned')) AS not_active,
             c.name AS cat_name
