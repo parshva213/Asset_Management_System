@@ -11,6 +11,8 @@ const Profile = () => {
     name: "",
     email: "",
     department: "",
+    phone: "",
+    status: "Active",
   })
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
@@ -26,6 +28,8 @@ const Profile = () => {
         name: user.name || "",
         email: user.email || "",
         department: user.department || "",
+        phone: user.phone || "",
+        status: user.status || "Active",
       })
     }
   }, [user])
@@ -58,7 +62,7 @@ const Profile = () => {
 
     setPasswordLoading(true)
     const result = await changePassword(passwordData.currentPassword, passwordData.newPassword)
-    
+
     if (result.success) {
       showSuccess(result.message)
       setPasswordData({
@@ -130,6 +134,31 @@ const Profile = () => {
                   disabled={isReadOnly}
                   placeholder="Enter your department"
                 />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Phone Number</label>
+                <input
+                  type="tel"
+                  name="phone"
+                  className="form-input"
+                  value={profileData.phone}
+                  onChange={handleProfileChange}
+                  disabled={isReadOnly}
+                  placeholder="Enter your phone number"
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Status</label>
+                <select
+                  name="status"
+                  className="form-select"
+                  value={profileData.status}
+                  onChange={handleProfileChange}
+                  disabled={isReadOnly}
+                >
+                  <option value="Active">Active</option>
+                  <option value="On Leave">On Leave</option>
+                </select>
               </div>
               {!isReadOnly && (
                 <button
