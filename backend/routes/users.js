@@ -19,10 +19,11 @@ router.get("/", verifyToken, async (req, res) => {
     const { location_id, room_id } = req.query;
 
     let query = `
-      SELECT u.id, u.name, u.email, u.role, u.department, u.phone, u.loc_id, l.name as location_name, u.created_at,
+      SELECT u.id, u.name, u.email, u.role, u.department, u.phone, u.loc_id, u.room_id, l.name as location_name, r.name as room_name, u.created_at,
              GROUP_CONCAT(CONCAT(a.id, ':', a.name, ':', a.serial_number) SEPARATOR '|') AS assigned_assets_raw
       FROM users u
       LEFT JOIN locations l ON u.loc_id = l.id
+      LEFT JOIN rooms r ON u.room_id = r.id
       LEFT JOIN asset_assignments aa ON u.id = aa.assigned_to AND aa.unassigned_at IS NULL
       LEFT JOIN assets a ON aa.asset_id = a.id
       WHERE 1=1
@@ -42,7 +43,7 @@ router.get("/", verifyToken, async (req, res) => {
       } else if (location_id) {
         query += " AND u.loc_id = ? AND u.role = 'Maintenance'";
         params.push(location_id);
-      } else {
+      } else { 
         query += " AND u.role = 'Maintenance'";
       }
     } else if (req.user.role === "Supervisor") {
@@ -83,6 +84,29 @@ router.get("/", verifyToken, async (req, res) => {
     res.json(usersWithAssets)
   } catch (error) {
     console.error("Error fetching users:", error)
+    res.status(500).json({ message: "Server error" })
+  }
+})
+
+router.get("/maintenance", verifyToken, async (req, res) => {
+  try {
+    if (req.user.role === "Employee" || req.user.role === "Maintenance" || req.user.role === "Vendor") {
+      return res.status(403).json({ message: "Access denied" })
+    }
+    let query = `
+      select * from users where role = 'Maintenance' and org_id = ?
+    `;
+    let params = [req.user.org_id];
+    if (req.query.location_id) {
+      query += " and loc_id = ?";
+      params.push(req.query.location_id);
+    } else {
+      query += " and loc_id is null";
+    }
+    const [users] = await db.execute(query, params);
+    res.json(users)
+  } catch (error) {
+    console.error("Error fetching maintenance users:", error)
     res.status(500).json({ message: "Server error" })
   }
 })
@@ -158,6 +182,11 @@ router.put("/:id", verifyToken, async (req, res) => {
     if (room_id !== undefined) {
       updates.push("room_id = ?")
       params.push(room_id)
+    }
+
+    if (req.body.role !== undefined) {
+      updates.push("role = ?")
+      params.push(req.body.role)
     }
 
     if (updates.length === 0) {

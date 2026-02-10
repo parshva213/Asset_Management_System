@@ -26,7 +26,10 @@ const Users = () => {
   const fetchUsers = useCallback(async () => {
     setLoading(true)
     try {
-      const url = `/users`
+      let url = `/users`
+      if (user.role === "Super Admin") {
+        url += `/maintenance`
+      }
       const response = await api.get(url)
       setUsers(response.data)
     } catch (error) {
@@ -34,7 +37,7 @@ const Users = () => {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [user.role])
 
   const fetchAvailableAssets = useCallback(async (locationId = null) => {
     try {
@@ -219,7 +222,6 @@ const Users = () => {
               </div>
               <div className="card-body">
                 <p><strong>Email:</strong> {user.email}</p>
-                <p><strong>Location:</strong> {user.location_name}</p>
                 <p><strong>Department:</strong> {user.department || "N/A"}</p>
                 <p><strong>Assigned Assets:</strong> {user.assigned_assets?.length || 0}</p>
               </div>

@@ -5,10 +5,10 @@ import { useAuth } from "../contexts/AuthContext"
 import api from "../api"
 
 const MainUsers = () => {
-  useAuth()
+  const { user } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const [users, setUsers] = useState([])
+  const [MainUsers, setMainUsers] = useState([])
   const [locationName, setLocationName] = useState("")
   const [loading, setLoading] = useState(true)
 
@@ -33,9 +33,9 @@ const MainUsers = () => {
         params.delete("locid")
         params.append("location_id", locid)
       }
-      const url = `/users?${params.toString()}`
+      const url = `/users/maintenance?location_id=${locid}`
       const response = await api.get(url)
-      setUsers(response.data)
+      setMainUsers(response.data)
     } catch (error) {
       console.error("Error fetching users:", error)
     } finally {
@@ -153,6 +153,15 @@ const MainUsers = () => {
     }
   }
 
+  const handleRoleChange = async (userId, newRole) => {
+    try {
+      await api.put(`/users/${userId}`, { role: newRole })
+      await fetchUsers()
+    } catch (error) {
+      console.error("Error changing role:", error)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -180,36 +189,49 @@ const MainUsers = () => {
         </div>
       </div>
 
-      {users.length === 0 ? (
+      {MainUsers.length === 0 ? (
         <div className="empty-state">
           <p>No users found for this filter.</p>
         </div>
       ) : (
         <div className="user-grid">
-          {users.map((user) => (
-            <div key={user.id} className="card user-card" id={`user-${user.id}`}>
+          {MainUsers.map((MainUser) => (
+            <div key={MainUser.id} className="card user-card" id={`user-${MainUser.id}`}>
               <div className="card-header flex-between">
                 <div>
-                  <h3 className="text-lg font-bold">{user.name}</h3>
+                  <h3 className="text-lg font-bold">{MainUser.name}</h3>
                 </div>
-                <span className="badge badge-primary">{user.role}</span>
+                {user.role === "Super Admin" ? (
+                  <>
+                    <select 
+                    className="form-select"
+                    value={MainUser.role}
+                    onChange={(e) => handleRoleChange(MainUser.id, e.target.value)}
+                    >
+                      <option value="Employee">Employee</option>
+                      <option value="Maintenance">Maintenance</option>
+                      <option value="Supervisor">Supervisor</option>
+                    </select>
+                  </>
+                ) : (
+                  <span className="badge badge-primary">{MainUser.role}</span>
+                )}
               </div>
               <div className="card-body">
-                <p><strong>Email:</strong> {user.email}</p>
-                <p><strong>Location:</strong> {user.location_name || "Unassigned"}</p>
-                <p><strong>Department:</strong> {user.department || "N/A"}</p>
-                <p><strong>Assigned Assets:</strong> {user.assigned_assets?.length || 0}</p>
+                <p><strong>Email:</strong> {MainUser.email}</p>
+                <p><strong>Department:</strong> {MainUser.department || "N/A"}</p>
+                <p><strong>Assigned Assets:</strong> {MainUser.assigned_assets?.length || 0}</p>
               </div>
               <div className="card-footer">
                 <button 
                   className="btn btn-primary" 
-                  onClick={() => handleOpenModal(user, 'location')}
+                  onClick={() => handleOpenModal(MainUser, 'location')}
                 >
                   Change Location
                 </button>
                 <button 
                   className="btn btn-success" 
-                  onClick={() => handleOpenModal(user, 'assets')}
+                  onClick={() => handleOpenModal(MainUser, 'assets')}
                 >
                   Assets
                 </button>

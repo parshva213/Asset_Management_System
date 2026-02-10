@@ -181,12 +181,7 @@ const LocationRooms = () => {
                                 <button onClick={() => handleEditRoom(room)} className="btn btn-secondary">
                                   Edit
                                 </button>
-                                <button onClick={() => handleDeleteRoom(room.id)} className="btn btn-danger">
-                                  Delete
-                                </button>
-                              </>
-                            )}
-                            <div className="dropdown-container">
+                                <div className="dropdown-container">
                               <button 
                                 onClick={() => setOpenDropdownId(openDropdownId === room.id ? null : room.id)} 
                                 className="btn btn-secondary"
@@ -216,6 +211,8 @@ const LocationRooms = () => {
                                 </div>
                               )}
                             </div>
+                              </>
+                            )}
                           </div>
                         </td>
                     </tr>

@@ -94,19 +94,6 @@ const Requests = () => {
     setShowModal(true)
   }
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this request?")) {
-      try {
-        await api.delete(`/requests/${id}`)
-        fetchRequests()
-        showSuccess("Request deleted successfully")
-      } catch (error) {
-        console.error("Error deleting request:", error)
-        showError("Error deleting request")
-      }
-    }
-  }
-
   const resetForm = () => {
     setFormData({
       asset_id: "",
@@ -288,9 +275,6 @@ const Requests = () => {
                         <>
                             <button onClick={() => handleEdit(request)} className="btn btn-secondary">
                             Edit
-                            </button>
-                            <button onClick={() => handleDelete(request.id)} className="btn btn-danger">
-                            Delete
                             </button>
                         </>
                         )}

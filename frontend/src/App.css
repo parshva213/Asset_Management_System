@@ -2028,8 +2028,8 @@ body.dark .transform-input {
 /* User Grid & Card Layouts */
 .user-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 2rem;
+    grid-template-columns: repeat(3, 2fr);
+    gap: 1rem;
     margin-top: 1.5rem;
 }
 

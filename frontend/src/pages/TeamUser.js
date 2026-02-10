@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useSearchParams, useNavigate } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
 import api from "../api"
@@ -18,10 +18,15 @@ const TeamUser = () => {
   const [activeModal, setActiveModal] = useState(null) // 'location', 'assets'
   const [modalLoading, setModalLoading] = useState(false)
   const [locations, setLocations] = useState([])
+  const [rooms, setRooms] = useState([])
   const [newLocationId, setNewLocationId] = useState("")
+  const [newRoomId, setNewRoomId] = useState("")
   const [availableAssets, setAvailableAssets] = useState([])
   const [assetsToAssign, setAssetsToAssign] = useState([])
   const [assetsToUnassign, setAssetsToUnassign] = useState([])
+  
+  // Track previous location to detect actual changes
+  const prevLocationIdRef = useRef(null)
 
   const locid = searchParams.get("locid")
   const roomid = searchParams.get("roomid")
@@ -79,13 +84,27 @@ const TeamUser = () => {
     } catch (error) {
       console.error("Error fetching locations:", error)
     }
+  }, [locid])
+
+  const fetchRooms = useCallback(async (locationId) => {
+    try {
+      if (!locationId) {
+        setRooms([])
+        return
+      }
+      const response = await api.get(`/locations/${locationId}/rooms`)
+      setRooms(response.data)
+    } catch (error) {
+      console.error("Error fetching rooms:", error)
+      setRooms([])
+    }
   }, [])
 
   const fetchAvailableAssets = useCallback(async (locId = null) => {
     try {
-      let url = "/assets?status=Available";
+      let url = "/assets";
       if (locId) {
-        url += `&location_id=${locId}`;
+        url += `?location_id=${locId}`;
       }
       const response = await api.get(url)
       setAvailableAssets(response.data)
@@ -101,19 +120,46 @@ const TeamUser = () => {
     if (locid || roomid) {
       fetchLocationName()
     }
-  }, [locid, roomid, role, fetchUsers, fetchLocationName, fetchLocations])
+    if (locid) {
+      fetchRooms(locid)
+    }
+  }, [locid, roomid, role, fetchUsers, fetchLocationName, fetchLocations, fetchRooms])
 
   const handleOpenModal = (user, type) => {
     setSelectedUser(user)
     setActiveModal(type)
     if (type === 'location') {
       setNewLocationId(user.loc_id || "")
+      setNewRoomId(user.room_id || "")
+      
+      // Reset ref so we don't clear the room on initial render
+      prevLocationIdRef.current = null
+      
+      // Fetch rooms for the user's current location
+      if (user.loc_id) {
+        fetchRooms(user.loc_id)
+      }
     } else if (type === 'assets') {
       fetchAvailableAssets(user.loc_id)
       setAssetsToAssign([])
       setAssetsToUnassign([])
     }
   }
+
+  // Fetch rooms when location changes in the modal
+  useEffect(() => {
+    if (activeModal === 'location' && newLocationId) {
+      fetchRooms(newLocationId)
+      
+      // Only reset room if location actually changed (not on initial modal open)
+      if (prevLocationIdRef.current !== null && prevLocationIdRef.current !== newLocationId) {
+        setNewRoomId("")
+      }
+      
+      // Update the ref to track current location
+      prevLocationIdRef.current = newLocationId
+    }
+  }, [newLocationId, activeModal, fetchRooms])
 
   const handleCloseModal = () => {
     setSelectedUser(null)
@@ -128,7 +174,8 @@ const TeamUser = () => {
     if (!selectedUser || !newLocationId) return
     setModalLoading(true)
     try {
-      await api.put(`/users/${selectedUser.id}`, { loc_id: newLocationId })
+      const updateData = { loc_id: newLocationId, room_id: newRoomId || null }
+      await api.put(`/users/${selectedUser.id}`, updateData)
       await fetchUsers()
       handleCloseModal()
     } catch (error) {
@@ -212,7 +259,6 @@ const TeamUser = () => {
               </div>
               <div className="card-body">
                 <p><strong>Email:</strong> {user.email}</p>
-                <p><strong>Location:</strong> {user.location_name || "Unassigned"}</p>
                 <p><strong>Department:</strong> {user.department || "N/A"}</p>
                 <p><strong>Assigned Assets:</strong> {user.assigned_assets?.length || 0}</p>
               </div>
@@ -248,6 +294,7 @@ const TeamUser = () => {
             </div>
             <div className="modal-body">
               {activeModal === 'location' && (
+                <>
                 <div className="form-group">
                   <label className="form-label">Select New Location</label>
                   <select 
@@ -262,7 +309,24 @@ const TeamUser = () => {
                       </option>
                     ))}
                   </select>
-                </div>
+                  </div>
+                  
+                  <div className="form-group">
+                    <label className="form-label">Select New Room</label>
+                    <select 
+                      className="form-input" 
+                      value={newRoomId} 
+                      onChange={(e) => setNewRoomId(e.target.value)}
+                    >
+                      <option value="">Select Room</option>
+                      {rooms.map(room => (
+                        <option key={room.id} value={room.id}>
+                          {room.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </>  
               )}
               {activeModal === 'assets' && (
                 <div className="assets-modal-content">
@@ -279,7 +343,7 @@ const TeamUser = () => {
                               checked={!assetsToUnassign.includes(asset.id)}
                               onChange={() => toggleUnassignAsset(asset.id)}
                             />
-                            <span className="text-sm">{asset.name} (Qty: {asset.quantity || "N/A"})</span>
+                            <span className="text-sm">{asset.name} (Qty: {asset.quantity} Assigned: {asset.assign})</span>
                           </label>
                         ))}
                       </div>
@@ -314,7 +378,7 @@ const TeamUser = () => {
                 <button 
                   className="btn btn-primary flex-1" 
                   onClick={handleSaveLocation}
-                  disabled={modalLoading || String(newLocationId) === String(selectedUser.loc_id)}
+                  disabled={modalLoading || (String(newLocationId) === String(selectedUser.loc_id) && String(newRoomId) === String(selectedUser.room_id))}
                 >
                   {modalLoading ? "Saving..." : "Save Location"}
                 </button>
