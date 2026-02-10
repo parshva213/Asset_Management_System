@@ -212,24 +212,24 @@ const Locations = () => {
                     rows="1"
                     />
                 </div>
+                <div className="flex gap-2 modal-footer">
+                  <button type="submit" className="btn btn-primary" style={{flex: 1}}>
+                  {editingLocation ? "Update Location" : "Add Location"}
+                  </button>
+                  <button
+                  type="button"
+                  className="btn btn-secondary"
+                  style={{flex: 1}}
+                  onClick={() => {
+                    setShowLocationModal(false)
+                    setEditingLocation(null)
+                    resetLocationForm()
+                  }}
+                  >
+                  Cancel
+                  </button>
+                </div>
               </form>
-            </div>
-            <div className="flex gap-2 modal-footer">
-              <button type="submit" className="btn btn-primary" style={{flex: 1}}>
-              {editingLocation ? "Update Location" : "Add Location"}
-              </button>
-              <button
-              type="button"
-              className="btn btn-secondary"
-              style={{flex: 1}}
-              onClick={() => {
-                  setShowLocationModal(false)
-                  setEditingLocation(null)
-                  resetLocationForm()
-              }}
-              >
-              Cancel
-              </button>
             </div>
           </div>
         </div>

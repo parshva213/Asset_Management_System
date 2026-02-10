@@ -66,6 +66,7 @@ const LocationAssets = () => {
                 <tr>
                 <th>Name</th>
                 <th>Quantity</th>
+                <th>Assigned</th>
                 <th>Active</th>
                 <th>Not Active</th>
                 <th>Category</th>
@@ -76,6 +77,7 @@ const LocationAssets = () => {
                 <tr key={index}>
                     <td>{asset.aname}</td>
                     <td>{asset.quantity}</td>
+                    <td>{asset.assigned_total || 0}</td>
                     <td>{asset.active}</td>
                     <td>{asset.not_active}</td>
                     <td>{asset.cat_name || "N/A"}</td>

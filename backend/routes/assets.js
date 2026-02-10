@@ -15,7 +15,8 @@ router.get("/", authenticateToken, async (req, res) => {
     // Case 1: Location Summary (Used by LocationAssets page)
     if (location_id) {
         query = `
-            SELECT a.name AS aname, COUNT(a.id) AS quantity,
+            SELECT MIN(a.id) AS id, a.name, a.name AS aname, COUNT(a.id) AS quantity,
+            SUM(a.status = 'Assigned') AS assigned_total, 
             SUM(a.status IN ('Available','Assigned')) AS active,
             SUM(a.status NOT IN ('Available','Assigned')) AS not_active,
             c.name AS cat_name
@@ -101,12 +102,13 @@ router.get("/roomAssignData", authenticateToken, async (req, res) => {
   try {
     const {location_id, room_id} = req.query
     let query = `
-      select a.id, a.name as aname, u.name as uname ,a.asset_type, a.serial_number, a.warranty_expiry, c.name as cat_name, a.purchase_date
+      select a.id, a.name as aname, u.name as uname, u.role, a.asset_type, a.serial_number, a.warranty_expiry, c.name as cat_name, a.purchase_date
       from assets a
       left join categories c on a.category_id = c.id
       left join asset_assignments aa on a.id = aa.asset_id
       left join users u on aa.assigned_to = u.id
       where a.status = 'Assigned' and a.org_id = ? and a.location_id = ? and a.room_id = ?
+      order by u.id asc
     `;
     const [result] = await pool.query(query, [req.user.org_id, location_id,room_id]);
     res.json(result);

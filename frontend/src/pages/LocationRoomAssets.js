@@ -19,7 +19,7 @@ const LocationRoomAssets = () => {
   const fetchAssets = useCallback(async () => {
     try {
       setLoading(true)
-      let endpoint = "/roomAssignData"
+      let endpoint = "/assets/roomAssignData"
       const params = new URLSearchParams()
       
       if (lid) params.append("location_id", lid)
@@ -77,28 +77,27 @@ const LocationRoomAssets = () => {
             <table className="table">
             <thead>
                 <tr>
-                <th>Name</th>
+                <th>Asset Name</th>
+                <th>Assigned To</th>
+                <th>Role</th>
                 <th>Type</th>
                 <th>Serial Number</th>
                 <th>Warranty Expiry</th>
                 <th>Category</th>
-                <th>Location</th>
                 <th>Purchase Date</th>
-                {/* Add count column if backend returns it */}
-                {assets[0].count !== undefined && <th>Count</th>} 
                 </tr>
             </thead>
             <tbody>
                 {assets.map((asset, index) => (
                 <tr key={asset.id || index}>
-                    <td>{asset.name}</td>
+                    <td>{asset.aname}</td>
+                    <td>{asset.uname}</td>
+                    <td>{asset.role}</td>
                     <td>{asset.asset_type}</td>
                     <td>{asset.serial_number || "N/A"}</td>
-                    <td>{formatDate(asset.warranty_expiry) || "N/A"}</td>
-                    <td>{asset.category_name || "N/A"}</td>
-                    <td>{asset.location_name || "N/A"}</td>
-                    <td>{formatDate(asset.purchase_date) || "N/A"}</td>
-                    {asset.count !== undefined && <td>{asset.count}</td>}
+                    <td>{formatDate(asset.warranty_expiry)}</td>
+                    <td>{asset.cat_name}</td>
+                    <td>{formatDate(asset.purchase_date)}</td>
                 </tr>
                 ))}
             </tbody>

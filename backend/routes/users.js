@@ -93,18 +93,46 @@ router.get("/maintenance", verifyToken, async (req, res) => {
     if (req.user.role === "Employee" || req.user.role === "Maintenance" || req.user.role === "Vendor") {
       return res.status(403).json({ message: "Access denied" })
     }
+
     let query = `
-      select * from users where role = 'Maintenance' and org_id = ?
+      SELECT u.id, u.name, u.email, u.role, u.department, u.phone, u.status, u.loc_id, u.room_id, l.name as location_name, r.name as room_name, u.created_at,
+             GROUP_CONCAT(CONCAT(a.id, ':', a.name, ':', a.serial_number) SEPARATOR '|') AS assigned_assets_raw
+      FROM users u
+      LEFT JOIN locations l ON u.loc_id = l.id
+      LEFT JOIN rooms r ON u.room_id = r.id
+      LEFT JOIN asset_assignments aa ON u.id = aa.assigned_to AND aa.unassigned_at IS NULL
+      LEFT JOIN assets a ON aa.asset_id = a.id
+      WHERE u.role = 'Maintenance' AND u.org_id = ?
     `;
     let params = [req.user.org_id];
+
     if (req.query.location_id) {
-      query += " and loc_id = ?";
+      query += " AND u.loc_id = ?";
       params.push(req.query.location_id);
     } else {
-      query += " and loc_id is null";
+      query += " AND u.loc_id IS NULL";
     }
+
+    query += " GROUP BY u.id, u.name, u.email, u.role, u.department, u.phone, u.loc_id, l.name, u.created_at ORDER BY u.id ASC";
+
     const [users] = await db.execute(query, params);
-    res.json(users)
+
+    const usersWithAssets = users.map((u) => {
+      const assigned_assets = [];
+      if (u.assigned_assets_raw) {
+        const assetsSeen = new Set();
+        u.assigned_assets_raw.split('|').forEach(str => {
+          if (!assetsSeen.has(str)) {
+            assetsSeen.add(str);
+            const [id, name, sn] = str.split(':');
+            if (id) assigned_assets.push({ id: parseInt(id), name, serial_number: sn });
+          }
+        });
+      }
+      return { ...u, assigned_assets, assigned_assets_raw: undefined };
+    });
+
+    res.json(usersWithAssets)
   } catch (error) {
     console.error("Error fetching maintenance users:", error)
     res.status(500).json({ message: "Server error" })

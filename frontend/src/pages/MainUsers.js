@@ -9,7 +9,7 @@ const MainUsers = () => {
   useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const [MainUsers, setMainUsers] = useState([])
+  const [users, setUsers] = useState([])
   const [locationName, setLocationName] = useState("")
   const [loading, setLoading] = useState(true)
 
@@ -36,7 +36,7 @@ const MainUsers = () => {
       }
       const url = `/users/maintenance?location_id=${locid}`
       const response = await api.get(url)
-      setMainUsers(response.data)
+      setUsers(response.data)
     } catch (error) {
       console.error("Error fetching users:", error)
     } finally {
@@ -190,52 +190,52 @@ const MainUsers = () => {
         </div>
       </div>
 
-      {MainUsers.length === 0 ? (
+      {users.length === 0 ? (
         <div className="empty-state">
           <p>No users found for this filter.</p>
         </div>
       ) : (
         <div className="user-grid">
-          {MainUsers.map((MainUser) => (
-            <div key={MainUser.id} className="card user-card" id={`user-${MainUser.id}`}>
+          {users?.map((u) => (
+            <div key={u.id} className="card user-card" id={`user-${u.id}`}>
               <div className="card-header flex-between">
                 <div>
-                  <h3 className="text-lg font-bold">{MainUser.name}</h3>
+                  <h3 className="text-lg font-bold">{u.name}</h3>
                 </div>
                 {/* {user.role === "Super Admin" ? (
                   <>
                     <select 
                     className="form-select"
-                    value={MainUser.role}
-                    onChange={(e) => handleRoleChange(MainUser.id, e.target.value)}
+                    value={u.role}
+                    onChange={(e) => handleRoleChange(u.id, e.target.value)}
                     >
-                      <option value={MainUser.role}>{MainUser.role}</option>
-                      {MainUser.role !== "Employee" && <option value="Employee">Employee</option>}
-                      {MainUser.role !== "Maintenance" && <option value="Maintenance">Maintenance</option>}
-                      {MainUser.role !== "Supervisor" && <option value="Supervisor">Supervisor</option>}
+                      <option value={u.role}>{u.role}</option>
+                      {u.role !== "Employee" && <option value="Employee">Employee</option>}
+                      {u.role !== "Maintenance" && <option value="Maintenance">Maintenance</option>}
+                      {u.role !== "Supervisor" && <option value="Supervisor">Supervisor</option>}
                     </select>
                   </>
                 ) : (
-                  <span className="badge badge-primary">{MainUser.role}</span>
+                  <span className="badge badge-primary">{u.role}</span>
                 )} */}
-                  <span className="badge badge-primary">{MainUser.role}</span>
+                  <span className="badge badge-primary">{u.role}</span>
 
               </div>
               <div className="card-body">
-                <p><strong>Email:</strong> {MainUser.email}</p>
-                <p><strong>Department:</strong> {MainUser.department || "N/A"}</p>
-                <p><strong>Assigned Assets:</strong> {MainUser.assigned_assets?.length || 0}</p>
+                <p><strong>Email:</strong> {u.email}</p>
+                <p><strong>Department:</strong> {u.department || "N/A"}</p>
+                <p><strong>Assigned Assets:</strong> {u.assigned_assets?.length || 0}</p>
               </div>
               <div className="card-footer">
                 <button 
                   className="btn btn-primary" 
-                  onClick={() => handleOpenModal(MainUser, 'location')}
+                  onClick={() => handleOpenModal(u, 'location')}
                 >
                   Change Location
                 </button>
                 <button 
                   className="btn btn-success" 
-                  onClick={() => handleOpenModal(MainUser, 'assets')}
+                  onClick={() => handleOpenModal(u, 'assets')}
                 >
                   Assets
                 </button>
@@ -266,7 +266,7 @@ const MainUsers = () => {
                     onChange={(e) => setNewLocationId(e.target.value)}
                   >
                     <option value="">Select Location</option>
-                    {locations.map(loc => (
+                    {locations?.map(loc => (
                       <option key={loc.id} value={loc.id}>
                         {loc.name}
                       </option>
@@ -282,7 +282,7 @@ const MainUsers = () => {
                       <p className="text-sm text-secondary italic px-2">No assets currently assigned.</p>
                     ) : (
                       <div className="assigned-checkbox-list space-y-1 max-h-40 overflow-y-auto pr-2">
-                        {selectedUser.assigned_assets.map(asset => (
+                        {selectedUser.assigned_assets?.map(asset => (
                           <label key={asset.id} className="flex items-center gap-2 p-2 rounded hover:bg-light cursor-pointer">
                             <input 
                               type="checkbox" 
@@ -302,14 +302,14 @@ const MainUsers = () => {
                       <p className="text-sm text-secondary italic px-2">No assets available for assignment.</p>
                     ) : (
                       <div className="available-checkbox-list space-y-1 max-h-48 overflow-y-auto pr-2">
-                        {availableAssets.map(asset => (
+                        {availableAssets?.map(asset => (
                           <label key={asset.id} className="flex items-center gap-2 p-2 rounded hover:bg-light cursor-pointer">
                             <input 
                               type="checkbox" 
                               checked={assetsToAssign.includes(asset.id)}
                               onChange={() => toggleAssignAsset(asset.id)}
                             />
-                            <span className="text-sm">{asset.name} (Qty: {asset.quantity || "N/A"})</span>
+                            <span className="text-sm">{asset.name} (Total: {asset.quantity}, Assigned: {asset.assigned_total || 0})</span>
                           </label>
                         ))}
                       </div>
