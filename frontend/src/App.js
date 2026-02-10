@@ -27,6 +27,7 @@ import Users from "./pages/Users"
 import MainUsers from "./pages/MainUsers"
 import TeamUser from "./pages/TeamUser"
 import LocationRoomAssets from "./pages/LocationRoomAssets"
+import LocationAssets from "./pages/LocationAssets"
 
 // ---------- SUPERVISOR PAGES ----------
 import PurchaseOrders from "./pages/purchase-orders"
@@ -97,6 +98,7 @@ function App() {
               <Route path="mainusers" element={<ProtectedRoute roles={['Super Admin']}><MainUsers /></ProtectedRoute>} />
               <Route path="team-user" element={<ProtectedRoute roles={['Super Admin', 'Supervisor']}><TeamUser /></ProtectedRoute>} />
               <Route path="lr-assets" element={<ProtectedRoute roles={['Super Admin', 'Supervisor']}><LocationRoomAssets /></ProtectedRoute>} />
+              <Route path="l-assets" element={<ProtectedRoute roles={['Super Admin', 'Supervisor']}><LocationAssets /></ProtectedRoute>} />
 
               {/* Supervisor */}
               <Route path="supervisor-dashboard" element={<ProtectedRoute roles={['Supervisor']}><SupervisorDashboard /></ProtectedRoute>} />

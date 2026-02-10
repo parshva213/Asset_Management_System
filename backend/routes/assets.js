@@ -5,51 +5,88 @@ import { verifyToken as authenticateToken } from "../middleware/auth.js"; // JWT
 import { generateSerialNumbers } from "../utils/serialNumberUtils.js";
 
 // GET all assets
+// GET all assets
 router.get("/", authenticateToken, async (req, res) => {
   try {
-    const { status, location_id, category_id, room_id } = req.query;
-    let query = "SELECT * FROM assets";
+    let query = "";
     let params = [];
-    let whereClauses = [];
+    const { status, location_id, category_id, room_id } = req.query;
 
-    // All roles (except maybe SD but that's handled elsewhere) 
-    // should be restricted by their organization's categories
-    if (req.user.role !== "Software Developer") {
-        whereClauses.push("category_id IN (SELECT id FROM categories WHERE org_id = ?)");
-        params.push(req.user.org_id);
-    }
-
-    if (status) {
-        whereClauses.push("status = ?");
-        params.push(status);
-    }
+    // Case 1: Location Summary (Used by LocationAssets page)
     if (location_id) {
-        whereClauses.push("location_id = ?");
-        params.push(location_id);
+        query = `
+            SELECT MIN(a.id) AS id, a.name, a.name AS aname, COUNT(a.id) AS quantity,
+            SUM(a.status = 'Assigned') AS assigned_total, 
+            SUM(a.status IN ('Available','Assigned')) AS active,
+            SUM(a.status NOT IN ('Available','Assigned')) AS not_active,
+            c.name AS cat_name
+            FROM assets a
+            LEFT JOIN categories c ON a.category_id = c.id
+            WHERE 
+            a.location_id = ?
+            AND a.org_id = ?
+            GROUP BY 
+            a.name,
+            c.name
+            ORDER BY a.name ASC`;
+        params = [location_id, req.user.org_id];
     }
-    if (category_id) {
-        whereClauses.push("category_id = ?");
-        params.push(category_id);
+    // Case 2: Global Summary for Super Admin (Used by Assets page Admin view)
+    else if (req.user.role === "Super Admin" && Object.keys(req.query).length === 0) {
+        query = `
+            select a.id, a.serial_number as sn, a.name as aname, status, a.warranty_expiry, a.purchase_cost,
+            c.name as cat_name, l.name as loc_name, r.name as room_name
+            from assets a
+            left join categories c on a.category_id = c.id
+            left join locations l on a.location_id = l.id
+            left join rooms r on a.room_id = r.id
+            where 
+            a.status not in ('Available', 'Assigned')
+            and a.org_id = ?
+            order by a.id asc`;
+        params = [req.user.org_id];
     }
-    if (room_id) {
-        whereClauses.push("room_id = ?");
-        params.push(room_id);
-    }
+    // Case 3: Standard Asset List (Used by Supervisor/Employee or filtered requests)
+    else {
+        query = `
+            SELECT a.*, u.name as assign,
+            c.name as category_name,
+            l.name as location_name,
+            r.name as room_name
+            FROM assets a 
+            LEFT JOIN asset_assignments aa ON a.id = aa.asset_id AND aa.unassigned_at IS NULL 
+            LEFT JOIN users u ON aa.assigned_to = u.id
+            LEFT JOIN categories c ON a.category_id = c.id
+            LEFT JOIN locations l ON a.location_id = l.id
+            LEFT JOIN rooms r ON a.room_id = r.id`;
+        
+        let whereClauses = [];
+        
+        // Filter by Organization (except for Devs if applicable, but standardizing on org_id is safer)
+        if (req.user.role !== "Software Developer") {
+             whereClauses.push("a.org_id = ?");
+             params.push(req.user.org_id);
+        }
 
-    if (whereClauses.length > 0) {
-        query += " WHERE " + whereClauses.join(" AND ");
-    }
+        if (status) {
+            whereClauses.push("a.status = ?");
+            params.push(status);
+        }
+        // distinct from location_id summary query above
+        if (location_id) { 
+            whereClauses.push("a.location_id = ?");
+            params.push(location_id);
+        }
+        if (room_id) {
+            whereClauses.push("a.room_id = ?");
+            params.push(room_id);
+        }
 
-    // Special Case: Super Admin viewing grouped summary if NO query params 
-    // (This was original intent from user's earlier code, but might interfere with generic GET)
-    // Actually, looking at the code, the original intent was:
-    // query = "SELECT *,count(*) as count FROM assets where category_id in (select id from categories where org_id = ?) ORDER BY id ASC Group by name";
-    // If we want to keep that exact behavior when NO params:
-    if (req.user.role === "Super Admin" && Object.keys(req.query).length === 0) {
-      query = "SELECT name, count(*) as count FROM assets WHERE category_id IN (SELECT id FROM categories WHERE org_id = ?) GROUP BY name ORDER BY name ASC";
-      params = [req.user.org_id];
-    } else {
-      query += " ORDER BY id ASC";
+        if (whereClauses.length > 0) {
+            query += " WHERE " + whereClauses.join(" AND ");
+        }
+        
+        query += " ORDER BY a.id ASC";
     }
 
     const [result] = await pool.query(query, params);
@@ -60,6 +97,27 @@ router.get("/", authenticateToken, async (req, res) => {
     res.status(500).json({ message: "Database error" });
   }
 });
+
+router.get("/roomAssignData", authenticateToken, async (req, res) => {
+  try {
+    const {location_id, room_id} = req.query
+    let query = `
+      select a.id, a.name as aname, u.name as uname, u.role, a.asset_type, a.serial_number, a.warranty_expiry, c.name as cat_name, a.purchase_date
+      from assets a
+      left join categories c on a.category_id = c.id
+      left join asset_assignments aa on a.id = aa.asset_id
+      left join users u on aa.assigned_to = u.id
+      where a.status = 'Assigned' and a.org_id = ? and a.location_id = ? and a.room_id = ?
+      order by u.id asc
+    `;
+    const [result] = await pool.query(query, [req.user.org_id, location_id,room_id]);
+    res.json(result);
+    
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Database error" });
+  }
+})
 
 // POST new asset
 router.post("/", authenticateToken, async (req, res) => {

@@ -4,13 +4,11 @@
 import { useState, useEffect, useCallback } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import api from "../api"
-import { formatDate } from "../utils/dateUtils"
 
-const LocationRoomAssets = () => {
+const LocationAssets = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const lid = searchParams.get("locid")
-  const rid = searchParams.get("roomid")
+  const lid = searchParams.get("lid")
 
   const [assets, setAssets] = useState([])
   const [loading, setLoading] = useState(true)
@@ -19,24 +17,13 @@ const LocationRoomAssets = () => {
   const fetchAssets = useCallback(async () => {
     try {
       setLoading(true)
-      let endpoint = "/assets/roomAssignData"
-      const params = new URLSearchParams()
-      
-      if (lid) params.append("location_id", lid)
-      if (rid) params.append("room_id", rid)
-
-      const response = await api.get(`${endpoint}?${params.toString()}`)
+      const response = await api.get(`/assets?location_id=${lid}`)
       setAssets(response.data)
       
       if (lid) {
         const locRes = await api.get(`/locations/${lid}`)
         setTitle(`Manage Assets for ${locRes.data.name}`)
-      }
-      if (rid) {
-        const roomRes = await api.get(`/locations/rooms/${rid}`)
-        setTitle(`Manage Assets for ${roomRes.data.name} in ${roomRes.data.location_name}`)
-      }
-      if (!lid && !rid) {
+      } else {
         setTitle("All Assets")
       }
       
@@ -45,7 +32,7 @@ const LocationRoomAssets = () => {
     } finally {
       setLoading(false)
     }
-  }, [lid, rid])
+  }, [lid])
 
   useEffect(() => {
     fetchAssets()
@@ -58,11 +45,11 @@ const LocationRoomAssets = () => {
       <div className="flex-between mb-4">
         <div>
           <button 
-            onClick={() => navigate(`/rooms?location_id=${lid}`)} 
+            onClick={() => navigate(`/locations`)} 
             className="btn btn-secondary mb-2"
             style={{ padding: '0.4rem 0.8rem', fontSize: '13px' }}
           >
-            ← Back to Room
+            ← Back to location
           </button>
           <h2>{title}</h2>
         </div>
@@ -77,27 +64,23 @@ const LocationRoomAssets = () => {
             <table className="table">
             <thead>
                 <tr>
-                <th>Asset Name</th>
-                <th>Assigned To</th>
-                <th>Role</th>
-                <th>Type</th>
-                <th>Serial Number</th>
-                <th>Warranty Expiry</th>
+                <th>Name</th>
+                <th>Quantity</th>
+                <th>Assigned</th>
+                <th>Active</th>
+                <th>Not Active</th>
                 <th>Category</th>
-                <th>Purchase Date</th>
                 </tr>
             </thead>
             <tbody>
                 {assets.map((asset, index) => (
-                <tr key={asset.id || index}>
+                <tr key={index}>
                     <td>{asset.aname}</td>
-                    <td>{asset.uname}</td>
-                    <td>{asset.role}</td>
-                    <td>{asset.asset_type}</td>
-                    <td>{asset.serial_number || "N/A"}</td>
-                    <td>{formatDate(asset.warranty_expiry)}</td>
-                    <td>{asset.cat_name}</td>
-                    <td>{formatDate(asset.purchase_date)}</td>
+                    <td>{asset.quantity}</td>
+                    <td>{asset.assigned_total || 0}</td>
+                    <td>{asset.active}</td>
+                    <td>{asset.not_active}</td>
+                    <td>{asset.cat_name || "N/A"}</td>
                 </tr>
                 ))}
             </tbody>
@@ -108,4 +91,4 @@ const LocationRoomAssets = () => {
   )
 }
 
-export default LocationRoomAssets
+export default LocationAssets

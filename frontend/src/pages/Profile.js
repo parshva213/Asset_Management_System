@@ -11,6 +11,8 @@ const Profile = () => {
     name: "",
     email: "",
     department: "",
+    phone: "",
+    status: "Active",
   })
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
@@ -26,6 +28,8 @@ const Profile = () => {
         name: user.name || "",
         email: user.email || "",
         department: user.department || "",
+        phone: user.phone || "",
+        status: user.status || "Active",
       })
     }
   }, [user])
@@ -58,7 +62,7 @@ const Profile = () => {
 
     setPasswordLoading(true)
     const result = await changePassword(passwordData.currentPassword, passwordData.newPassword)
-    
+
     if (result.success) {
       showSuccess(result.message)
       setPasswordData({
@@ -88,11 +92,11 @@ const Profile = () => {
       <div className="dashboard-grid profile-grid">
         {/* Profile Information Card */}
         <div className="card profile-card">
-          <div className="card-header">
+          <div className="modal-header">
             <h3>Profile Information</h3>
           </div>
-          <div className="card-body">
-            <form onSubmit={handleProfileSubmit}>
+          <div className="modal-body">
+            <form>
               <div className="form-group">
                 <label className="form-label">Full Name</label>
                 <input
@@ -131,26 +135,57 @@ const Profile = () => {
                   placeholder="Enter your department"
                 />
               </div>
-              {!isReadOnly && (
+              <div className="form-group">
+                <label className="form-label">Phone Number</label>
+                <input
+                  type="tel"
+                  name="phone"
+                  className="form-input"
+                  value={profileData.phone}
+                  onChange={handleProfileChange}
+                  disabled={isReadOnly}
+                  placeholder="Enter your phone number"
+                />
+              </div>
+              {user.role !== "Vendor" && (
+              <div className="form-group">
+                <label className="form-label">Status</label>
+                <select
+                  name="status"
+                  className="form-select"
+                  value={profileData.status}
+                  onChange={handleProfileChange}
+                  disabled={isReadOnly}
+                >
+                  <option value="Active">Active</option>
+                  <option value="On Leave">On Leave</option>
+                </select>
+              </div>
+              )}
+            </form>
+          </div>
+          <div className="modal-footer">
+            {!isReadOnly && (
                 <button
-                  type="submit"
+                type="button"
+                onClick={handleProfileSubmit}
                   className="btn btn-primary w-full mt-2"
                   disabled={profileLoading}
                 >
                   {profileLoading ? "Updating..." : "Update Profile"}
                 </button>
               )}
-            </form>
+             
           </div>
         </div>
 
         {/* Change Password Card */}
         {!isReadOnly && (
           <div className="card password-card">
-            <div className="card-header">
+            <div className="modal-header">
               <h3>Change Password</h3>
             </div>
-            <div className="card-body">
+            <div className="modal-body" style={{overflow:"hidden"}}>
               <form onSubmit={handlePasswordSubmit}>
                 <div className="form-group">
                   <label className="form-label">Current Password</label>

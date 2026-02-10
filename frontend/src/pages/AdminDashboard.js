@@ -7,8 +7,8 @@ import api from "../api"
 const AdminDashboard = () => {
     const { user, logout } = useAuth()
     const [stats, setStats] = useState({
-        totalAssets: 0,
         assignedAssets: 0,
+        maintainedAssets: 0,
         availableAssets: 0,
         pendingRequests: 0,
         activeUsers: 0,
@@ -33,14 +33,12 @@ const AdminDashboard = () => {
             if (dashboardRes.status === 'fulfilled') {
                 const data = dashboardRes.value.data
                 setStats({
-                    totalAssets: data.totalAssets,
                     assignedAssets: data.assignedAssets,
+                    maintainedAssets: data.maintainedAssets,
                     availableAssets: data.availableAssets,
                     pendingRequests: data.pendingRequests,
-                    totalUsers: data.totalUsers,
                     activeUsers: data.activeUsers || 0,
                     inactiveUsers: data.inactiveUsers || 0,
-                    teamMembers: data.teamMembers || 0,
                     hwCategories: data.hwCategories || 0,
                     swCategories: data.swCategories || 0,
                     totalLocations: data.totalLocations || 0,
@@ -115,17 +113,25 @@ const AdminDashboard = () => {
                         </div>
                         <div className="split-container">
                             <div className="split-item left">
+<<<<<<< HEAD
                                 <span className="stat-label">Total</span>
                                 <h3 className="stat-value">{stats.totalAssets}</h3>
+=======
+                                <span className="stat-label">Available</span>
+                                <h3 className="stat-value">{stats.availableAssets}</h3>
+>>>>>>> 5618f10ec87921f047d9f5792783016fdacb7b35
                             </div>
-                            <div className="split-divider"></div>
                             <div className="split-item right">
                                 <span className="stat-label">Assigned</span>
                                 <h3 className="stat-value">{stats.assignedAssets}</h3>
                             </div>
+                            <div className="split-item right">
+                                <span className="stat-label">Maintained</span>
+                                <h3 className="stat-value">{stats.maintainedAssets}</h3>
+                            </div>
                         </div>
                         <div className="stat-footer">
-                            <Link to="/assets">View full details →</Link>
+                            <Link to="/assets">View Maintained Assets →</Link>
                         </div>
                     </div>
 
@@ -140,14 +146,13 @@ const AdminDashboard = () => {
                                 <span className="stat-label">Pending</span>
                                 <h3 className="stat-value">{stats.pendingOrders}</h3>
                             </div>
-                            <div className="split-divider"></div>
                             <div className="split-item right">
                                 <span className="stat-label">Completed</span>
                                 <h3 className="stat-value">{stats.completedOrders}</h3>
                             </div>
                         </div>
                         <div className="stat-footer">
-                            <Link to="/purchase-orders">View full details →</Link>
+                            <Link to="/purchase-orders">View Orders →</Link>
                         </div>
                     </div>
 
@@ -162,14 +167,13 @@ const AdminDashboard = () => {
                                 <span className="stat-label">Pending</span>
                                 <h3 className="stat-value">{stats.pendingRequests}</h3>
                             </div>
-                            <div className="split-divider"></div>
                             <div className="split-item right">
                                 <span className="stat-label">Approved</span>
                                 <h3 className="stat-value">{stats.approvedRequests}</h3>
                             </div>
                         </div>
                         <div className="stat-footer">
-                            <Link to="/requests">View full details →</Link>
+                            <Link to="/requests">View Requests →</Link>
                         </div>
                     </div>
 
@@ -184,14 +188,13 @@ const AdminDashboard = () => {
                                 <span className="stat-label">Active</span>
                                 <h3 className="stat-value">{stats.activeUsers || 0}</h3>
                             </div>
-                            <div className="split-divider"></div>
                             <div className="split-item right">
                                 <span className="stat-label">Inactive</span>
                                 <h3 className="stat-value">{stats.inactiveUsers || 0}</h3>
                             </div>
                         </div>
                         <div className="stat-footer">
-                             <Link to="/employees">View full details →</Link>
+                             <Link to="/employees">View Maintenance Team →</Link>
                         </div>
                     </div>
 
@@ -206,14 +209,13 @@ const AdminDashboard = () => {
                                 <span className="stat-label">Hardware</span>
                                 <h3 className="stat-value">{stats.hwCategories || 0}</h3>
                             </div>
-                            <div className="split-divider"></div>
                             <div className="split-item right">
                                 <span className="stat-label">Software</span>
                                 <h3 className="stat-value">{stats.swCategories || 0}</h3>
                             </div>
                         </div>
                         <div className="stat-footer">
-                             <Link to="/categories">View full details →</Link>
+                             <Link to="/categories">View Categories →</Link>
                         </div>
                     </div>
 
@@ -228,14 +230,13 @@ const AdminDashboard = () => {
                                 <span className="stat-label">Locations</span>
                                 <h3 className="stat-value">{stats.totalLocations}</h3>
                             </div>
-                            <div className="split-divider"></div>
                             <div className="split-item right">
                                 <span className="stat-label">Rooms</span>
                                 <h3 className="stat-value">{stats.totalRooms}</h3>
                             </div>
                         </div>
                         <div className="stat-footer">
-                             <Link to="/locations">View full details →</Link>
+                             <Link to="/locations">View Locations →</Link>
                         </div>
                     </div>
                 </div>

@@ -10,6 +10,7 @@ A comprehensive web-based Asset Management System built with React.js, Node.js, 
 - **Employee**: View assigned assets, submit requests, and manage personal profile
 - **Maintenance Team**: Maintenance task management and asset servicing
 - **Vendor**: Supply management and vendor-specific operations
+- **Software Developer**: Platform maintenance, organization management, and system-wide monitoring
 
 ### Core Functionality
 
@@ -29,6 +30,7 @@ A comprehensive web-based Asset Management System built with React.js, Node.js, 
 - Navigation drill-down from locations to rooms to assets/teams
 
 #### 👥 User & Team Management
+- **Multi-step Registration**: Intelligent registration flow for IT Supervisors (Location -> Room filtering)
 - User assignment to locations and rooms
 - Asset assignment/unassignment to users
 - Team view by location or room
@@ -41,7 +43,7 @@ A comprehensive web-based Asset Management System built with React.js, Node.js, 
 - Role-based request visibility and management
 
 #### 🏷️ Category Management
-- Organize assets by custom categories
+- **Stepped Form**: Interactive multi-step process for organizing assets by custom categories
 - Category-based filtering and reporting
 
 ### Navigation Features
@@ -136,6 +138,7 @@ Asset_Management_System/
 │   │   │   ├── Dashboard.js         # Role-based dashboard router
 │   │   │   ├── EmployeeDashboard.js # Employee dashboard
 │   │   │   ├── Employees.js         # Employee list
+│   │   │   ├── LocationAssets.js    # Filtered asset view
 │   │   │   ├── LocationRoomAssets.js # Assets by location/room
 │   │   │   ├── LocationRooms.js     # Rooms in location
 │   │   │   ├── Locations.js         # Location management
@@ -143,6 +146,7 @@ Asset_Management_System/
 │   │   │   ├── MainUsers.js         # Maintenance team
 │   │   │   ├── MaintenanceDashboard.js
 │   │   │   ├── MaintenanceTasks.js
+│   │   │   ├── NewConfiguration.js  # Maintenance config
 │   │   │   ├── Organizations.js     # Organization management
 │   │   │   ├── Profile.js           # User profile
 │   │   │   ├── purchase-orders.js   # Purchase orders
@@ -150,15 +154,20 @@ Asset_Management_System/
 │   │   │   ├── Requests.js          # Asset requests
 │   │   │   ├── ResetPassword.js
 │   │   │   ├── RoleSelection.js
-│   │   │   ├── SDDashboard.js       # SD Dashboard
+│   │   │   ├── SDDashboard.js       # Software Developer Dashboard
 │   │   │   ├── SupervisorDashboard.js # IT Supervisor dashboard
+│   │   │   ├── SupplyAssets.js      # Vendor supply view
 │   │   │   ├── TeamUser.js          # Team members view
+│   │   │   ├── UpdateMaintenance.js
 │   │   │   ├── UpdatePassword.js
 │   │   │   ├── Users.js             # User management
+│   │   │   ├── VendorAssets.js
 │   │   │   ├── VendorDashboard.js
-│   │   │   └── VendorRequests.js
+│   │   │   ├── VendorRequests.js
+│   │   │   └── WarrantyDocs.js
 │   │   ├── utils/
-│   │   │   └── dateUtils.js         # Date formatting
+│   │   │   ├── dateUtils.js         # Date formatting
+│   │   │   └── uniqueKeyGenerator.js # Key generation
 │   │   ├── api.js                   # Axios instance
 │   │   ├── App.js                   # Route definitions
 │   │   ├── App.css                  # Component styles
@@ -361,124 +370,28 @@ Users with valid credentials are automatically approved and logged in. Invalid c
 ### Organizations (`/api/organizations`)
 | Method | Endpoint | Description | Auth Required | Role |
 |--------|----------|-------------|---------------|------|
-| GET | `/` | Get all organizations | Yes | Admin |
-| POST | `/` | Create organization | Yes | Admin |
-| PUT | `/:id` | Update organization | Yes | Admin |
-| DELETE | `/:id` | Delete organization | Yes | Admin |
+| GET | `/` | Get all organizations | Yes | Software Developer |
+| GET | `/:id` | Get single organization | Yes | Software Developer |
+| POST | `/` | Create organization | Yes | Software Developer |
+| PUT | `/:id` | Update organization | Yes | Software Developer |
+| DELETE | `/:id` | Delete organization | Yes | Software Developer |
 
-## 🗄️ Database Schema
+### Maintenance (`/api/maintenance`)
+| Method | Endpoint | Description | Auth Required | Role |
+|--------|----------|-------------|---------------|------|
+| GET | `/` | Get all records | Yes | Admin, Supervisor |
+| GET | `/dashboard` | Get metrics | Yes | All |
+| GET | `/tasks` | Get pending tasks | Yes | Maintenance |
+| POST | `/` | Create record | Yes | Admin, Supervisor |
+| PUT | `/:id` | Update status | Yes | Maintenance, Admin |
+| DELETE | `/:id` | Delete record | Yes | Admin |
 
-### Core Tables
-
-#### `users`
-```sql
-- id (PK)
-- name
-- email (UNIQUE)
-- password
-- role (Super Admin, IT Supervisor, Employee, Maintenance, Vendor)
-- department
-- employee_id
-- loc_id (FK → locations)
-- room_id (FK → rooms)
-- created_at
-- updated_at
-```
-
-#### `organizations`
-```sql
-- id (PK)
-- name
-- description
-- created_at
-```
-
-#### `locations`
-```sql
-- id (PK)
-- org_id (FK → organizations)
-- name
-- address
-- description
-- created_at
-```
-
-#### `rooms`
-```sql
-- id (PK)
-- location_id (FK → locations)
-- name
-- floor
-- capacity
-- description
-- created_at
-```
-
-#### `categories`
-```sql
-- id (PK)
-- name
-- description
-- created_at
-```
-
-#### `assets`
-```sql
-- id (PK)
-- name
-- asset_type (Hardware/Software)
-- serial_number (UNIQUE)
-- category_id (FK → categories)
-- location_id (FK → locations)
-- room_id (FK → rooms)
-- status (Available, Assigned, Under Maintenance)
-- purchase_date
-- warranty_expiry
-- assigned_to (FK → users)
-- quantity
-- created_at
-- updated_at
-```
-
-#### `asset_requests`
-```sql
-- id (PK)
-- user_id (FK → users)
-- asset_id (FK → assets)
-- request_type (New, Repair, Replace)
-- status (Pending, Approved, Rejected, Completed)
-- description
-- created_at
-- updated_at
-```
-
-#### `activity_logs`
-```sql
-- id (PK)
-- user_id (FK → users)
-- action
-- details
-- created_at
-```
-
-### Key Relationships
-- Organizations have many Locations
-- Locations have many Rooms
-- Assets belong to Categories, Locations, and Rooms
-- Assets can be assigned to Users
-- Users can have many Requests
-- Requests reference Assets and Users
-
-## 🔐 Security Features
-
-- **JWT Authentication**: Secure token-based authentication
-- **Role-Based Access Control (RBAC)**: Granular permissions per role
-- **Input Validation**: Joi schema validation on all inputs
-- **SQL Injection Prevention**: Parameterized queries with MySQL2
-- **CORS Configuration**: Controlled cross-origin access
-- **Helmet**: Security headers for Express
-- **Password Hashing**: bcryptjs for secure password storage
-- **Rate Limiting**: Express rate limiter for API protection
+### Purchase Orders (`/api/purchase-orders`)
+| Method | Endpoint | Description | Auth Required | Role |
+|--------|----------|-------------|---------------|------|
+| GET | `/` | Get all orders | Yes | Admin, Supervisor |
+| POST | `/` | Create order | Yes | Supervisor |
+| PUT | `/:id/status`| Update status | Yes | Admin |
 
 ## 🎨 UI/UX Features
 
@@ -498,6 +411,7 @@ Users with valid credentials are automatically approved and logged in. Invalid c
 ```bash
 cd backend
 npm run test-db    # Test database connection
+npm run setup-db   # Initialize database schema
 ```
 
 ### Frontend Testing
@@ -522,39 +436,6 @@ npm run build
 cd backend
 npm start
 ```
-
-### Environment Variables for Production
-```env
-NODE_ENV=production
-PORT=5000
-DB_HOST=your_production_db_host
-DB_USER=your_production_db_user
-DB_PASSWORD=your_production_db_password
-DB_NAME=asset_management
-JWT_SECRET=your_production_jwt_secret_minimum_32_characters
-JWT_EXPIRES_IN=24h
-```
-
-### Deployment Platforms
-
-**Backend Options:**
-- Railway
-- Render
-- Heroku
-- AWS EC2
-- DigitalOcean
-
-**Frontend Options:**
-- Vercel
-- Netlify
-- AWS S3 + CloudFront
-- GitHub Pages
-
-**Database Options:**
-- AWS RDS (MySQL)
-- PlanetScale
-- Railway (MySQL)
-- DigitalOcean Managed Databases
 
 ## 🤝 Contributing
 
@@ -588,15 +469,15 @@ For support and questions:
 
 ## 🗺️ Roadmap
 
+- [x] Hierarchical navigation (Locations -> Rooms -> Assets)
+- [x] Multi-step registration for IT Supervisors
+- [x] Stepped form for Category Management
+- [x] Smart serial number generation
 - [ ] Email notifications for requests
 - [ ] Advanced reporting and analytics
-- [ ] Asset depreciation tracking
 - [ ] Barcode/QR code scanning
 - [ ] Mobile application
 - [ ] Export to PDF/Excel
-- [ ] Advanced search and filters
-- [ ] Asset maintenance scheduling
-- [ ] Multi-language support
 - [ ] API documentation with Swagger
 
 ---

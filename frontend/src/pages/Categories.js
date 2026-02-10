@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react"
 import { useAuth } from "../contexts/AuthContext"
 import { useToast } from "../contexts/ToastContext"
 import api from "../api"
-import { formatDate } from "../utils/dateUtils"
 import Button from "../components/Button"
 
 const Categories = () => {
@@ -14,9 +13,10 @@ const Categories = () => {
         const [loading, setLoading] = useState(true)
         const [showModal, setShowModal] = useState(false)
         const [editingCategory, setEditingCategory] = useState(null)
-        const [formData, setFormData] = useState({ name: "", description: "" })
+        const [formData, setFormData] = useState({ name: "", description: "", type: "" })
         const [submitting, setSubmitting] = useState(false)
         const [error, setError] = useState(null)
+        const [filterType, setFilterType] = useState("")
 
         useEffect(() => {
             fetchCategories()
@@ -38,6 +38,11 @@ const Categories = () => {
     const handleSubmit = async (e) => {
             e.preventDefault()
             setError(null)
+
+            if (!formData.type) {
+                setError("Please select a category type")
+                return
+            }
 
             if (!formData.name || formData.name.trim().length < 2) {
                 setError("Category name must be at least 2 characters")
@@ -79,24 +84,16 @@ const Categories = () => {
 
         const handleEdit = (category) => {
             setEditingCategory(category)
-            setFormData({ name: category.name || "", description: category.description || "" })
+            setFormData({ 
+                name: category.name || "", 
+                description: category.description || "",
+                type: category.type || "" 
+            })
             setShowModal(true)
         }
 
-        const handleDelete = async (id) => {
-            if (!window.confirm("Are you sure you want to delete this category?")) return
-            try {
-                await api.delete(`/categories/${id}`)
-                // Remove the category from local state immediately
-                setCategories(prev => prev.filter(cat => cat.id !== id))
-                showSuccess("Category deleted successfully")
-            } catch (err) {
-                console.error("Error deleting category:", err)
-                showError(err?.response?.data?.message || "Error deleting category")
-            }
-        }
 
-        const resetForm = () => setFormData({ name: "", description: "" })
+        const resetForm = () => setFormData({ name: "", description: "", type: "" })
 
     const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value })
 
@@ -109,12 +106,26 @@ const Categories = () => {
                 {['Super Admin', 'Supervisor'].includes(user?.role) && (
                     <Button onClick={() => {
                         setEditingCategory(null)
-                        setFormData({ name: "", description: "" })
+                        setFormData({ name: "", description: "", type: "" })
                         setShowModal(true)
                     }}>
                         Add New Category
                     </Button>
                 )}
+            </div>
+            
+            <div className="mb-4" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <label className="fw-bold" style={{ margin: 0 }}>Filter by Type:</label>
+                <select 
+                    className="form-select" 
+                    style={{maxWidth: '200px'}}
+                    value={filterType} 
+                    onChange={(e) => setFilterType(e.target.value)}
+                >
+                    <option value="">All Types</option>
+                    <option value="Hardware">Hardware</option>
+                    <option value="Software">Software</option>
+                </select>
             </div>
 
             {categories.length === 0 ? (
@@ -128,26 +139,23 @@ const Categories = () => {
                             <tr>
                                 <th>Name</th>
                                 <th>Description</th>
-                                <th>Created At</th>
+                                <th>Type</th>
                                 {user?.role === "Super Admin" && <th>Actions</th>}
                             </tr>
                         </thead>
                         <tbody>
-                            {categories.map((category) => (
+                            {categories
+                                .filter(category => !filterType || category.type === filterType)
+                                .map((category) => (
                                 <tr key={category.id} id={`cat-${category.id}`}>
                                     <td>{category.name}</td>
                                     <td>{category.description || "N/A"}</td>
-                                    <td>{category.created_at ? formatDate(category.created_at) : "-"}</td>
+                                    <td>{category.type || "N/A"}</td>
                                     {user?.role === "Super Admin" && (
                                         <td>
-                                            <div className="flex gap-2">
-                                                <Button variant="secondary" onClick={() => handleEdit(category)}>
-                                                    Edit
-                                                </Button>
-                                                <Button variant="danger" onClick={() => handleDelete(category.id)}>
-                                                    Delete
-                                                </Button>
-                                            </div>
+                                            <Button variant="secondary" onClick={() => handleEdit(category)}>
+                                                Edit
+                                            </Button>
                                         </td>
                                     )}
                                 </tr>
@@ -178,48 +186,69 @@ const Categories = () => {
                         <form onSubmit={handleSubmit}>
                              <div className="modal-body">
                                 <div className="form-group">
-                                    <label className="form-label">Category Name</label>
-                                    <input
-                                        type="text"
-                                        name="name"
-                                        className="form-input"
-                                        value={formData.name}
+                                    <label className="form-label">Category Type</label>
+                                    <select 
+                                        name="type" 
+                                        className="form-select"
+                                        value={formData.type} 
                                         onChange={handleChange}
                                         required
-                                        minLength={2}
-                                    />
+                                    >
+                                        <option value="">Select Type</option>
+                                        <option value="Hardware">Hardware</option>
+                                        <option value="Software">Software</option>
+                                    </select>
                                 </div>
 
-                                <div className="form-group">
-                                    <label className="form-label">Description</label>
-                                    <textarea
-                                        name="description"
-                                        className="form-input"
-                                        value={formData.description}
-                                        onChange={handleChange}
-                                        rows={3}
-                                    />
-                                </div>
+                                {formData.type && (
+                                    <>
+                                        <div className="form-group">
+                                            <label className="form-label">Category Name</label>
+                                            <input
+                                                type="text"
+                                                name="name"
+                                                className="form-input"
+                                                value={formData.name}
+                                                onChange={handleChange}
+                                                required
+                                                minLength={2}
+                                            />
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label className="form-label">Description</label>
+                                            <textarea
+                                                name="description"
+                                                className="form-input"
+                                                value={formData.description}
+                                                onChange={handleChange}
+                                                rows={3}
+                                            />
+                                        </div>
+                                    </>
+                                )}
 
                                 {error && <div className="alert alert-error">{error}</div>}
-
-                                <div className="flex gap-2" style={{marginTop: '1.5rem'}}>
-                                    <Button type="submit" disabled={submitting}>
-                                        {submitting ? (editingCategory ? "Updating..." : "Adding...") : editingCategory ? "Update Category" : "Add Category"}
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        variant="secondary"
-                                        onClick={() => {
+                            </div>
+                            
+                            <div className="modal-footer" style={{ borderTop: '1px solid #eee', padding: '1rem', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    onClick={() => {
                                         setShowModal(false)
                                         setEditingCategory(null)
                                         resetForm()
                                         setError(null)
-                                        }}
-                                    >
-                                        Cancel
+                                    }}
+                                >
+                                    Cancel
+                                </Button>
+                                {formData.name && (
+                                    <Button type="submit" disabled={submitting}>
+                                        {submitting ? (editingCategory ? "Updating..." : "Adding...") : editingCategory ? "Update Category" : "Add Category"}
                                     </Button>
-                                </div>
+                                )}
                             </div>
                         </form>
                     </div>

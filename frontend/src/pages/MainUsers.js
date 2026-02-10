@@ -5,6 +5,7 @@ import { useAuth } from "../contexts/AuthContext"
 import api from "../api"
 
 const MainUsers = () => {
+  // const { user } = useAuth()
   useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -33,7 +34,7 @@ const MainUsers = () => {
         params.delete("locid")
         params.append("location_id", locid)
       }
-      const url = `/users?${params.toString()}`
+      const url = `/users/maintenance?location_id=${locid}`
       const response = await api.get(url)
       setUsers(response.data)
     } catch (error) {
@@ -153,6 +154,15 @@ const MainUsers = () => {
     }
   }
 
+  // const handleRoleChange = async (userId, newRole) => {
+  //   try {
+  //     await api.put(`/users/${userId}`, { role: newRole })
+  //     await fetchUsers()
+  //   } catch (error) {
+  //     console.error("Error changing role:", error)
+  //   }
+  // }
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -186,30 +196,46 @@ const MainUsers = () => {
         </div>
       ) : (
         <div className="user-grid">
-          {users.map((user) => (
-            <div key={user.id} className="card user-card" id={`user-${user.id}`}>
+          {users?.map((u) => (
+            <div key={u.id} className="card user-card" id={`user-${u.id}`}>
               <div className="card-header flex-between">
                 <div>
-                  <h3 className="text-lg font-bold">{user.name}</h3>
+                  <h3 className="text-lg font-bold">{u.name}</h3>
                 </div>
-                <span className="badge badge-primary">{user.role}</span>
+                {/* {user.role === "Super Admin" ? (
+                  <>
+                    <select 
+                    className="form-select"
+                    value={u.role}
+                    onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                    >
+                      <option value={u.role}>{u.role}</option>
+                      {u.role !== "Employee" && <option value="Employee">Employee</option>}
+                      {u.role !== "Maintenance" && <option value="Maintenance">Maintenance</option>}
+                      {u.role !== "Supervisor" && <option value="Supervisor">Supervisor</option>}
+                    </select>
+                  </>
+                ) : (
+                  <span className="badge badge-primary">{u.role}</span>
+                )} */}
+                  <span className="badge badge-primary">{u.role}</span>
+
               </div>
               <div className="card-body">
-                <p><strong>Email:</strong> {user.email}</p>
-                <p><strong>Location:</strong> {user.location_name || "Unassigned"}</p>
-                <p><strong>Department:</strong> {user.department || "N/A"}</p>
-                <p><strong>Assigned Assets:</strong> {user.assigned_assets?.length || 0}</p>
+                <p><strong>Email:</strong> {u.email}</p>
+                <p><strong>Department:</strong> {u.department || "N/A"}</p>
+                <p><strong>Assigned Assets:</strong> {u.assigned_assets?.length || 0}</p>
               </div>
               <div className="card-footer">
                 <button 
                   className="btn btn-primary" 
-                  onClick={() => handleOpenModal(user, 'location')}
+                  onClick={() => handleOpenModal(u, 'location')}
                 >
                   Change Location
                 </button>
                 <button 
                   className="btn btn-success" 
-                  onClick={() => handleOpenModal(user, 'assets')}
+                  onClick={() => handleOpenModal(u, 'assets')}
                 >
                   Assets
                 </button>
@@ -240,7 +266,7 @@ const MainUsers = () => {
                     onChange={(e) => setNewLocationId(e.target.value)}
                   >
                     <option value="">Select Location</option>
-                    {locations.map(loc => (
+                    {locations?.map(loc => (
                       <option key={loc.id} value={loc.id}>
                         {loc.name}
                       </option>
@@ -256,7 +282,7 @@ const MainUsers = () => {
                       <p className="text-sm text-secondary italic px-2">No assets currently assigned.</p>
                     ) : (
                       <div className="assigned-checkbox-list space-y-1 max-h-40 overflow-y-auto pr-2">
-                        {selectedUser.assigned_assets.map(asset => (
+                        {selectedUser.assigned_assets?.map(asset => (
                           <label key={asset.id} className="flex items-center gap-2 p-2 rounded hover:bg-light cursor-pointer">
                             <input 
                               type="checkbox" 
@@ -276,14 +302,14 @@ const MainUsers = () => {
                       <p className="text-sm text-secondary italic px-2">No assets available for assignment.</p>
                     ) : (
                       <div className="available-checkbox-list space-y-1 max-h-48 overflow-y-auto pr-2">
-                        {availableAssets.map(asset => (
+                        {availableAssets?.map(asset => (
                           <label key={asset.id} className="flex items-center gap-2 p-2 rounded hover:bg-light cursor-pointer">
                             <input 
                               type="checkbox" 
                               checked={assetsToAssign.includes(asset.id)}
                               onChange={() => toggleAssignAsset(asset.id)}
                             />
-                            <span className="text-sm">{asset.name} (Qty: {asset.quantity || "N/A"})</span>
+                            <span className="text-sm">{asset.name} (Total: {asset.quantity}, Assigned: {asset.assigned_total || 0})</span>
                           </label>
                         ))}
                       </div>

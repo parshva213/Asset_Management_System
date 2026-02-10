@@ -293,8 +293,9 @@ app.get("/api/dashboard", authenticate(), async (req, res) => {
 // ------------------ ADMIN DASHBOARD ------------------
 app.get("/api/admin/dashboard", authenticate(["Super Admin", "Admin"]), async (req, res) => {
     try {
-        const [totalAssets] = await pool.query("SELECT COUNT(*) as count FROM assets where org_id = ?", [req.user.org_id]);
+        const [availableAssets] = await pool.query("SELECT COUNT(*) as count FROM assets where org_id = ? AND status = 'Available'", [req.user.org_id]);
         const [assignedAssets] = await pool.query("SELECT COUNT(*) as count FROM assets WHERE org_id = ? AND status = 'Assigned'", [req.user.org_id]);
+        const [maintainedAssets] = await pool.query("SELECT COUNT(*) as count FROM assets WHERE org_id = ? AND status not in ('Available', 'Assigned')", [req.user.org_id]);
         const [activeUsers] = await pool.query("SELECT COUNT(*) as count FROM users WHERE org_id = ? AND role != 'Super Admin' AND status IN ('Active', 'On Leave')", [req.user.org_id]);
         const [inactiveUsers] = await pool.query("SELECT COUNT(*) as count FROM users WHERE org_id = ? AND role != 'Super Admin' AND status NOT IN ('Active', 'On Leave')", [req.user.org_id]);
         
@@ -310,8 +311,9 @@ app.get("/api/admin/dashboard", authenticate(["Super Admin", "Admin"]), async (r
         const [completedOrders] = await pool.query("SELECT COUNT(*) as count FROM purchase_orders WHERE status = 'Completed' and admin_id IN (SELECT id from users where org_id = ? and role = 'Super Admin')", [req.user.org_id]);
 
         res.json({
-            totalAssets: totalAssets[0].count,
             assignedAssets: assignedAssets[0].count,
+            maintainedAssets: maintainedAssets[0].count,
+            availableAssets: availableAssets[0].count,
             activeUsers: activeUsers[0].count,
             inactiveUsers: inactiveUsers[0].count,
             hwCategories: hwCategories[0].count,

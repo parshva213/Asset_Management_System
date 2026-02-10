@@ -8,7 +8,7 @@ import { useToast } from "../contexts/ToastContext"
 const Locations = () => {
   const navigate = useNavigate()
   const { showSuccess, showError } = useToast()
-  const { items: locations, loading: locationsLoading, create: createLocation, update: updateLocation, remove: removeLocation, list: listLocations } = useCrud("locations")
+  const { items: locations, loading: locationsLoading, create: createLocation, update: updateLocation, list: listLocations } = useCrud("locations")
   const [loading, setLoading] = useState(true)
   const [showLocationModal, setShowLocationModal] = useState(false)
   const [editingLocation, setEditingLocation] = useState(null)
@@ -56,19 +56,6 @@ const Locations = () => {
       description: location.description || "",
     })
     setShowLocationModal(true)
-  }
-
-  const handleDeleteLocation = async (id) => {
-    if (window.confirm("Are you sure you want to delete this location?")) {
-      try {
-        await removeLocation(id)
-        showSuccess("Location deleted successfully")
-        listLocations()
-      } catch (error) {
-        console.error("Error deleting location:", error)
-        showError("Error deleting location")
-      }
-    }
   }
 
   const resetLocationForm = () => {
@@ -128,9 +115,6 @@ const Locations = () => {
                             <button onClick={() => handleEditLocation(location)} className="btn btn-secondary">
                             Edit
                             </button>
-                            <button onClick={() => handleDeleteLocation(location.id)} className="btn btn-danger">
-                            Delete
-                            </button>
                             <div className="dropdown-container">
                             <button 
                                 onClick={() => setOpenDropdownId(openDropdownId === location.id ? null : location.id)} 
@@ -160,7 +144,7 @@ const Locations = () => {
                                 </button>
                                 <button
                                     onClick={() => {
-                                    navigate(`/lr-assets?lid=${location.id}`)
+                                    navigate(`/l-assets?lid=${location.id}`)
                                     setOpenDropdownId(null)
                                     }}
                                     className="dropdown-item"
@@ -228,24 +212,24 @@ const Locations = () => {
                     rows="1"
                     />
                 </div>
+                <div className="flex gap-2 modal-footer">
+                  <button type="submit" className="btn btn-primary" style={{flex: 1}}>
+                  {editingLocation ? "Update Location" : "Add Location"}
+                  </button>
+                  <button
+                  type="button"
+                  className="btn btn-secondary"
+                  style={{flex: 1}}
+                  onClick={() => {
+                    setShowLocationModal(false)
+                    setEditingLocation(null)
+                    resetLocationForm()
+                  }}
+                  >
+                  Cancel
+                  </button>
+                </div>
               </form>
-            </div>
-            <div className="flex gap-2 modal-footer">
-              <button type="submit" className="btn btn-primary" style={{flex: 1}}>
-              {editingLocation ? "Update Location" : "Add Location"}
-              </button>
-              <button
-              type="button"
-              className="btn btn-secondary"
-              style={{flex: 1}}
-              onClick={() => {
-                  setShowLocationModal(false)
-                  setEditingLocation(null)
-                  resetLocationForm()
-              }}
-              >
-              Cancel
-              </button>
             </div>
           </div>
         </div>

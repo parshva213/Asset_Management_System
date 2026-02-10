@@ -32,7 +32,7 @@ const Assets = () => {
   const fetchInitial = useCallback(async () => {
     try {
       setLoading(true);
-      await Promise.all([fetchAssets(), fetchCategories(), fetchLocations(), fetchRooms()]);
+      await Promise.all([fetchAssets()]);
     } finally {
       setLoading(false);
     }
@@ -163,20 +163,14 @@ const Assets = () => {
       room_id: asset.room_id || "",
       purchase_date: asset.purchase_date || "",
     });
+    dataFetch();
+  };
+  const dataFetch = () => {
+    fetchCategories();
+    fetchLocations();
+    fetchRooms();
     setShowModal(true);
-  };
-
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this asset?")) return;
-    try {
-      await api.delete(`/assets/${id}`);
-      fetchAssets();
-      showSuccess("Asset deleted successfully");
-    } catch (err) {
-      console.error("Error deleting asset:", err);
-      showError("Error deleting asset");
-    }
-  };
+  }; 
 
   if (loading) return <div className="loading">Loading assets...</div>;
 
@@ -198,7 +192,7 @@ const Assets = () => {
       <div className="flex-between mb-4">
         <h2>Assets Management</h2>
         {(user?.role === "Super Admin" || user?.role === "Supervisor") && (
-          <button onClick={() => setShowModal(true)} className="btn btn-primary">
+          <button onClick={() => dataFetch()} className="btn btn-primary">
             Add Asset
           </button>
         )}
@@ -213,49 +207,80 @@ const Assets = () => {
             <table className="table">
             <thead>
                 <tr>
-                <th>Name</th>
-                <th>Category</th>
-                <th>Location</th>
-                <th>Status</th>
-                <th>Purchased</th>
-                <th>Warranty</th>
-                <th>Actions</th>
+                {user?.role === "Super Admin" ? (
+                    <>                      
+                        <th>Serial Number</th>
+                        <th>Name</th>
+                        <th>Status</th>
+                        <th>Category</th>
+                        <th>Location</th>
+                        <th>Room</th>
+                        <th>Warranty</th>
+                        <th>Purchase Cost</th>
+                    </>
+                ) : (
+                    <>
+                        <th>Serial Number</th>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Location</th>
+                        <th>Status</th>
+                        <th>Purchased</th>
+                        <th>Warranty</th>
+                        <th>Actions</th>
+                    </>
+                )}
                 </tr>
             </thead>
             <tbody>
                 {assets.map((asset) => (
                 <tr key={asset.id} id={`asset-${asset.id}`}>
-                    <td>
-                    <div className="fw-bold">{asset.name}</div>
-                    <div className="text-muted small">SN: {asset.serial_number || "N/A"}</div>
-                    </td>
-                    <td>{asset.category_name || "N/A"}</td>
-                    <td>{asset.location_name || "Unassigned"}</td>
-                    <td>
-                    <span
-                        className={`badge ${
-                        asset.status === "Available"
-                            ? "badge-success"
-                            : asset.status === "Assigned"
-                            ? "badge-primary"
-                            : "badge-warning"
-                        }`}
-                    >
-                        {asset.status}
-                    </span>
-                    </td>
-                    <td>{formatDate(asset.purchase_date)}</td>
-                    <td>{formatDate(asset.warranty_expiry)}</td>
-                    <td>
-                    <div className="flex gap-2">
-                        <button onClick={() => handleEdit(asset)} className="btn btn-secondary">
-                        Edit
-                        </button>
-                        <button onClick={() => handleDelete(asset.id)} className="btn btn-danger">
-                        Delete
-                        </button>
-                    </div>
-                    </td>
+                    {user?.role === "Super Admin" ? (
+                        <>
+                            <td>{asset.sn}</td>
+                            <td>{asset.aname}</td>
+                            <td>{asset.status}</td>
+                            <td>{asset.cat_name}</td>
+                            <td>{asset.loc_name}</td>
+                            <td>{asset.room_name}</td>
+                            <td>{asset.warranty_expiry}</td>
+                            <td>{asset.purchase_cost}</td>
+                        </>
+                    ) : (
+                        <>
+                            <td>{asset.serial_number || "N/A"}</td>
+                            <td>
+                            <div className="fw-bold">{asset.name}</div>
+                            </td>
+                            <td>{asset.category_name || "N/A"}</td>
+                            <td>{asset.location_name || "Unassigned"}</td>
+                            <td>
+                            <span
+                                className={`badge ${
+                                asset.status === "Available"
+                                    ? "badge-success"
+                                    : asset.status === "Assigned"
+                                    ? "badge-primary"
+                                    : "badge-warning"
+                                }`}
+                            >
+                                {asset.status}
+                            </span>
+                            {asset.status === "Assigned" && asset.assign && (
+                                <div className="text-muted small mt-1">To: {asset.assign}</div>
+                            )}
+                            </td>
+                            <td>{formatDate(asset.purchase_date)}</td>
+                            <td>{formatDate(asset.warranty_expiry)}</td>
+                            <td>
+                            <div className="flex gap-2">
+                                <button onClick={() => handleEdit(asset)} className="btn btn-secondary">
+                                Edit
+                                </button>
+                            </div>
+                            </td>
+                        </>
+                    )}
                 </tr>
                 ))}
             </tbody>
