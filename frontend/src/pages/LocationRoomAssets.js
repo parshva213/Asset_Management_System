@@ -19,7 +19,7 @@ const LocationRoomAssets = () => {
   const fetchAssets = useCallback(async () => {
     try {
       setLoading(true)
-      let endpoint = "/assets"
+      let endpoint = "/roomAssignData"
       const params = new URLSearchParams()
       
       if (lid) params.append("location_id", lid)
@@ -31,10 +31,12 @@ const LocationRoomAssets = () => {
       if (lid) {
         const locRes = await api.get(`/locations/${lid}`)
         setTitle(`Manage Assets for ${locRes.data.name}`)
-      } else if (rid) {
+      }
+      if (rid) {
         const roomRes = await api.get(`/locations/rooms/${rid}`)
         setTitle(`Manage Assets for ${roomRes.data.name} in ${roomRes.data.location_name}`)
-      } else {
+      }
+      if (!lid && !rid) {
         setTitle("All Assets")
       }
       

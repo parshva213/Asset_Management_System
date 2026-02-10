@@ -76,10 +76,6 @@ router.get("/", authenticateToken, async (req, res) => {
             whereClauses.push("a.location_id = ?");
             params.push(location_id);
         }
-        if (category_id) {
-            whereClauses.push("a.category_id = ?");
-            params.push(category_id);
-        }
         if (room_id) {
             whereClauses.push("a.room_id = ?");
             params.push(room_id);
@@ -100,6 +96,26 @@ router.get("/", authenticateToken, async (req, res) => {
     res.status(500).json({ message: "Database error" });
   }
 });
+
+router.get("/roomAssignData", authenticateToken, async (req, res) => {
+  try {
+    const {location_id, room_id} = req.query
+    let query = `
+      select a.id, a.name as aname, u.name as uname ,a.asset_type, a.serial_number, a.warranty_expiry, c.name as cat_name, a.purchase_date
+      from assets a
+      left join categories c on a.category_id = c.id
+      left join asset_assignments aa on a.id = aa.asset_id
+      left join users u on aa.assigned_to = u.id
+      where a.status = 'Assigned' and a.org_id = ? and a.location_id = ? and a.room_id = ?
+    `;
+    const [result] = await pool.query(query, [req.user.org_id, location_id,room_id]);
+    res.json(result);
+    
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Database error" });
+  }
+})
 
 // POST new asset
 router.post("/", authenticateToken, async (req, res) => {

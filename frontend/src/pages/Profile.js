@@ -92,11 +92,11 @@ const Profile = () => {
       <div className="dashboard-grid profile-grid">
         {/* Profile Information Card */}
         <div className="card profile-card">
-          <div className="card-header">
+          <div className="modal-header">
             <h3>Profile Information</h3>
           </div>
-          <div className="card-body">
-            <form onSubmit={handleProfileSubmit}>
+          <div className="modal-body">
+            <form>
               <div className="form-group">
                 <label className="form-label">Full Name</label>
                 <input
@@ -147,6 +147,7 @@ const Profile = () => {
                   placeholder="Enter your phone number"
                 />
               </div>
+              {user.role !== "Vendor" && (
               <div className="form-group">
                 <label className="form-label">Status</label>
                 <select
@@ -160,26 +161,31 @@ const Profile = () => {
                   <option value="On Leave">On Leave</option>
                 </select>
               </div>
-              {!isReadOnly && (
+              )}
+            </form>
+          </div>
+          <div className="modal-footer">
+            {!isReadOnly && (
                 <button
-                  type="submit"
+                type="button"
+                onClick={handleProfileSubmit}
                   className="btn btn-primary w-full mt-2"
                   disabled={profileLoading}
                 >
                   {profileLoading ? "Updating..." : "Update Profile"}
                 </button>
               )}
-            </form>
+             
           </div>
         </div>
 
         {/* Change Password Card */}
         {!isReadOnly && (
           <div className="card password-card">
-            <div className="card-header">
+            <div className="modal-header">
               <h3>Change Password</h3>
             </div>
-            <div className="card-body">
+            <div className="modal-body" style={{overflow:"hidden"}}>
               <form onSubmit={handlePasswordSubmit}>
                 <div className="form-group">
                   <label className="form-label">Current Password</label>

@@ -5,7 +5,8 @@ import { useAuth } from "../contexts/AuthContext"
 import api from "../api"
 
 const MainUsers = () => {
-  const { user } = useAuth()
+  // const { user } = useAuth()
+  useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [MainUsers, setMainUsers] = useState([])
@@ -153,14 +154,14 @@ const MainUsers = () => {
     }
   }
 
-  const handleRoleChange = async (userId, newRole) => {
-    try {
-      await api.put(`/users/${userId}`, { role: newRole })
-      await fetchUsers()
-    } catch (error) {
-      console.error("Error changing role:", error)
-    }
-  }
+  // const handleRoleChange = async (userId, newRole) => {
+  //   try {
+  //     await api.put(`/users/${userId}`, { role: newRole })
+  //     await fetchUsers()
+  //   } catch (error) {
+  //     console.error("Error changing role:", error)
+  //   }
+  // }
 
   if (loading) {
     return (
@@ -201,21 +202,24 @@ const MainUsers = () => {
                 <div>
                   <h3 className="text-lg font-bold">{MainUser.name}</h3>
                 </div>
-                {user.role === "Super Admin" ? (
+                {/* {user.role === "Super Admin" ? (
                   <>
                     <select 
                     className="form-select"
                     value={MainUser.role}
                     onChange={(e) => handleRoleChange(MainUser.id, e.target.value)}
                     >
-                      <option value="Employee">Employee</option>
-                      <option value="Maintenance">Maintenance</option>
-                      <option value="Supervisor">Supervisor</option>
+                      <option value={MainUser.role}>{MainUser.role}</option>
+                      {MainUser.role !== "Employee" && <option value="Employee">Employee</option>}
+                      {MainUser.role !== "Maintenance" && <option value="Maintenance">Maintenance</option>}
+                      {MainUser.role !== "Supervisor" && <option value="Supervisor">Supervisor</option>}
                     </select>
                   </>
                 ) : (
                   <span className="badge badge-primary">{MainUser.role}</span>
-                )}
+                )} */}
+                  <span className="badge badge-primary">{MainUser.role}</span>
+
               </div>
               <div className="card-body">
                 <p><strong>Email:</strong> {MainUser.email}</p>

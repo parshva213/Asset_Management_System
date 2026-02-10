@@ -563,7 +563,6 @@ body.dark .role-option:hover {
 
 .menu-toggle svg {
     width: 20px;
-    min-height: 500px;
     height: auto;
     overflow: visible;
 }
