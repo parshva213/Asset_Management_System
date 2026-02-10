@@ -21,6 +21,33 @@ router.get("/", verifyToken, async (req, res) => {
     }
 });
 
+// GET dashboard metrics
+router.get("/dashboard", verifyToken, async (req, res) => {
+    try {
+        // High Priority based on Asset Requests
+        const [pendingRequests] = await pool.query("SELECT * FROM asset_requests WHERE status IN ('Pending', 'In Progress')");
+
+        // Maintenance Record Stats
+        const [maintenancePending] = await pool.query("SELECT COUNT(*) as count FROM maintenance_records WHERE status = 'Pending'");
+        const [maintenanceCompleted] = await pool.query("SELECT COUNT(*) as count FROM maintenance_records WHERE status = 'Completed'");
+        const [configCount] = await pool.query("SELECT COUNT(*) as count FROM maintenance_records WHERE maintenance_type = 'Configuration'");
+
+        // Total Assets
+        const [assetsCount] = await pool.query("SELECT COUNT(*) as count FROM assets");
+
+        res.json({
+            pendingTasks: pendingRequests, // Used for High Priority calc
+            pendingCount: maintenancePending[0].count,
+            completedCount: maintenanceCompleted[0].count,
+            configCount: configCount[0].count,
+            totalAssets: assetsCount[0].count
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
 // GET maintenance tasks (for tasks page)
 router.get("/tasks", verifyToken, async (req, res) => {
     try {
