@@ -8,7 +8,7 @@ router.get("/", verifyToken, async (req, res) => {
     if (req.user.role === "Employee" || req.user.role === "Maintenance" || req.user.role === "Vendor") {
       return res.status(403).json({ message: "Access denied" })
     }
-    
+
     const [currentUserRows] = await db.execute("SELECT org_id, ownpk, role FROM users WHERE id = ?", [req.user.id]);
     const currentUser = currentUserRows[0];
     const org_id = currentUser?.org_id;
@@ -19,7 +19,7 @@ router.get("/", verifyToken, async (req, res) => {
     const { location_id, room_id } = req.query;
 
     let query = `
-      SELECT u.id, u.name, u.email, u.role, u.department, u.phone, u.loc_id, u.room_id, l.name as location_name, r.name as room_name, u.created_at,
+      SELECT u.id, u.name, u.email, u.role, u.department, u.phone, u.status, u.loc_id, u.room_id, l.name as location_name, r.name as room_name, u.created_at,
              GROUP_CONCAT(CONCAT(a.id, ':', a.name, ':', a.serial_number) SEPARATOR '|') AS assigned_assets_raw
       FROM users u
       LEFT JOIN locations l ON u.loc_id = l.id
@@ -32,8 +32,8 @@ router.get("/", verifyToken, async (req, res) => {
 
     // Filter by Organization (for Super Admin and everyone else within intent)
     if (org_id) {
-        query += " AND u.org_id = ?";
-        params.push(org_id);
+      query += " AND u.org_id = ?";
+      params.push(org_id);
     }
 
     if (req.user.role === "Super Admin") {
@@ -43,7 +43,7 @@ router.get("/", verifyToken, async (req, res) => {
       } else if (location_id) {
         query += " AND u.loc_id = ? AND u.role = 'Maintenance'";
         params.push(location_id);
-      } else { 
+      } else {
         query += " AND u.role = 'Maintenance'";
       }
     } else if (req.user.role === "Supervisor") {
@@ -52,12 +52,12 @@ router.get("/", verifyToken, async (req, res) => {
         query += " AND u.unpk = ? and u.role = 'Employee'";
         params.push(currentUser.ownpk);
       } else {
-        return res.status(403).json({ message: "Access denied" }) 
+        return res.status(403).json({ message: "Access denied" })
       }
     }
 
     query += " GROUP BY u.id, u.name, u.email, u.role, u.department, u.phone, u.loc_id, l.name, u.created_at ORDER BY u.id ASC";
-    
+
     console.log("Users Query:", query);
     console.log("Params:", params);
 
@@ -127,7 +127,7 @@ router.post("/assign-asset", verifyToken, async (req, res) => {
 
     // 2. Update Asset Status
     await db.execute(
-      "UPDATE assets SET status = 'Assigned' WHERE id = ?", 
+      "UPDATE assets SET status = 'Assigned' WHERE id = ?",
       [asset_id]
     )
 
@@ -148,8 +148,8 @@ router.post("/unassign-asset", verifyToken, async (req, res) => {
 
     // 1. Remove Assignment Record
     await db.execute(
-        "UPDATE asset_assignments SET unassigned_by = ?, unassigned_at = CURRENT_TIMESTAMP WHERE asset_id = ? AND unassigned_at IS NULL",
-        [req.user.id, asset_id]
+      "UPDATE asset_assignments SET unassigned_by = ?, unassigned_at = CURRENT_TIMESTAMP WHERE asset_id = ? AND unassigned_at IS NULL",
+      [req.user.id, asset_id]
     )
 
     // 2. Update Asset Status
@@ -168,7 +168,7 @@ router.post("/unassign-asset", verifyToken, async (req, res) => {
 router.put("/:id", verifyToken, async (req, res) => {
   try {
     const { loc_id, room_id } = req.body
-    
+
     // We update only what's provided, focusing on loc_id for the user request
     let query = "UPDATE users SET "
     let params = []
