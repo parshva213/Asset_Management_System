@@ -18,6 +18,13 @@ const Requests = () => {
     priority: "",
     type: "",
   })
+  const [categories, setCategories] = useState([])
+  const [uniqueAssets, setUniqueAssets] = useState([])
+  const [newAssetSelection, setNewAssetSelection] = useState({
+    category_id: "",
+    asset_type: "",
+    model_name: ""
+  })
   const [formData, setFormData] = useState({
     asset_id: "",
     request_type: "Repair",
@@ -29,6 +36,8 @@ const Requests = () => {
   useEffect(() => {
     fetchRequests()
     fetchAssets()
+    fetchCategories()
+    fetchUniqueAssets()
   }, [])
 
   const fetchRequests = async () => {
@@ -51,6 +60,24 @@ const Requests = () => {
     }
   }
 
+  const fetchCategories = async () => {
+    try {
+      const response = await api.get("/categories")
+      setCategories(response.data)
+    } catch (error) {
+      console.error("Error fetching categories:", error)
+    }
+  }
+
+  const fetchUniqueAssets = async () => {
+    try {
+      const response = await api.get("/assets/unique-names")
+      setUniqueAssets(response.data)
+    } catch (error) {
+      console.error("Error fetching unique assets:", error)
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
@@ -58,7 +85,26 @@ const Requests = () => {
         await api.put(`/requests/${editingRequest.id}`, formData)
         showSuccess("Request updated successfully")
       } else {
-        await api.post("/requests", formData)
+        // Prepare payload
+        let payload = { ...formData }
+
+        if (formData.request_type === "New Asset") {
+          // For new assets, we don't have a specific asset_id. 
+          // We'll bundle the selection details into the description.
+          const catName = categories.find(c => c.id == newAssetSelection.category_id)?.name || "Unknown Category";
+
+          const detailedDesc = `[New Asset Request]
+Category: ${catName}
+Type: ${newAssetSelection.asset_type}
+Model: ${newAssetSelection.model_name}
+
+Description: ${formData.description}`;
+
+          payload.description = detailedDesc;
+          payload.asset_id = null; // Explicitly null
+        }
+
+        await api.post("/requests", payload)
         showSuccess("Request submitted successfully")
       }
       setShowModal(false)
@@ -101,6 +147,11 @@ const Requests = () => {
       reason: "",
       description: "",
       priority: "Medium",
+    })
+    setNewAssetSelection({
+      category_id: "",
+      asset_type: "",
+      model_name: ""
     })
   }
 
@@ -160,10 +211,10 @@ const Requests = () => {
     return (
       <div className="content">
         <div className="flex-center h-full">
-           <div className="empty-state">
-             <h3>Set your location first</h3>
-             <p className="text-secondary">You need to be assigned to a room to view requests.</p>
-           </div>
+          <div className="empty-state">
+            <h3>Set your location first</h3>
+            <p className="text-secondary">You need to be assigned to a room to view requests.</p>
+          </div>
         </div>
       </div>
     )
@@ -180,16 +231,16 @@ const Requests = () => {
               : "All Requests"}
         </h2>
         {user?.role === "Employee" && (
-            <button 
-                className="btn btn-primary" 
-                onClick={() => {
-                    setEditingRequest(null)
-                    resetForm()
-                    setShowModal(true)
-                }}
-            >
-                + New Request
-            </button>
+          <button
+            className="btn btn-primary"
+            onClick={() => {
+              setEditingRequest(null)
+              resetForm()
+              setShowModal(true)
+            }}
+          >
+            + New Request
+          </button>
         )}
       </div>
 
@@ -232,89 +283,89 @@ const Requests = () => {
         </div>
       ) : (
         <div className="table-container">
-            <table className="table">
+          <table className="table">
             <thead>
-                <tr>
+              <tr>
                 <th>Priority</th>
                 <th>Type</th>
                 <th>Asset</th>
                 <th>Requested By</th>
                 <th>Status</th>
                 <th>Actions</th>
-                </tr>
+              </tr>
             </thead>
             <tbody>
-                {filteredRequests.map((request) => (
+              {filteredRequests.map((request) => (
                 <tr key={request.id} id={`req-${request.id}`}>
-                    <td>
+                  <td>
                     <span
-                        style={{
+                      style={{
                         color: getPriorityColor(request.priority),
                         fontWeight: "bold",
-                        }}
-                        >
-                        {request.priority}
+                      }}
+                    >
+                      {request.priority}
                     </span>
-                    </td>
-                        <td>{request.request_type}</td>
-                        <td>{request.asset_name || "N/A"}</td>
-                        <td>{request.requester_name || "N/A"}</td>
-                    <td>
+                  </td>
+                  <td>{request.request_type}</td>
+                  <td>{request.asset_name || "N/A"}</td>
+                  <td>{request.requester_name || "N/A"}</td>
+                  <td>
                     <span
-                        style={{
+                      style={{
                         color: getStatusColor(request.status),
                         fontWeight: "bold",
-                        }}
+                      }}
                     >
-                        {request.status}
+                      {request.status}
                     </span>
-                    </td>
-                    <td>
+                  </td>
+                  <td>
                     <div className="flex gap-2">
-                        {user?.role === "Employee" && request.status === "Pending" && (
+                      {user?.role === "Employee" && request.status === "Pending" && (
                         <>
-                            <button onClick={() => handleEdit(request)} className="btn btn-secondary">
+                          <button onClick={() => handleEdit(request)} className="btn btn-secondary">
                             Edit
-                            </button>
+                          </button>
                         </>
-                        )}
-                        {(user?.role === "Supervisor" || user?.role === "Super Admin") && (
+                      )}
+                      {(user?.role === "Supervisor" || user?.role === "Super Admin") && (
                         <>
-                            {request.status === "Pending" && (
+                          {request.status === "Pending" && (
                             <>
-                                <button
+                              <button
                                 onClick={() => handleStatusUpdate(request.id, "In Progress")}
                                 className="btn btn-secondary"
-                                >
+                              >
                                 Accept
-                                </button>
-                                <button
+                              </button>
+                              <button
                                 onClick={() => {
-                                    const response = prompt("Rejection reason:")
-                                    if (response) handleStatusUpdate(request.id, "Rejected", response)
+                                  const response = prompt("Rejection reason:")
+                                  if (response) handleStatusUpdate(request.id, "Rejected", response)
                                 }}
                                 className="btn btn-danger"
-                                >
+                              >
                                 Reject
-                                </button>
+                              </button>
                             </>
-                            )}
-                            {request.status === "In Progress" && (
+                          )}
+                          {request.status === "In Progress" && (
                             <button
-                                onClick={() => handleStatusUpdate(request.id, "Completed")}
-                                className="btn btn-primary"
+                              onClick={() => handleStatusUpdate(request.id, "Completed")}
+                              className="btn btn-primary"
                             >
-                                Complete
+                              Complete
                             </button>
-                            )}
+                          )}
                         </>
-                        )}
+                      )}
                     </div>
-                    </td>
+                  </td>
                 </tr>
-                ))}
+              ))}
             </tbody>
-            </table>
+          </table>
         </div>
       )}
 
@@ -335,46 +386,101 @@ const Requests = () => {
               </button>
             </div>
             <div className="modal-body">
-                <form onSubmit={handleSubmit} style={{display: 'flex', flexDirection: 'column', gap: '1rem'}}>
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div className="form-group">
-                    <label className="form-label">Asset (Optional)</label>
-                    <select name="asset_id" className="form-select" value={formData.asset_id} onChange={handleChange}>
-                    <option value="">Select Asset</option>
-                    {assets.map((asset) => (
-                        <option key={asset.id} value={asset.id}>
-                        {asset.name} - {asset.serial_number}
-                        </option>
-                    ))}
-                    </select>
-                </div>
-                <div className="form-group">
-                    <label className="form-label">Request Type</label>
-                    <select
+                  <label className="form-label">Request Type</label>
+                  <select
                     name="request_type"
                     className="form-select"
                     value={formData.request_type}
                     onChange={handleChange}
                     required
-                    >
+                  >
                     <option value="Repair">Repair</option>
                     <option value="Replacement">Replacement</option>
                     <option value="New Asset">New Asset</option>
-                    </select>
+                  </select>
                 </div>
+
+                {formData.request_type !== "New Asset" ? (
+                  <div className="form-group">
+                    <label className="form-label">Your Asset (Optional)</label>
+                    <select name="asset_id" className="form-select" value={formData.asset_id} onChange={handleChange}>
+                      <option value="">Select Your Assign Asset</option>
+                      {assets.map((asset) => (
+                        <option key={asset.id} value={asset.id}>
+                          {asset.name} - {asset.serial_number}
+                        </option>
+                      ))}
+                    </select>
+                    <small className="text-secondary" style={{ fontSize: '0.75rem', marginTop: '0.25rem', display: 'block' }}>
+                      Showing only assets assigned to you.
+                    </small>
+                  </div>
+                ) : (
+                  <>
+                    <div className="form-group">
+                      <label className="form-label">Category</label>
+                      <select
+                        className="form-select"
+                        value={newAssetSelection.category_id}
+                        onChange={(e) => setNewAssetSelection({ ...newAssetSelection, category_id: e.target.value })}
+                      >
+                        <option value="">Select Category</option>
+                        {categories.map(c => (
+                          <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {newAssetSelection.category_id && (
+                      <div className="form-group">
+                        <label className="form-label">Asset Type</label>
+                        <select
+                          className="form-select"
+                          value={newAssetSelection.asset_type}
+                          onChange={(e) => setNewAssetSelection({ ...newAssetSelection, asset_type: e.target.value })}
+                        >
+                          <option value="">Select Type</option>
+                          <option value="Hardware">Hardware</option>
+                          <option value="Software">Software</option>
+                        </select>
+                      </div>
+                    )}
+
+                    {newAssetSelection.asset_type && (
+                      <div className="form-group">
+                        <label className="form-label">Model</label>
+                        <select
+                          className="form-select"
+                          value={newAssetSelection.model_name}
+                          onChange={(e) => setNewAssetSelection({ ...newAssetSelection, model_name: e.target.value })}
+                        >
+                          <option value="">Select Model</option>
+                          {uniqueAssets
+                            .filter(a => a.category_id == newAssetSelection.category_id && a.asset_type === newAssetSelection.asset_type)
+                            .map(a => (
+                              <option key={a.id} value={a.name}>{a.name}</option>
+                            ))}
+                        </select>
+                      </div>
+                    )}
+                  </>
+                )}
                 <div className="form-group">
-                    <label className="form-label">Reason</label>
-                    <input
+                  <label className="form-label">Reason</label>
+                  <input
                     type="text"
                     name="reason"
                     className="form-input"
                     value={formData.reason}
                     onChange={handleChange}
                     placeholder="Brief reason for the request"
-                    />
+                  />
                 </div>
                 <div className="form-group">
-                    <label className="form-label">Description</label>
-                    <textarea
+                  <label className="form-label">Description</label>
+                  <textarea
                     name="description"
                     className="form-input"
                     value={formData.description}
@@ -382,35 +488,35 @@ const Requests = () => {
                     rows="4"
                     placeholder="Detailed description of the request"
                     required
-                    />
+                  />
                 </div>
                 <div className="form-group">
-                    <label className="form-label">Priority</label>
-                    <select name="priority" className="form-select" value={formData.priority} onChange={handleChange}>
+                  <label className="form-label">Priority</label>
+                  <select name="priority" className="form-select" value={formData.priority} onChange={handleChange}>
                     <option value="Low">Low</option>
                     <option value="Medium">Medium</option>
                     <option value="High">High</option>
                     <option value="Critical">Critical</option>
-                    </select>
+                  </select>
                 </div>
                 <div className="flex gap-2">
-                    <button type="submit" className="btn btn-primary" style={{flex: 1}}>
+                  <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
                     {editingRequest ? "Update Request" : "Submit Request"}
-                    </button>
-                    <button
+                  </button>
+                  <button
                     type="button"
                     className="btn btn-secondary"
-                    style={{flex: 1}}
+                    style={{ flex: 1 }}
                     onClick={() => {
-                        setShowModal(false)
-                        setEditingRequest(null)
-                        resetForm()
+                      setShowModal(false)
+                      setEditingRequest(null)
+                      resetForm()
                     }}
-                    >
+                  >
                     Cancel
-                    </button>
+                  </button>
                 </div>
-                </form>
+              </form>
             </div>
           </div>
         </div>

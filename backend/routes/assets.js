@@ -14,7 +14,7 @@ router.get("/", authenticateToken, async (req, res) => {
 
     // Case 1: Location Summary (Used by LocationAssets page)
     if (location_id) {
-        query = `
+      query = `
             SELECT MIN(a.id) AS id, a.name, a.name AS aname, COUNT(a.id) AS quantity,
             SUM(a.status = 'Assigned') AS assigned_total, 
             SUM(a.status = 'Available') AS available_total,
@@ -30,11 +30,11 @@ router.get("/", authenticateToken, async (req, res) => {
             a.name,
             c.name
             ORDER BY a.name ASC`;
-        params = [location_id, req.user.org_id];
+      params = [location_id, req.user.org_id];
     }
     // Case 2: Global Summary for Super Admin (Used by Assets page Admin view)
     else if (req.user.role === "Super Admin" && Object.keys(req.query).length === 0) {
-        query = `
+      query = `
             select a.id, a.serial_number as sn, a.name as aname, status, a.warranty_expiry, a.purchase_cost,
             c.name as cat_name, l.name as loc_name, r.name as room_name
             from assets a
@@ -45,49 +45,54 @@ router.get("/", authenticateToken, async (req, res) => {
             a.status not in ('Available', 'Assigned')
             and a.org_id = ?
             order by a.id asc`;
-        params = [req.user.org_id];
+      params = [req.user.org_id];
     }
     // Case 3: Standard Asset List (Used by Supervisor/Employee or filtered requests)
     else {
-        query = `
+      query = `
             SELECT a.*, u.name as assign,
             c.name as category_name,
             l.name as location_name,
             r.name as room_name
             FROM assets a 
-            LEFT JOIN asset_assignments aa ON a.id = aa.asset_id AND aa.unassigned_at IS NULL 
-            LEFT JOIN users u ON aa.assigned_to = u.id
+            LEFT JOIN users u ON a.assigned_to = u.id
             LEFT JOIN categories c ON a.category_id = c.id
             LEFT JOIN locations l ON a.location_id = l.id
             LEFT JOIN rooms r ON a.room_id = r.id`;
-        
-        let whereClauses = [];
-        
-        // Filter by Organization (except for Devs if applicable, but standardizing on org_id is safer)
-        if (req.user.role !== "Software Developer") {
-             whereClauses.push("a.org_id = ?");
-             params.push(req.user.org_id);
-        }
 
-        if (status) {
-            whereClauses.push("a.status = ?");
-            params.push(status);
-        }
-        // distinct from location_id summary query above
-        if (location_id) { 
-            whereClauses.push("a.location_id = ?");
-            params.push(location_id);
-        }
-        if (room_id) {
-            whereClauses.push("a.room_id = ?");
-            params.push(room_id);
-        }
+      let whereClauses = [];
 
-        if (whereClauses.length > 0) {
-            query += " WHERE " + whereClauses.join(" AND ");
-        }
-        
-        query += " ORDER BY a.id ASC";
+      // Filter by Organization (except for Devs if applicable, but standardizing on org_id is safer)
+      if (req.user.role !== "Software Developer") {
+        whereClauses.push("a.org_id = ?");
+        params.push(req.user.org_id);
+      }
+
+      // Filter for Employees: Only show assigned assets
+      if (req.user.role === "Employee") {
+        whereClauses.push("a.assigned_to = ?");
+        params.push(req.user.id);
+      }
+
+      if (status) {
+        whereClauses.push("a.status = ?");
+        params.push(status);
+      }
+      // distinct from location_id summary query above
+      if (location_id) {
+        whereClauses.push("a.location_id = ?");
+        params.push(location_id);
+      }
+      if (room_id) {
+        whereClauses.push("a.room_id = ?");
+        params.push(room_id);
+      }
+
+      if (whereClauses.length > 0) {
+        query += " WHERE " + whereClauses.join(" AND ");
+      }
+
+      query += " ORDER BY a.id ASC";
     }
 
     const [result] = await pool.query(query, params);
@@ -99,9 +104,27 @@ router.get("/", authenticateToken, async (req, res) => {
   }
 });
 
+// GET unique asset names (one per group) for "New Asset" requests
+router.get("/unique-names", authenticateToken, async (req, res) => {
+  try {
+    const query = `
+            SELECT MIN(id) as id, name, category_id, asset_type 
+            FROM assets 
+            WHERE org_id = ? 
+            GROUP BY name, category_id, asset_type 
+            ORDER BY name ASC
+        `;
+    const [result] = await pool.query(query, [req.user.org_id]);
+    res.json(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Database error" });
+  }
+});
+
 router.get("/roomAssignData", authenticateToken, async (req, res) => {
   try {
-    const {location_id, room_id} = req.query
+    const { location_id, room_id } = req.query
     let query = `
       select a.id, a.name as aname, u.name as uname, u.role, a.asset_type, a.serial_number, a.warranty_expiry, c.name as cat_name, a.purchase_date
       from assets a
@@ -111,9 +134,9 @@ router.get("/roomAssignData", authenticateToken, async (req, res) => {
       where a.status = 'Assigned' and a.org_id = ? and a.location_id = ? and a.room_id = ?
       order by u.id asc
     `;
-    const [result] = await pool.query(query, [req.user.org_id, location_id,room_id]);
+    const [result] = await pool.query(query, [req.user.org_id, location_id, room_id]);
     res.json(result);
-    
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Database error" });
@@ -159,17 +182,17 @@ router.post("/", authenticateToken, async (req, res) => {
       if (rms.length === 0) return res.status(400).json({ message: "Invalid room" });
     }
     const qty = parseInt(quantity) || 1;
-    
+
     // Generate Serial Number Prefix
     // Format: [FirstWordOfFullName]-[InitialsOfAssetName]-[Type]-[CatID]-[LocID]
     const firstWord = name.split(' ')[0].toUpperCase();
     const assetNameOnly = name.split(' ').slice(1).join(' ') || name; // Fallback if only one word
     const initials = (assetNameOnly || name)
-        .split(' ')
-        .map(word => word[0])
-        .join('')
-        .toUpperCase();
-    
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase();
+
     const typeCode = asset_type === 'Hardware' ? 'HW' : 'SW';
     const catCode = String(category_id || 0);
     const locCode = String(location_id || 0);
@@ -177,17 +200,17 @@ router.post("/", authenticateToken, async (req, res) => {
 
     // Get the last sequence number for this prefix
     const [lastRecord] = await pool.query(
-        "SELECT serial_number FROM assets WHERE serial_number LIKE ? ORDER BY serial_number DESC LIMIT 1",
-        [`${prefix}/%`]
+      "SELECT serial_number FROM assets WHERE serial_number LIKE ? ORDER BY serial_number DESC LIMIT 1",
+      [`${prefix}/%`]
     );
 
     let startSeq = 1;
     if (lastRecord.length > 0) {
-        const lastSerial = lastRecord[0].serial_number;
-        const lastSeq = parseInt(lastSerial.split('/').pop());
-        if (!isNaN(lastSeq)) {
-            startSeq = lastSeq + 1;
-        }
+      const lastSerial = lastRecord[0].serial_number;
+      const lastSeq = parseInt(lastSerial.split('/').pop());
+      if (!isNaN(lastSeq)) {
+        startSeq = lastSeq + 1;
+      }
     }
 
     const serials = generateSerialNumbers(prefix, qty, startSeq);
@@ -196,22 +219,22 @@ router.post("/", authenticateToken, async (req, res) => {
                  VALUES ?`;
 
     const insertData = serials.map(sn => [
-        name, 
-        description || null, 
-        category_id || null, 
-        location_id || null, 
-        room_id || null,
-        asset_type, 
-        purchase_date || null, 
-        warranty_expiry || null, 
-        purchase_cost || null, 
-        req.user.id,
-        req.user.org_id,
-        sn
+      name,
+      description || null,
+      category_id || null,
+      location_id || null,
+      room_id || null,
+      asset_type,
+      purchase_date || null,
+      warranty_expiry || null,
+      purchase_cost || null,
+      req.user.id,
+      req.user.org_id,
+      sn
     ]);
 
     await pool.query(sql, [insertData]);
-    
+
     res.status(201).json({ message: `${qty} assets created successfully` });
   } catch (err) {
     console.error(err);

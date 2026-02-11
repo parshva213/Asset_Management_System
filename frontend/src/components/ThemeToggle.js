@@ -24,7 +24,7 @@ const ThemeToggle = ({ style, className }) => {
     };
 
     const getIcon = (t) => {
-        switch(t) {
+        switch (t) {
             case 'light': return '☀️';
             case 'dark': return '🌙';
             case 'system': return '🖥️';
@@ -34,15 +34,15 @@ const ThemeToggle = ({ style, className }) => {
 
     return (
         <div className={`theme-dropdown ${className || ''}`} style={{ position: 'relative', ...style }} ref={dropdownRef}>
-            <button 
-                onClick={toggleOpen} 
+            <button
+                onClick={toggleOpen}
                 className="btn btn-secondary"
                 style={{ padding: '0.5rem', display: 'flex', alignItems: 'center', gap: '5px' }}
                 title="Select Theme"
             >
-                {getIcon(theme)} <span style={{fontSize: '0.8rem'}}>▼</span>
+                {getIcon(theme)} <span style={{ fontSize: '0.8rem' }}>▼</span>
             </button>
-            
+
             {isOpen && (
                 <div className="dropdown-menu" style={{
                     position: 'absolute',
@@ -55,24 +55,25 @@ const ThemeToggle = ({ style, className }) => {
                     boxShadow: 'var(--shadow-lg)',
                     zIndex: 1000,
                     minWidth: '140px',
-                    overflow: 'hidden'
+                    overflow: 'hidden',
+                    left: 'auto'
                 }}>
                     {['light', 'dark', 'system'].map((t) => (
-                        <div 
+                        <div
                             key={t}
                             onClick={() => handleSelect(t)}
-                            style={{ 
-                                padding: '10px 16px', 
-                                cursor: 'pointer', 
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                gap: '10px', 
-                                background: theme === t ? 'var(--primary)' : 'transparent', 
+                            style={{
+                                padding: '10px 16px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '10px',
+                                background: theme === t ? 'var(--primary)' : 'transparent',
                                 color: theme === t ? 'white' : 'var(--text)',
                                 transition: 'background 0.2s'
                             }}
-                            onMouseEnter={(e) => { if(theme !== t) e.currentTarget.style.background = 'var(--bg-primary)'; }}
-                            onMouseLeave={(e) => { if(theme !== t) e.currentTarget.style.background = 'transparent'; }}
+                            onMouseEnter={(e) => { if (theme !== t) e.currentTarget.style.background = 'var(--bg-primary)'; }}
+                            onMouseLeave={(e) => { if (theme !== t) e.currentTarget.style.background = 'transparent'; }}
                         >
                             <span style={{ fontSize: '1.1em' }}>
                                 {t === 'light' ? '☀️' : t === 'dark' ? '🌙' : '🖥️'}
