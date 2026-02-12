@@ -91,7 +91,7 @@ const Requests = () => {
         if (formData.request_type === "New Asset") {
           // For new assets, we don't have a specific asset_id. 
           // We'll bundle the selection details into the description.
-          const catName = categories.find(c => c.id == newAssetSelection.category_id)?.name || "Unknown Category";
+          const catName = categories.find(c => c.id === Number(newAssetSelection.category_id))?.name || "Unknown Category";
 
           const detailedDesc = `[New Asset Request]
 Category: ${catName}
@@ -458,7 +458,7 @@ Description: ${formData.description}`;
                         >
                           <option value="">Select Model</option>
                           {uniqueAssets
-                            .filter(a => a.category_id == newAssetSelection.category_id && a.asset_type === newAssetSelection.asset_type)
+                            .filter(a => a.category_id === Number(newAssetSelection.category_id) && a.asset_type === newAssetSelection.asset_type)
                             .map(a => (
                               <option key={a.id} value={a.name}>{a.name}</option>
                             ))}

@@ -22,9 +22,6 @@ const TeamUser = () => {
   const [newLocationId, setNewLocationId] = useState("")
   const [newRoomId, setNewRoomId] = useState("")
   const [availableAssets, setAvailableAssets] = useState([])
-  const [categories, setCategories] = useState([])
-  const [filterType, setFilterType] = useState("All")
-  const [filterCategory, setFilterCategory] = useState("All")
   const [assetsToAssign, setAssetsToAssign] = useState([])
   const [assetsToUnassign, setAssetsToUnassign] = useState([])
   
@@ -87,16 +84,8 @@ const TeamUser = () => {
     } catch (error) {
       console.error("Error fetching locations:", error)
     }
-  }, [locid])
-
-  const fetchCategories = useCallback(async () => {
-    try {
-      const response = await api.get("/categories")
-      setCategories(response.data)
-    } catch (error) {
-      console.error("Error fetching categories:", error)
-    }
   }, [])
+
 
   const fetchRooms = useCallback(async (locationId) => {
     try {
@@ -114,9 +103,9 @@ const TeamUser = () => {
 
   const fetchAvailableAssets = useCallback(async (locId = null) => {
     try {
-      let url = "/assets";
+      let url = "/assets?status=Available&detailed=true";
       if (locId) {
-        url += `?location_id=${locId}`;
+        url += `&location_id=${locId}`;
       }
       const response = await api.get(url)
       setAvailableAssets(response.data)
@@ -129,14 +118,13 @@ const TeamUser = () => {
   useEffect(() => {
     fetchUsers()
     fetchLocations()
-    fetchCategories()
     if (locid || roomid) {
       fetchLocationName()
     }
     if (locid) {
       fetchRooms(locid)
     }
-  }, [locid, roomid, role, fetchUsers, fetchLocationName, fetchLocations, fetchRooms, fetchCategories])
+  }, [locid, roomid, role, fetchUsers, fetchLocationName, fetchLocations, fetchRooms])
 
   const handleOpenModal = (user, type) => {
     setSelectedUser(user)
@@ -298,12 +286,15 @@ const TeamUser = () => {
       {activeModal && selectedUser && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <div className="modal-header">
-              <h2>
-                {activeModal === 'location' && `Change Location - ${selectedUser.name}`}
-                {activeModal === 'assets' && `Manage Assets - ${selectedUser.name}`}
-              </h2>
-              <button className="close-modal" onClick={handleCloseModal}>&times;</button>
+            <div className="modal-header flex-col items-start gap-4">
+              <div className="flex justify-between items-center w-full">
+                <h2 className="text-xl font-bold">
+                  {activeModal === 'location' && `Change Location - ${selectedUser.name}`}
+                  {activeModal === 'assets' && `Manage Assets - ${selectedUser.name}`}
+                </h2>
+                <button className="close-modal" onClick={handleCloseModal}>&times;</button>
+              </div>
+              
             </div>
             
             <div className="modal-body">
@@ -357,7 +348,7 @@ const TeamUser = () => {
                       <p className="text-sm text-secondary italic px-2 py-3 bg-light/30 rounded">No assets currently assigned.</p>
                     ) : (
                       <div className="assigned-checkbox-list space-y-1">
-                        {selectedUser.assigned_assets.map(asset => (
+                        {selectedUser.assigned_assets?.map(asset => (
                           <label key={asset.id} className="flex items-center gap-2 p-2 rounded hover:bg-light cursor-pointer border border-transparent hover:border-border transition-all">
                             <input 
                               type="checkbox" 
@@ -365,67 +356,29 @@ const TeamUser = () => {
                               onChange={() => toggleUnassignAsset(asset.id)}
                               className="w-4 h-4 rounded text-primary focus:ring-primary"
                             />
-                            <span className="text-sm font-medium">
-                              {asset.name}
-                            </span>
+                            <div className="flex-1">
+                              <span className="text-sm font-medium">{asset.name}</span>
+                            </div>
                           </label>
                         ))}
                       </div>
                     )}
                   </div>
 
-                  {/* Available Assets Section with Filters */}
+                  {/* Available Assets Section */}
                   <div className="available-assets-section border-t pt-6">
                     <h4 className="mb-4 text-secondary border-b pb-2 flex justify-between items-center">
                       <span>Available for Assignment</span>
                       <span className="text-xs font-normal">at {selectedUser.location_name || 'Organization'}</span>
                     </h4>
 
-                    {/* Filter Controls */}
-                    <div className="grid grid-cols-2 gap-3 mb-4">
-                      <div className="filter-item">
-                        <label className="text-[10px] uppercase tracking-wider font-bold text-secondary mb-1 block">Type</label>
-                        <select 
-                          className="form-input text-sm py-2"
-                          value={filterType}
-                          onChange={(e) => setFilterType(e.target.value)}
-                        >
-                          <option value="All">All Types</option>
-                          <option value="Hardware">Hardware</option>
-                          <option value="Software">Software</option>
-                        </select>
-                      </div>
-                      <div className="filter-item">
-                        <label className="text-[10px] uppercase tracking-wider font-bold text-secondary mb-1 block">Category</label>
-                        <select 
-                          className="form-input text-sm py-2"
-                          value={filterCategory}
-                          onChange={(e) => setFilterCategory(e.target.value)}
-                        >
-                          <option value="All">All Categories</option>
-                          {categories.map(cat => (
-                            <option key={cat.id} value={cat.name}>{cat.name}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
 
-                    {availableAssets.filter(asset => {
-                        const matchesType = filterType === "All" || asset.asset_type === filterType;
-                        const matchesCat = filterCategory === "All" || asset.category_name === filterCategory;
-                        const isAssigned = selectedUser.assigned_assets?.some(a => a.name === asset.name);
-                        return matchesType && matchesCat && !isAssigned;
-                    }).length === 0 ? (
-                      <p className="text-sm text-secondary italic px-2 py-4 text-center bg-light/30 rounded">No available assets match your filters.</p>
+                    {availableAssets.length === 0 ? (
+                      <p className="text-sm text-secondary italic px-2 py-4 text-center bg-light/30 rounded">No available assets for this location.</p>
                     ) : (
                       <div className="available-checkbox-list space-y-1">
                         {availableAssets
-                          .filter(asset => {
-                            const matchesType = filterType === "All" || asset.asset_type === filterType;
-                            const matchesCat = filterCategory === "All" || asset.category_name === filterCategory;
-                            const isAssigned = selectedUser.assigned_assets?.some(a => a.name === asset.name);
-                            return matchesType && matchesCat && !isAssigned;
-                          })
+                          ?.filter(asset => !selectedUser.assigned_assets?.some(assigned => assigned.name === asset.name))
                           .map(asset => (
                             <label key={asset.id} className="flex items-center gap-3 p-3 rounded hover:bg-light cursor-pointer border border-transparent hover:border-border transition-all group">
                               <input 
@@ -435,17 +388,18 @@ const TeamUser = () => {
                                 className="w-4 h-4 rounded text-primary focus:ring-primary"
                               />
                               <div className="flex-1">
-                                <div className="text-sm font-semibold group-hover:text-primary transition-colors">{asset.name}</div>
+                                <div className="text-sm font-semibold group-hover:text-primary transition-colors">
+                                  <span className="text-primary mr-1">[{asset.id}]</span> {asset.name}
+                                </div>
                                 <div className="text-[11px] text-secondary flex gap-2">
                                   <span>Qty: {asset.quantity || 0}</span>
-                                  <span>•</span>
-                                  <span>Avail: {asset.available_total || 0}</span>
-                                  <span>•</span>
-                                  <span className="capitalize">{(asset.asset_type || 'N/A').toLowerCase()}</span>
+                                  <span>Available: {asset.available_total || 0}</span>
+                                  <span>Assigned: {asset.assigned_total || 0}</span>
                                 </div>
                               </div>
                             </label>
-                          ))}
+                          ))
+                        }
                       </div>
                     )}
                   </div>

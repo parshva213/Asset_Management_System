@@ -14,22 +14,22 @@ const Dashboard = () => {
       setRedirecting(true)
       switch (user.role) {
         case "Super Admin":
-          navigate("/admin-dashboard", { replace: true })
+          navigate("/dashboard/admin", { replace: true })
           break
         case "Supervisor":
-          navigate("/supervisor-dashboard", { replace: true })
+          navigate("/dashboard/supervisor", { replace: true })
           break
         case "Employee":
-          navigate("/employee-dashboard", { replace: true })
+          navigate("/dashboard/employee", { replace: true })
           break
         case "Vendor":
-          navigate("/vendor-dashboard", { replace: true })
+          navigate("/dashboard/vendor", { replace: true })
           break
         case "Maintenance":
-          navigate("/maintenance-dashboard", { replace: true })
+          navigate("/dashboard/maintenance", { replace: true })
           break
         case "Software Developer":
-          navigate("/sd-dashboard", { replace: true })
+          navigate("/dashboard/software-developer", { replace: true })
           break
         default:
           navigate("/login", { replace: true })

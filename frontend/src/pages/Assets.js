@@ -13,7 +13,7 @@ const Assets = () => {
   const [editingAsset, setEditingAsset] = useState(null);
   const [categories, setCategories] = useState([]);
   const [locations, setLocations] = useState([]);
-  const [rooms, setRooms] = useState([]);
+
 
   const [formData, setFormData] = useState({
     company_name: "",
@@ -25,7 +25,6 @@ const Assets = () => {
     asset_type: "",
     category_id: "",
     location_id: "",
-    room_id: "",
     purchase_date: "",
   });
 
@@ -44,8 +43,8 @@ const Assets = () => {
 
   const fetchAssets = async () => {
     try {
-      console.log("asset")
-      const res = await api.get("/assets");
+      let path = "/assets";
+      const res = await api.get(`${path}`);
       setAssets(res.data) ? console.log("asset success") : console.log("asset Error");
       
     } catch (err) {
@@ -55,7 +54,6 @@ const Assets = () => {
 
   const fetchCategories = async () => {
     try {
-      console.log("categories");
       const res = await api.get("/categories");
       setCategories(res.data) ? console.log("cat success") : console.log("cat Error");
     } catch (err) {
@@ -65,7 +63,6 @@ const Assets = () => {
 
   const fetchLocations = async () => {
     try {
-      console.log("locations")
       const res = await api.get("/locations");
       setLocations(res.data) ? console.log("loc success") : console.log("loc Error");
     } catch (err) {
@@ -73,24 +70,9 @@ const Assets = () => {
     }
   };
 
-  const fetchRooms = async (locId) => {
-    console.log("rooms")
-    const targetLocId = locId || formData.location_id;
-    if (!targetLocId) {
-        setRooms([]);
-        return;
-    }
-    try {
-      const res = await api.get(`/locations/${targetLocId}/rooms`);
-      console.log("Assets.js: fetchRooms response length:", res.data.length);
-      setRooms(res.data) ? console.log("rooms success") : console.log("rooms Error");
-    } catch (err) {
-      console.error("Error fetching rooms:", err);
-    }
-  };
+
 
   const resetForm = () => {
-    console.log("resetForm")
     setFormData({
       company_name: "",
       name: "",
@@ -101,7 +83,6 @@ const Assets = () => {
       asset_type: "",
       category_id: "",
       location_id: "",
-      room_id: "",
       purchase_date: "",
     });
     setEditingAsset(null);
@@ -112,8 +93,7 @@ const Assets = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
 
     if (name === "location_id") {
-        setFormData((prev) => ({ ...prev, room_id: "" })); // Reset room selection
-        fetchRooms(value);
+        // Rooms are no longer needed in creation
     }
   };
 
@@ -126,7 +106,6 @@ const Assets = () => {
         name: finalName,
         category_id: formData.category_id ? Number(formData.category_id) : null,
         location_id: formData.location_id ? Number(formData.location_id) : null,
-        room_id: formData.room_id ? Number(formData.room_id) : null,
         purchase_cost: formData.purchase_cost ? Number(formData.purchase_cost) : null,
       };
 
@@ -148,6 +127,7 @@ const Assets = () => {
 
   const handleEdit = (asset) => {
     setEditingAsset(asset);
+    dataFetch();
     // For edit, we might want to split the name back into company and asset name if possible, 
     // but for now let's just populate the asset name field with the full name to avoid complexity.
     setFormData({
@@ -160,15 +140,13 @@ const Assets = () => {
       asset_type: asset.asset_type,
       category_id: asset.category_id || "",
       location_id: asset.location_id || "",
-      room_id: asset.room_id || "",
       purchase_date: asset.purchase_date || "",
     });
-    dataFetch();
   };
   const dataFetch = () => {
     fetchCategories();
     fetchLocations();
-    fetchRooms();
+
     setShowModal(true);
   }; 
 
@@ -190,7 +168,7 @@ const Assets = () => {
   return (
     <div>
       <div className="flex-between mb-4">
-        <h2>Assets Management</h2>
+        <h2> {(user?.role === "Super Admin")? "List of Assets Not Working" : "Assets Management"}</h2>
         {(user?.role === "Super Admin" || user?.role === "Supervisor") && (
           <button onClick={() => dataFetch()} className="btn btn-primary">
             Add Asset
@@ -332,18 +310,6 @@ const Assets = () => {
                   </>
                 )}
 
-                {/* Step 3: Room */}
-                {formData.location_id && (
-                    <div className="form-group">
-                        <label className="form-label">Room</label>
-                        <select className="form-select" name="room_id" value={formData.room_id} onChange={handleChange} required>
-                        <option value="">Select room</option>
-                        {rooms.map((r) => (
-                            <option key={r.id} value={r.id}>{r.name}</option>
-                        ))}
-                        </select>
-                    </div>
-                )}
 
                 {/* Step 4: Company Name */}
                 {formData.asset_type && (

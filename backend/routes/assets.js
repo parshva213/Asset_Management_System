@@ -6,63 +6,95 @@ import { generateSerialNumbers } from "../utils/serialNumberUtils.js";
 
 // GET all assets
 // GET all assets
+router.get("/Under-Maintenance", authenticateToken, async (req, res) => {
+  try {
+    const [result] = await pool.query("SELECT * FROM assets WHERE status not in ('Available', 'Assigned') ");
+    res.json(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Database error" });
+  }
+})
+
+// GET all assets
 router.get("/", authenticateToken, async (req, res) => {
   try {
     let query = "";
     let params = [];
-    const { status, location_id, category_id, room_id } = req.query;
+    const { status, location_id, category_id, room_id, role, detailed } = req.query;
 
     // Case 1: Location Summary (Used by LocationAssets page)
     if (location_id) {
-      query = `
-            SELECT MIN(a.id) AS id, a.name, a.name AS aname, COUNT(a.id) AS quantity,
-            SUM(a.status = 'Assigned') AS assigned_total, 
-            SUM(a.status = 'Available') AS available_total,
-            SUM(a.status IN ('Available','Assigned')) AS active,
-            SUM(a.status NOT IN ('Available','Assigned')) AS not_active,
-            c.name AS cat_name
-            FROM assets a
-            LEFT JOIN categories c ON a.category_id = c.id
-            WHERE 
-            a.location_id = ?
-            AND a.org_id = ?
-            GROUP BY 
-            a.name,
-            c.name
-            ORDER BY a.name ASC`;
-      params = [location_id, req.user.org_id];
+      if (role) {
+        // Detailed rows for specific role (Requested for Maintenance View)
+        query = `
+              SELECT DISTINCT a.id, a.name AS aname, u.name AS uname, u.role, a.asset_type, 
+              a.serial_number, a.warranty_expiry, c.name AS cat_name, a.purchase_date
+              FROM assets a
+              LEFT JOIN categories c ON a.category_id = c.id
+              JOIN asset_assignments aa ON a.id = aa.asset_id AND aa.unassigned_at IS NULL AND aa.unassigned_by IS NULL
+              JOIN users u ON aa.assigned_to = u.id
+              WHERE a.location_id = ? AND a.org_id = ? AND u.role = ?
+              ORDER BY a.name ASC`;
+        params = [location_id, req.user.org_id, role];
+      } else {
+        // Standard summary (Used by LocationAssets page)
+        query = `
+              SELECT MIN(a.id) AS id, a.name, a.name AS aname, COUNT(a.id) AS quantity,
+              SUM(a.status = 'Assigned') AS assigned_total, 
+              SUM(a.status = 'Available') AS available_total,
+              SUM(a.status IN ('Available','Assigned')) AS active,
+              SUM(a.status NOT IN ('Available','Assigned')) AS not_active,
+              c.name AS cat_name
+              FROM assets a
+              LEFT JOIN categories c ON a.category_id = c.id
+              WHERE a.location_id = ? AND a.org_id = ?
+              GROUP BY a.name, c.name
+              ORDER BY a.name ASC`;
+        params = [location_id, req.user.org_id];
+      }
     }
     // Case 2: Global Summary for Super Admin (Used by Assets page Admin view)
     else if (req.user.role === "Super Admin" && Object.keys(req.query).length === 0) {
       query = `
-            select a.id, a.serial_number as sn, a.name as aname, status, a.warranty_expiry, a.purchase_cost,
-            c.name as cat_name, l.name as loc_name, r.name as room_name
-            from assets a
-            left join categories c on a.category_id = c.id
-            left join locations l on a.location_id = l.id
-            left join rooms r on a.room_id = r.id
-            where 
-            a.status not in ('Available', 'Assigned')
-            and a.org_id = ?
-            order by a.id asc`;
+          select a.id, a.serial_number as sn, a.name as aname, status, a.warranty_expiry, a.purchase_cost,
+          c.name as cat_name, l.name as loc_name, r.name as room_name
+          from assets a
+          left join categories c on a.category_id = c.id
+          left join locations l on a.location_id = l.id
+          left join rooms r on a.room_id = r.id
+          where 
+          a.status not in ('Available', 'Assigned')
+          and a.org_id = ?
+          order by a.id asc`;
       params = [req.user.org_id];
     }
     // Case 3: Standard Asset List (Used by Supervisor/Employee or filtered requests)
     else {
       query = `
-            SELECT a.*, u.name as assign,
-            c.name as category_name,
-            l.name as location_name,
-            r.name as room_name
-            FROM assets a 
-            LEFT JOIN users u ON a.assigned_to = u.id
-            LEFT JOIN categories c ON a.category_id = c.id
-            LEFT JOIN locations l ON a.location_id = l.id
-            LEFT JOIN rooms r ON a.room_id = r.id`;
+          SELECT a.*, u.name as assign,
+          c.name as category_name,
+          l.name as location_name,
+          r.name as room_name,
+          COALESCE(asum.quantity, 0) as quantity,
+          COALESCE(asum.assigned_total, 0) as assigned_total,
+          COALESCE(asum.available_total, 0) as available_total
+          FROM assets a 
+          LEFT JOIN users u ON a.assigned_to = u.id
+          LEFT JOIN categories c ON a.category_id = c.id
+          LEFT JOIN locations l ON a.location_id = l.id
+          LEFT JOIN rooms r ON a.room_id = r.id
+          LEFT JOIN (
+            SELECT name, location_id, org_id, COUNT(*) as quantity, 
+                   SUM(status = 'Assigned') as assigned_total, 
+                   SUM(status = 'Available') as available_total
+            FROM assets
+            GROUP BY name, location_id, org_id
+          ) asum ON a.name = asum.name AND a.location_id = asum.location_id AND a.org_id = asum.org_id`;
 
       let whereClauses = [];
 
-      // Filter by Organization (except for Devs if applicable, but standardizing on org_id is safer)
+      // Filter by Organization
       if (req.user.role !== "Software Developer") {
         whereClauses.push("a.org_id = ?");
         params.push(req.user.org_id);
@@ -78,14 +110,20 @@ router.get("/", authenticateToken, async (req, res) => {
         whereClauses.push("a.status = ?");
         params.push(status);
       }
-      // distinct from location_id summary query above
+
       if (location_id) {
         whereClauses.push("a.location_id = ?");
         params.push(location_id);
       }
+
       if (room_id) {
         whereClauses.push("a.room_id = ?");
         params.push(room_id);
+      }
+
+      if (role) {
+        whereClauses.push("u.role = ?");
+        params.push(role);
       }
 
       if (whereClauses.length > 0) {
@@ -97,12 +135,12 @@ router.get("/", authenticateToken, async (req, res) => {
 
     const [result] = await pool.query(query, params);
     res.json(result);
-
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Database error" });
   }
 });
+
 
 // GET unique asset names (one per group) for "New Asset" requests
 router.get("/unique-names", authenticateToken, async (req, res) => {
@@ -126,13 +164,14 @@ router.get("/roomAssignData", authenticateToken, async (req, res) => {
   try {
     const { location_id, room_id } = req.query
     let query = `
-      select a.id, a.name as aname, u.name as uname, u.role, a.asset_type, a.serial_number, a.warranty_expiry, c.name as cat_name, a.purchase_date
+      select distinct a.id, a.name as aname, u.name as uname, u.role, a.asset_type, a.serial_number, a.warranty_expiry, c.name as cat_name, a.purchase_date
       from assets a
       left join categories c on a.category_id = c.id
-      left join asset_assignments aa on a.id = aa.asset_id
-      left join users u on aa.assigned_to = u.id
+      join asset_assignments aa on a.id = aa.asset_id and aa.unassigned_at is null and aa.unassigned_by is null
+      join users u on aa.assigned_to = u.id
       where a.status = 'Assigned' and a.org_id = ? and a.location_id = ? and a.room_id = ?
-      order by u.id asc
+      and u.role in ('Supervisor', 'Employee')
+      order by uname asc
     `;
     const [result] = await pool.query(query, [req.user.org_id, location_id, room_id]);
     res.json(result);
@@ -216,7 +255,7 @@ router.post("/", authenticateToken, async (req, res) => {
     const serials = generateSerialNumbers(prefix, qty, startSeq);
 
     const sql = `INSERT INTO assets (name, description, category_id, location_id, room_id, asset_type, purchase_date, warranty_expiry, purchase_cost, created_by, org_id, serial_number) 
-                 VALUES ?`;
+    VALUES ?`;
 
     const insertData = serials.map(sn => [
       name,
@@ -298,20 +337,6 @@ router.put("/:id", authenticateToken, async (req, res) => {
   }
 });
 
-// DELETE asset
-router.delete("/:id", authenticateToken, async (req, res) => {
-  if (req.user.role === "Employee") {
-    return res.status(403).json({ message: "Access denied" });
-  }
-
-  try {
-    await pool.query("DELETE FROM assets WHERE id=?", [req.params.id]);
-    res.json({ message: "Asset deleted" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Database error" });
-  }
-});
 
 export default router;
 

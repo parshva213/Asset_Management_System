@@ -184,6 +184,7 @@ router.get("/maintenance", verifyToken, async (req, res) => {
 })
 
 router.post("/assign-asset", verifyToken, async (req, res) => {
+  const conn = await db.getConnection();
   try {
     if (req.user.role === "Employee") {
       return res.status(403).json({ message: "Access denied" })
@@ -191,22 +192,32 @@ router.post("/assign-asset", verifyToken, async (req, res) => {
 
     const { user_id, asset_id, notes } = req.body
 
-    // 1. Create Assignment Record
-    await db.execute(
+    await conn.query('START TRANSACTION');
+
+    // 1. Fetch User's room_id
+    const [userRows] = await conn.execute("SELECT room_id FROM users WHERE id = ?", [user_id]);
+    const userRoomId = userRows.length > 0 ? userRows[0].room_id : null;
+
+    // 2. Create Assignment Record
+    await conn.execute(
       "INSERT INTO asset_assignments (assigned_to, asset_id, description, assigned_by) VALUES (?, ?, ?, ?)",
       [user_id, asset_id, notes || '', req.user.id]
     )
 
-    // 2. Update Asset Status
-    await db.execute(
-      "UPDATE assets SET status = 'Assigned' WHERE id = ?",
-      [asset_id]
+    // 3. Update Asset Status, Room ID, and Assigned To
+    await conn.execute(
+      "UPDATE assets SET status = 'Assigned', room_id = ?, assigned_to = ? WHERE id = ?",
+      [userRoomId, user_id, asset_id]
     )
 
+    await conn.query('COMMIT');
     res.json({ message: "Asset assigned successfully" })
   } catch (error) {
+    if (conn) await conn.query('ROLLBACK');
     console.error("Error assigning asset:", error)
     res.status(500).json({ message: "Server error" })
+  } finally {
+    if (conn) conn.release();
   }
 })
 
@@ -224,9 +235,9 @@ router.post("/unassign-asset", verifyToken, async (req, res) => {
       [req.user.id, asset_id]
     )
 
-    // 2. Update Asset Status
+    // 2. Update Asset Status and Assigned To
     await db.execute(
-      "UPDATE assets SET status = 'Available' WHERE id = ?",
+      "UPDATE assets SET status = 'Available', assigned_to = NULL WHERE id = ?",
       [asset_id]
     )
 

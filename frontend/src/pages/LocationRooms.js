@@ -6,6 +6,7 @@ import { useSearchParams, useNavigate } from "react-router-dom"
 import api from "../api"
 import { useAuth } from "../contexts/AuthContext"
 import { useToast } from "../contexts/ToastContext"
+import { formatDate } from "../utils/dateUtils"
 
 const LocationRooms = () => {
   const [searchParams] = useSearchParams()
@@ -18,6 +19,9 @@ const LocationRooms = () => {
   const [rooms, setRooms] = useState([])
   const [loading, setLoading] = useState(true)
   const [showRoomModal, setShowRoomModal] = useState(false)
+  const [showAssetsModal, setShowAssetsModal] = useState(false)
+  const [locationAssets, setLocationAssets] = useState([])
+  const [assetsLoading, setAssetsLoading] = useState(false)
   const [editingRoom, setEditingRoom] = useState(null)
   const [openDropdownId, setOpenDropdownId] = useState(null)
   
@@ -31,17 +35,23 @@ const LocationRooms = () => {
 
   const fetchRooms = useCallback(async () => {
     try {
-      // Fetch rooms specifically for this location
-      // Note: Backend might need an endpoint for this, or we filter client side if the general endpoint returns all.
-      // Assuming for now /api/locations/:id/rooms exists or we filter /api/locations/rooms
-      // Let's rely on filtering the all-rooms endpoint for now as per previous implementation logic, 
-      // but ideally we'd fetch just for this location.
       const response = await api.get("/locations/rooms")
-      // Filter for this location
       const filteredRooms = response.data.filter(r => r.location_id === parseInt(locationId))
       setRooms(filteredRooms)
     } catch (error) {
       console.error("Error fetching rooms:", error)
+    }
+  }, [locationId])
+
+  const fetchLocationAssets = useCallback(async () => {
+    try {
+      setAssetsLoading(true)
+      const response = await api.get(`/assets?location_id=${locationId}&role=Maintenance`)
+      setLocationAssets(response.data)
+    } catch (err) { 
+      console.error("Error fetching location assets:", err)
+    } finally {
+      setAssetsLoading(false)
     }
   }, [locationId])
 
@@ -100,19 +110,6 @@ const LocationRooms = () => {
     setShowRoomModal(true)
   }
 
-  const handleDeleteRoom = async (id) => {
-    if (window.confirm("Are you sure you want to delete this room?")) {
-      try {
-        await api.delete(`/locations/rooms/${id}`)
-        showSuccess("Room deleted successfully")
-        fetchRooms()
-      } catch (error) {
-        console.error("Error deleting room:", error)
-        showError("Error deleting room")
-      }
-    }
-  }
-
   const resetRoomForm = () => {
     setRoomFormData({
       name: "",
@@ -138,11 +135,24 @@ const LocationRooms = () => {
                 </button>
                 <h2>Rooms in {location ? location.name : "Location"}</h2>
             </div>
-            {user?.role === "Super Admin" && (
-                <button onClick={() => setShowRoomModal(true)} className="btn btn-primary">
-                    Add New Room
-                </button>
-            )}
+            <div className="flex items-center gap-2">
+                {user?.role === "Super Admin" && (
+                    <>
+                        <button 
+                            onClick={() => {
+                                fetchLocationAssets()
+                                setShowAssetsModal(true)
+                            }} 
+                            className="btn btn-secondary"
+                        >
+                            Maintaince assets view
+                        </button>
+                        <button onClick={() => setShowRoomModal(true)} className="btn btn-primary">
+                            Add New Room
+                        </button>
+                    </>
+                )}
+            </div>
         </div>
 
         {rooms.length === 0 ? (
@@ -282,24 +292,80 @@ const LocationRooms = () => {
                     rows="3"
                     />
                 </div>
-                <div className="flex gap-2">
-                    <button type="submit" className="btn btn-primary" style={{flex: 1}}>
+                </form>
+            </div>
+            <div className="modal-footer">
+                <div className="flex gap-2" style={{ width: '100%' }}>
+                    <button onClick={handleRoomSubmit} className="btn btn-primary" style={{flex: 1}}>
                     {editingRoom ? "Update Room" : "Add Room"}
                     </button>
                     <button
-                    type="button"
-                    className="btn btn-secondary"
-                    style={{flex: 1}}
-                    onClick={() => {
-                        setShowRoomModal(false)
-                        setEditingRoom(null)
-                        resetRoomForm()
-                    }}
+                        type="button"
+                        className="btn btn-secondary"
+                        style={{flex: 1}}
+                        onClick={() => {
+                            setShowRoomModal(false)
+                            setEditingRoom(null)
+                            resetRoomForm()
+                        }}
                     >
                     Cancel
                     </button>
                 </div>
-                </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showAssetsModal && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '1400px', width: '98%' }}>
+            <div className="modal-header">
+              <h2>Maintenance Assets View</h2>
+              <button
+                className="close-modal"
+                onClick={() => setShowAssetsModal(false)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="modal-body" style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+              {assetsLoading ? (
+                <div className="loading">Loading assets...</div>
+              ) : locationAssets.length === 0 ? (
+                <div className="empty-state">
+                  <p>No assets found for this location</p>
+                </div>
+              ) : (
+                <div className="table-container" style={{ overflowX: 'auto', width: '100%', padding: '0', border: 'none', boxShadow: 'none' }}>
+                    <table className="table" style={{ width: '100%', minWidth: '1300px', borderCollapse: 'collapse' }}>
+                    <thead>
+                        <tr>
+                        <th style={{ whiteSpace: 'nowrap' }}>Asset Name</th>
+                        <th style={{ whiteSpace: 'nowrap' }}>Assigned To</th>
+                        <th style={{ whiteSpace: 'nowrap' }}>Type</th>
+                        <th style={{ whiteSpace: 'nowrap' }}>Serial Number</th>
+                        <th style={{ whiteSpace: 'nowrap' }}>Warranty Expiry</th>
+                        <th style={{ whiteSpace: 'nowrap' }}>Category</th>
+                        <th style={{ whiteSpace: 'nowrap' }}>Purchase Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {locationAssets.map((asset, index) => (
+                        <tr key={index}>
+                            <td style={{ whiteSpace: 'nowrap', minWidth: '150px' }}>{asset.aname}</td>
+                            <td style={{ whiteSpace: 'nowrap' }}>{asset.uname}</td>
+                            <td style={{ whiteSpace: 'nowrap' }}>{asset.asset_type}</td>
+                            <td style={{ whiteSpace: 'nowrap' }}>{asset.serial_number || "N/A"}</td>
+                            <td style={{ whiteSpace: 'nowrap' }}>{formatDate(asset.warranty_expiry)}</td>
+                            <td style={{ whiteSpace: 'nowrap' }}>{asset.cat_name || "N/A"}</td>
+                            <td style={{ whiteSpace: 'nowrap' }}>{formatDate(asset.purchase_date)}</td>
+                        </tr>
+                        ))}
+                    </tbody>
+                    </table>
+                </div>
+              )}
             </div>
           </div>
         </div>

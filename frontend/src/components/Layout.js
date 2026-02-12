@@ -53,7 +53,7 @@ const ICONS = {
 
 const MENU_ITEMS = {
   "Super Admin": [
-    { name: "Dashboard", path: ["/admin-dashboard"], icon: "dashboard" },
+    { name: "Dashboard", path: ["/dashboard/admin"], icon: "dashboard" },
     { name: "Locations", path: ["/locations", "/rooms?location_id=","/lr-assets", "/mainusers", "/loc-assets", "/team-user"], icon: "locations" },
     { name: "Categories", path: ["/categories"], icon: "categories" },
     { name: "Assets", path: ["/assets"], icon: "assets" },
@@ -63,7 +63,7 @@ const MENU_ITEMS = {
     { name: "Profile", path: ["/profile"], icon: "profile" },
   ],
   "Supervisor": [
-    { name: "Dashboard", path: ["/dashboard", "/supervisor-dashboard"], icon: "dashboard" },
+    { name: "Dashboard", path: ["/dashboard/supervisor"], icon: "dashboard" },
     { name: "My Team", path: ["/users"], icon: "users" },
     { name: "Assets", path: ["/assets"], icon: "assets" },
     { name: "Orders", path: ["/purchase-orders"], icon: "orders" },
@@ -71,13 +71,13 @@ const MENU_ITEMS = {
     { name: "Profile", path: ["/profile"], icon: "profile" },
   ],
   "Employee": [
-    { name: "Dashboard", path: ["/dashboard", "/employee-dashboard"], icon: "dashboard" },
+    { name: "Dashboard", path: ["/dashboard/employee"], icon: "dashboard" },
     { name: "Assets", path: ["/assets"], icon: "assets" },
     { name: "Requests", path: ["/requests"], icon: "requests" },
     { name: "Profile", path: ["/profile"], icon: "profile" },
   ],
   "Vendor": [
-    { name: "Dashboard", path: ["/vendor-dashboard"], icon: "dashboard" },
+    { name: "Dashboard", path: ["/dashboard/vendor"], icon: "dashboard" },
     { name: "Organizations", path: ["/organizations"], icon: "organizations" },
     { name: "Supply", path: ["/supply-assets"], icon: "assets" },
     { name: "Warranty", path: ["/warranty-docs"], icon: "file" },
@@ -86,14 +86,14 @@ const MENU_ITEMS = {
     { name: "Profile", path: ["/profile"], icon: "profile" },
   ],
   "Maintenance": [
-    { name: "Dashboard", path: ["/maintenance-dashboard"], icon: "dashboard" },
+    { name: "Dashboard", path: ["/dashboard/maintenance"], icon: "dashboard" },
     { name: "Config", path: ["/new-configuration"], icon: "settings" },
     { name: "Update", path: ["/update-maintenance"], icon: "maintenance" },
     { name: "Tasks", path: ["/maintenance-tasks"], icon: "file" },
     { name: "Profile", path: ["/profile"], icon: "profile" },
   ],
   "Software Developer": [
-    { name: "Dashboard", path: ["/sd-dashboard", "/dashboard"], icon: "dashboard" },
+    { name: "Dashboard", path: ["/dashboard/software-developer"], icon: "dashboard" },
     { name: "Org", path: ["/organizations"], icon: "organizations" },
     { name: "Profile", path: ["/profile"], icon: "profile" },
   ]
@@ -103,7 +103,7 @@ const Layout = () => {
   const { user, logout } = useAuth()
   const { theme } = useTheme()
   const location = useLocation()
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen)

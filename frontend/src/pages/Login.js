@@ -39,10 +39,10 @@ const Login = () => {
     const result = await login(formData.email, formData.password, rememberMe)
 
     if (result.success) {
-      navigate(result.redirectPath || "/dashboard")
+      navigate("/dashboard")
     } else {
       setMessage(result.message)
-    }
+    } 
 
     setLoading(false)
   }
