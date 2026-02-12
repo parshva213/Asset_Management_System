@@ -1598,6 +1598,21 @@ body.dark .transform-input {
     padding: 2rem;
     max-width: 1400px;
     margin: 0 auto;
+
+}
+.profile-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+@media (max-width: 968px) {
+    .profile-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 .profile-grid {
@@ -1707,14 +1722,17 @@ body.dark .transform-input {
     border-radius: 1.5rem;
     width: 100%;
     max-width: 600px;
-    max-height: 90vh; /* Limit height to 90% of viewport */
+    max-height: 90vh;
+    /* Limit height to 90% of viewport */
     display: flex;
-    flex-direction: column; /* Vertical layout */
+    flex-direction: column;
+    /* Vertical layout */
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     border: 1px solid var(--border);
     animation: modal-in 0.3s ease-out;
     position: relative;
-    overflow: hidden; /* Contain children */
+    overflow: hidden;
+    /* Contain children */
 }
 
 .modal-header {
@@ -1723,13 +1741,16 @@ body.dark .transform-input {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-shrink: 0; /* Don't shrink header */
+    flex-shrink: 0;
+    /* Don't shrink header */
 }
 
 .modal-body {
     padding: 2rem;
-    overflow-y: auto; /* Enable vertical scrolling */
-    flex-grow: 1; /* Take up available space */
+    overflow-y: auto;
+    /* Enable vertical scrolling */
+    flex-grow: 1;
+    /* Take up available space */
 }
 
 .modal-footer {
@@ -1737,7 +1758,8 @@ body.dark .transform-input {
     border-top: 1px solid var(--border);
     display: flex;
     gap: 1rem;
-    flex-shrink: 0; /* Don't shrink footer */
+    flex-shrink: 0;
+    /* Don't shrink footer */
 }
 
 .profile-card:hover,
