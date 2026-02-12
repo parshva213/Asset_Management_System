@@ -20,15 +20,16 @@ router.get("/current-asset/:id", authenticateToken, async (req,res)=>{
   try {
     const {id} = req.params;
     let query = `
-      select a.*,
-      from assets a
-      left join asset_assignments aa on aa.asset_id = a.id
-      left join users u on u.id = aa.assigned_to 
-      where a.status = 'assigned' and a.org_id = ? and aa.unassigned_by is null and u.id = ?
+      SELECT a.*
+      FROM assets a
+      LEFT JOIN asset_assignments aa ON aa.asset_id = a.id
+      LEFT JOIN users u ON u.id = aa.assigned_to 
+      WHERE a.status = 'Assigned' AND a.org_id = ? AND aa.unassigned_by IS NULL AND u.id = ?
     `;
-    const result = await pool.query(query, [req.user.org_id ,id]);
+    const result = await pool.query(query, [req.user.org_id, id]);
     res.json(result[0]);
   } catch (error) {
+    console.error('Error in /current-asset/:id:', error);
     res.status(500).json({message: "Database error"})
   }
 })
@@ -36,7 +37,23 @@ router.get("/current-asset/:id", authenticateToken, async (req,res)=>{
 router.get("/available-assets-to-assign/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const [result] = await pool.query("SELECT * FROM assets WHERE status = 'Available' and org_id = ? and loc_id = ?", [req.user.org_id, id]);
+    const [result] = await pool.query(`
+      SELECT 
+        MIN(CASE WHEN a.status = 'Available' THEN a.id END) AS available_min_id,
+        a.name,
+        COUNT(*) AS total_assets,
+        SUM(a.status = 'Available') AS available_count,
+        SUM(a.status = 'Assigned') AS assigned_count
+      FROM assets a
+      WHERE 
+        a.location_id = ?
+        AND a.org_id = ?
+      GROUP BY 
+        a.name,
+        SUBSTRING_INDEX(a.serial_number, '/', 1)
+      ORDER BY 
+        a.name ASC;
+      `, [id, req.user.org_id]);
     res.json(result);
   } catch (error) {
     res.status(500).json({message: "Database error"})

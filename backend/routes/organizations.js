@@ -16,7 +16,7 @@ router.get("/", verifyToken, async (req, res) => {
       });
     }
 
-    const [rows] = await pool.query("SELECT * FROM organizations ORDER BY id ASC");
+    const [rows] = await pool.query("SELECT * FROM organizations where status <> 'Deleted' ORDER BY id ASC");
     res.json(rows);
   } catch (error) {
     console.error("Error fetching organizations:", error);
@@ -114,25 +114,22 @@ router.put("/:id", verifyToken, async (req, res) => {
 });
 
 // Delete organization
-router.delete("/:id", verifyToken, async (req, res) => {
+router.put("/:id/:name", verifyToken, async (req, res) => {
   try {
     if ((req.user.role || "").trim().toLowerCase() !== "software developer") {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    const { id } = req.params;
+    const { id,name } = req.params;
 
     const [rows] = await pool.query("SELECT name FROM organizations WHERE id = ?", [id]);
     if (rows.length === 0) {
       return res.status(404).json({ message: "Organization not found" });
     }
 
-    await pool.query("DELETE FROM organizations WHERE id = ?", [id]);
+    await pool.query("update organizations SET status = ? WHERE id = ?", [name,id]);
 
-    // Log activity safely
-    await logActivity(req.user.id, "Deleted organization", "organization", id, `Deleted organization: ${rows[0].name}`);
-
-    res.json({ message: "Organization deleted successfully" });
+    res.json({ message: `Organization ${name} successfully` });
   } catch (error) {
     console.error("Error deleting organization:", error);
     res.status(500).json({ message: "Server error" });

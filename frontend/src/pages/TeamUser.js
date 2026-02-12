@@ -21,6 +21,7 @@ const TeamUser = () => {
   const [rooms, setRooms] = useState([])
   const [newLocationId, setNewLocationId] = useState("")
   const [newRoomId, setNewRoomId] = useState("")
+  const [currentAsset, setCurrentAsset] = useState(null)
   const [availableAssets, setAvailableAssets] = useState([])
   const [assetsToAssign, setAssetsToAssign] = useState([])
   const [assetsToUnassign, setAssetsToUnassign] = useState([])
@@ -101,12 +102,18 @@ const TeamUser = () => {
     }
   }, [])
 
+  const fetchCurrentAsset = useCallback(async (userId) => {
+    try {
+      const response = await api.get(`/assets/current-asset/${userId}`)
+      setCurrentAsset(response.data)
+    } catch (error) {
+      console.error("Error fetching current asset:", error)
+    }
+  }, [])
+
   const fetchAvailableAssets = useCallback(async (locId = null) => {
     try {
-      let url = "/assets?status=Available&detailed=true";
-      if (locId) {
-        url += `&location_id=${locId}`;
-      }
+      let url = "/assets/available-assets-to-assign/" + locId;
       const response = await api.get(url)
       setAvailableAssets(response.data)
     } catch (error) {
@@ -141,6 +148,7 @@ const TeamUser = () => {
         fetchRooms(user.loc_id)
       }
     } else if (type === 'assets') {
+      fetchCurrentAsset(user.id)
       fetchAvailableAssets(user.loc_id)
       setAssetsToAssign([])
       setAssetsToUnassign([])
@@ -166,6 +174,7 @@ const TeamUser = () => {
     setSelectedUser(null)
     setActiveModal(null)
     setNewLocationId("")
+    setCurrentAsset(null)
     setAvailableAssets([])
     setAssetsToAssign([])
     setAssetsToUnassign([])
@@ -342,14 +351,14 @@ const TeamUser = () => {
                   <div className="mb-6">
                     <h4 className="mb-3 text-secondary border-b pb-2 flex justify-between items-center">
                       <span>Currently Assigned</span>
-                      <span className="text-xs font-normal">({selectedUser.assigned_assets?.length || 0})</span>
+                      <span className="text-xs font-normal">({currentAsset?.length || 0})</span>
                     </h4>
-                    {selectedUser.assigned_assets?.length === 0 ? (
+                    {currentAsset?.length === 0 ? (
                       <p className="text-sm text-secondary italic px-2 py-3 bg-light/30 rounded">No assets currently assigned.</p>
                     ) : (
                       <div className="assigned-checkbox-list space-y-1">
-                        {selectedUser.assigned_assets?.map(asset => (
-                          <label key={asset.id} className="flex items-center gap-2 p-2 rounded hover:bg-light cursor-pointer border border-transparent hover:border-border transition-all">
+                        {currentAsset?.map(asset => (
+                          <><label key={asset.id} className="flex items-center gap-2 p-2 rounded hover:bg-light cursor-pointer border border-transparent hover:border-border transition-all">
                             <input 
                               type="checkbox" 
                               checked={!assetsToUnassign.includes(asset.id)}
@@ -357,9 +366,10 @@ const TeamUser = () => {
                               className="w-4 h-4 rounded text-primary focus:ring-primary"
                             />
                             <div className="flex-1">
-                              <span className="text-sm font-medium">{asset.name}</span>
+                              <span className="text-sm font-medium">{asset.name}</span><br></br>
                             </div>
                           </label>
+                          <span className="text-sm font-medium">Serial Number: {asset.serial_number}</span></>
                         ))}
                       </div>
                     )}
@@ -387,16 +397,12 @@ const TeamUser = () => {
                                 onChange={() => toggleAssignAsset(asset.id)}
                                 className="w-4 h-4 rounded text-primary focus:ring-primary"
                               />
-                              <div className="flex-1">
                                 <div className="text-sm font-semibold group-hover:text-primary transition-colors">
-                                  <span className="text-primary mr-1">[{asset.id}]</span> {asset.name}
+                                {asset.name}
                                 </div>
                                 <div className="text-[11px] text-secondary flex gap-2">
-                                  <span>Qty: {asset.quantity || 0}</span>
-                                  <span>Available: {asset.available_total || 0}</span>
-                                  <span>Assigned: {asset.assigned_total || 0}</span>
+                                  <span>(Qty: {asset.total_assets || 0} | Available: {asset.available_count || 0} | Assigned: {asset.assigned_count || 0})</span>
                                 </div>
-                              </div>
                             </label>
                           ))
                         }

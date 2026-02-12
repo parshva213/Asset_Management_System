@@ -87,13 +87,13 @@ const Organizations = () => {
         setShowModal(true)
     }
 
-    const handleDelete = async (id) => {
-        if (!window.confirm("Are you sure you want to delete this organization?")) return
+    const handleDelete = async (id, name) => {
         try {
-            await api.delete(`/organizations/${id}`)
+            await api.put(`/organizations/${id}/${name}`)
             // Remove the organization from local state immediately
             setOrganizations(prev => prev.filter(org => org.id !== id))
-            showSuccess("Organization deleted successfully")
+            showSuccess(`organization ${name} successfully`)
+            fetchOrganizations()
         } catch (err) {
             console.error("Error deleting organization:", err)
             showError(err?.response?.data?.message || "Error deleting organization")
@@ -159,9 +159,26 @@ const Organizations = () => {
                                         <Button variant="secondary" onClick={() => handleEdit(organization)}>
                                             Edit
                                         </Button>
-                                        <Button variant="danger" onClick={() => handleDelete(organization.id)}>
-                                            Delete
-                                        </Button>
+                                        {organization.status !== "Active" && (
+                                            <Button variant="success" onClick={() => handleDelete(organization.id,"Active")}>
+                                                Active
+                                            </Button>
+                                        )}
+                                        {organization.status !== "Suspended" && (
+                                            <Button variant="warning" onClick={() => handleDelete(organization.id,"Suspended")}>
+                                                Suspended
+                                            </Button>
+                                        )}
+                                        {organization.status !== "Closed" && (
+                                            <Button variant="danger" onClick={() => handleDelete(organization.id,"Closed")}>
+                                                Closed
+                                            </Button>
+                                        )}
+                                        {organization.status !== "Deleted" && (
+                                            <Button variant="danger" onClick={() => handleDelete(organization.id,"Deleted")}>
+                                                Delete
+                                            </Button>
+                                        )}
                                     </div>
                                 </td>
                             </tr>

@@ -77,10 +77,7 @@ const MainUsers = () => {
 
   const fetchAvailableAssets = useCallback(async (locId = null) => {
     try {
-      let url = "/assets?status=Available&detailed=true";
-      if (locId) {
-        url += `&location_id=${locId}`;
-      }
+      let url = "/assets/available-assets-to-assign/" + locId;
       const response = await api.get(url)
       setAvailableAssets(response.data)
     } catch (error) {
@@ -303,7 +300,7 @@ const MainUsers = () => {
                     ) : (
                       <div className="assigned-checkbox-list space-y-1">
                         {currentAsset?.map(asset => (
-                          <label key={asset.id} className="flex items-center gap-2 p-2 rounded hover:bg-light cursor-pointer border border-transparent hover:border-border transition-all">
+                          <><label key={asset.id} className="flex items-center gap-2 p-2 rounded hover:bg-light cursor-pointer border border-transparent hover:border-border transition-all">
                             <input 
                               type="checkbox" 
                               checked={!assetsToUnassign.includes(asset.id)}
@@ -311,9 +308,10 @@ const MainUsers = () => {
                               className="w-4 h-4 rounded text-primary focus:ring-primary"
                             />
                             <div className="flex-1">
-                              <span className="text-sm font-medium">{asset.aname}-{asset.serial_number}</span>
+                              <span className="text-sm font-medium">{asset.name}</span><br></br>
                             </div>
                           </label>
+                          <span className="text-sm font-medium">Serial Number: {asset.serial_number}</span></>
                         ))}
                       </div>
                     )}
@@ -341,11 +339,11 @@ const MainUsers = () => {
                                 onChange={() => toggleAssignAsset(asset.id)}
                                 className="w-4 h-4 rounded text-primary focus:ring-primary"
                               />
-                                <div className="text-sm font-semibold group-hover:text-primary transition-colors">
-                                  {asset.name}
-                                  <span>  (Qty: {asset.quantity || 0}</span>
-                                  <span>Available: {asset.available_total || 0}</span>
-                                  <span>Assigned: {asset.assigned_total || 0})</span>
+                                 <div className="text-sm font-semibold group-hover:text-primary transition-colors">
+                                {asset.name}
+                                </div>
+                                <div className="text-[11px] text-secondary flex gap-2">
+                                  <span>(Qty: {asset.quantity || 0} | Available: {asset.available_total || 0} | Assigned: {asset.assigned_total || 0})</span>
                                 </div>
                             </label>
                           ))
