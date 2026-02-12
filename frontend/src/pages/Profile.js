@@ -96,7 +96,7 @@ const Profile = () => {
             <h3>Profile Information</h3>
           </div>
           <div className="modal-body">
-            <form>
+            <form onSubmit={handleProfileSubmit}>
               <div className="form-group">
                 <label className="form-label">Full Name</label>
                 <input
@@ -148,34 +148,30 @@ const Profile = () => {
                 />
               </div>
               {user.role !== "Vendor" && (
-              <div className="form-group">
-                <label className="form-label">Status</label>
-                <select
-                  name="status"
-                  className="form-select"
-                  value={profileData.status}
-                  onChange={handleProfileChange}
-                  disabled={isReadOnly}
-                >
-                  <option value="Active">Active</option>
-                  <option value="On Leave">On Leave</option>
-                </select>
-              </div>
+                <div className="form-group">
+                  <label className="form-label">Status</label>
+                  <select
+                    name="status"
+                    className="form-select"
+                    value={profileData.status}
+                    onChange={handleProfileChange}
+                    disabled={isReadOnly}
+                  >
+                    <option value="Active">Active</option>
+                    <option value="On Leave">On Leave</option>
+                  </select>
+                </div>
               )}
-            </form>
-          </div>
-          <div className="modal-footer">
-            {!isReadOnly && (
+              {!isReadOnly && (
                 <button
-                type="button"
-                onClick={handleProfileSubmit}
+                  type="submit"
                   className="btn btn-primary w-full mt-2"
                   disabled={profileLoading}
                 >
                   {profileLoading ? "Updating..." : "Update Profile"}
                 </button>
               )}
-             
+            </form>
           </div>
         </div>
 
@@ -185,7 +181,7 @@ const Profile = () => {
             <div className="modal-header">
               <h3>Change Password</h3>
             </div>
-            <div className="modal-body" style={{overflow:"hidden"}}>
+            <div className="modal-body" style={{ overflow: "hidden" }}>
               <form onSubmit={handlePasswordSubmit}>
                 <div className="form-group">
                   <label className="form-label">Current Password</label>
