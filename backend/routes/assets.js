@@ -22,9 +22,9 @@ router.get("/current-asset/:id", authenticateToken, async (req,res)=>{
     let query = `
       SELECT a.*
       FROM assets a
-      LEFT JOIN asset_assignments aa ON aa.asset_id = a.id
-      LEFT JOIN users u ON u.id = aa.assigned_to 
-      WHERE a.status = 'Assigned' AND a.org_id = ? AND aa.unassigned_by IS NULL AND u.id = ?
+      LEFT JOIN asset_assignments aa ON a.id =  aa.asset_id 
+      LEFT JOIN users u ON  aa.assigned_to = u.id
+      WHERE a.org_id = ? AND aa.unassigned_by IS NULL AND u.id = ?
     `;
     const result = await pool.query(query, [req.user.org_id, id]);
     res.json(result[0]);

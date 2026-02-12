@@ -192,22 +192,35 @@ router.post("/assign-asset", verifyToken, async (req, res) => {
 
     const { user_id, asset_id, notes } = req.body
 
+    console.log("[ASSIGN-ASSET] Request body:", { user_id, asset_id, notes });
+    console.log("[ASSIGN-ASSET] req.user:", req.user);
+
+    // Validate required parameters
+    if (!user_id || !asset_id) {
+      console.log("[ASSIGN-ASSET] Validation failed - missing user_id or asset_id");
+      return res.status(400).json({ message: "user_id and asset_id are required" });
+    }
+
     await conn.query('START TRANSACTION');
 
     // 1. Fetch User's room_id
     const [userRows] = await conn.execute("SELECT room_id FROM users WHERE id = ?", [user_id]);
-    const userRoomId = userRows.length > 0 ? userRows[0].room_id : null;
+    const userRoomId = (userRows.length > 0 && userRows[0].room_id) ? userRows[0].room_id : null;
+    console.log("[ASSIGN-ASSET] userRoomId:", userRoomId);
 
-    // 2. Create Assignment Record
+    // 2. Create Assignment Record (ensure all values are non-undefined)
+    const assignmentParams = [user_id, asset_id, notes ?? '', req.user?.id ?? null];
+    console.log("[ASSIGN-ASSET] Assignment params:", assignmentParams);
+    
     await conn.execute(
       "INSERT INTO asset_assignments (assigned_to, asset_id, description, assigned_by) VALUES (?, ?, ?, ?)",
-      [user_id, asset_id, notes || '', req.user.id]
+      assignmentParams
     )
 
-    // 3. Update Asset Status, Room ID, and Assigned To
+    // 3. Update Asset Status and Room ID (assignment tracked in asset_assignments table)
     await conn.execute(
-      "UPDATE assets SET status = 'Assigned', room_id = ?, assigned_to = ? WHERE id = ?",
-      [userRoomId, user_id, asset_id]
+      "UPDATE assets SET status = 'Assigned', room_id = ? WHERE id = ?",
+      [userRoomId, asset_id]
     )
 
     await conn.query('COMMIT');
@@ -237,7 +250,7 @@ router.post("/unassign-asset", verifyToken, async (req, res) => {
 
     // 2. Update Asset Status and Assigned To
     await db.execute(
-      "UPDATE assets SET status = 'Available', assigned_to = NULL WHERE id = ?",
+      "UPDATE assets SET status = 'Available' WHERE id = ?",
       [asset_id]
     )
 

@@ -71,7 +71,7 @@ const MainUsers = () => {
       const response = await api.get(`/assets/current-asset/${userId}`)
       setCurrentAsset(response.data)
     } catch (error) {
-      console.error("Error fetching current asset:", error)
+      console.error("Error fetching current asset:", error) 
     }
   }, [])
 
@@ -332,18 +332,18 @@ const MainUsers = () => {
                         {availableAssets
                           ?.filter(asset => !selectedUser.assigned_assets?.some(assigned => assigned.name === asset.name))
                           .map(asset => (
-                            <label key={asset.id} className="flex items-center gap-3 p-3 rounded hover:bg-light cursor-pointer border border-transparent hover:border-border transition-all group">
+                            <label key={asset.available_min_id} className="flex items-center gap-3 p-3 rounded hover:bg-light cursor-pointer border border-transparent hover:border-border transition-all group">
                               <input 
                                 type="checkbox" 
-                                checked={assetsToAssign.includes(asset.id)}
-                                onChange={() => toggleAssignAsset(asset.id)}
+                                checked={assetsToAssign.includes(asset.available_min_id)}
+                                onChange={() => toggleAssignAsset(asset.available_min_id)}
                                 className="w-4 h-4 rounded text-primary focus:ring-primary"
                               />
                                  <div className="text-sm font-semibold group-hover:text-primary transition-colors">
                                 {asset.name}
                                 </div>
                                 <div className="text-[11px] text-secondary flex gap-2">
-                                  <span>(Qty: {asset.quantity || 0} | Available: {asset.available_total || 0} | Assigned: {asset.assigned_total || 0})</span>
+                                  <span>(Qty: {asset.total_assets || 0} | Available: {asset.available_assets || 0} | Assigned: {asset.assigned_assets || 0})</span>
                                 </div>
                             </label>
                           ))

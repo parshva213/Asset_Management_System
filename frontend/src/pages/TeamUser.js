@@ -358,7 +358,7 @@ const TeamUser = () => {
                     ) : (
                       <div className="assigned-checkbox-list space-y-1">
                         {currentAsset?.map(asset => (
-                          <><label key={asset.id} className="flex items-center gap-2 p-2 rounded hover:bg-light cursor-pointer border border-transparent hover:border-border transition-all">
+                          <label key={asset.id} className="flex items-center gap-2 p-2 rounded hover:bg-light cursor-pointer border border-transparent hover:border-border transition-all">
                             <input 
                               type="checkbox" 
                               checked={!assetsToUnassign.includes(asset.id)}
@@ -366,10 +366,11 @@ const TeamUser = () => {
                               className="w-4 h-4 rounded text-primary focus:ring-primary"
                             />
                             <div className="flex-1">
-                              <span className="text-sm font-medium">{asset.name}</span><br></br>
+                              <span className="text-sm font-medium">{asset.name}</span>
+                              <br />
+                              <span className="text-xs text-secondary">Serial Number: {asset.serial_number}</span>
                             </div>
                           </label>
-                          <span className="text-sm font-medium">Serial Number: {asset.serial_number}</span></>
                         ))}
                       </div>
                     )}
@@ -390,18 +391,18 @@ const TeamUser = () => {
                         {availableAssets
                           ?.filter(asset => !selectedUser.assigned_assets?.some(assigned => assigned.name === asset.name))
                           .map(asset => (
-                            <label key={asset.id} className="flex items-center gap-3 p-3 rounded hover:bg-light cursor-pointer border border-transparent hover:border-border transition-all group">
+                            <label key={asset.available_min_id} className="flex items-center gap-3 p-3 rounded hover:bg-light cursor-pointer border border-transparent hover:border-border transition-all group">
                               <input 
                                 type="checkbox" 
-                                checked={assetsToAssign.includes(asset.id)}
-                                onChange={() => toggleAssignAsset(asset.id)}
+                                checked={assetsToAssign.includes(asset.available_min_id)}
+                                onChange={() => toggleAssignAsset(asset.available_min_id)}
                                 className="w-4 h-4 rounded text-primary focus:ring-primary"
                               />
                                 <div className="text-sm font-semibold group-hover:text-primary transition-colors">
                                 {asset.name}
                                 </div>
                                 <div className="text-[11px] text-secondary flex gap-2">
-                                  <span>(Qty: {asset.total_assets || 0} | Available: {asset.available_count || 0} | Assigned: {asset.assigned_count || 0})</span>
+                                  <span>(Qty: {asset.total_assets || 0} | Available: {asset.available_assets || 0} | Assigned: {asset.assigned_assets || 0})</span>
                                 </div>
                             </label>
                           ))
