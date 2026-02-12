@@ -44,9 +44,12 @@ const Assets = () => {
   const fetchAssets = async () => {
     try {
       let path = "/assets";
+      if (user?.role === "Employee") {
+        path = `/assets/current-asset/${user?.id}`;
+      }
       const res = await api.get(`${path}`);
       setAssets(res.data) ? console.log("asset success") : console.log("asset Error");
-      
+
     } catch (err) {
       console.error("Error fetching assets:", err);
     }
@@ -93,7 +96,7 @@ const Assets = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
 
     if (name === "location_id") {
-        // Rooms are no longer needed in creation
+      // Rooms are no longer needed in creation
     }
   };
 
@@ -148,7 +151,7 @@ const Assets = () => {
     fetchLocations();
 
     setShowModal(true);
-  }; 
+  };
 
   if (loading) return <div className="loading">Loading assets...</div>;
 
@@ -156,10 +159,10 @@ const Assets = () => {
     return (
       <div className="content">
         <div className="flex-center h-full">
-           <div className="empty-state">
-             <h3>Set your location first</h3>
-             <p className="text-secondary">You need to be assigned to a room to view the assets.</p>
-           </div>
+          <div className="empty-state">
+            <h3>Set your location first</h3>
+            <p className="text-secondary">You need to be assigned to a room to view the assets.</p>
+          </div>
         </div>
       </div>
     )
@@ -168,7 +171,7 @@ const Assets = () => {
   return (
     <div>
       <div className="flex-between mb-4">
-        <h2> {(user?.role === "Super Admin")? "List of Assets Not Working" : "Assets Management"}</h2>
+        <h2> {(user?.role === "Super Admin") ? "List of Assets Not Working" : "Assets Management"}</h2>
         {(user?.role === "Super Admin" || user?.role === "Supervisor") && (
           <button onClick={() => dataFetch()} className="btn btn-primary">
             Add Asset
@@ -182,87 +185,86 @@ const Assets = () => {
         </div>
       ) : (
         <div className="table-container">
-            <table className="table">
+          <table className="table">
             <thead>
-                <tr>
+              <tr>
                 {user?.role === "Super Admin" ? (
-                    <>                      
-                        <th>Serial Number</th>
-                        <th>Name</th>
-                        <th>Status</th>
-                        <th>Category</th>
-                        <th>Location</th>
-                        <th>Room</th>
-                        <th>Warranty</th>
-                        <th>Purchase Cost</th>
-                    </>
+                  <>
+                    <th>Serial Number</th>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Category</th>
+                    <th>Location</th>
+                    <th>Room</th>
+                    <th>Warranty</th>
+                    <th>Purchase Cost</th>
+                  </>
                 ) : (
-                    <>
-                        <th>Serial Number</th>
-                        <th>Name</th>
-                        <th>Category</th>
-                        <th>Location</th>
-                        <th>Status</th>
-                        <th>Purchased</th>
-                        <th>Warranty</th>
-                        <th>Actions</th>
-                    </>
+                  <>
+                    <th>Serial Number</th>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Location</th>
+                    <th>Status</th>
+                    <th>Purchased</th>
+                    <th>Warranty</th>
+                    <th>Actions</th>
+                  </>
                 )}
-                </tr>
+              </tr>
             </thead>
             <tbody>
-                {assets.map((asset) => (
+              {assets.map((asset) => (
                 <tr key={asset.id} id={`asset-${asset.id}`}>
-                    {user?.role === "Super Admin" ? (
-                        <>
-                            <td>{asset.sn}</td>
-                            <td>{asset.aname}</td>
-                            <td>{asset.status}</td>
-                            <td>{asset.cat_name}</td>
-                            <td>{asset.loc_name}</td>
-                            <td>{asset.room_name}</td>
-                            <td>{asset.warranty_expiry}</td>
-                            <td>{asset.purchase_cost}</td>
-                        </>
-                    ) : (
-                        <>
-                            <td>{asset.serial_number || "N/A"}</td>
-                            <td>
-                            <div className="fw-bold">{asset.name}</div>
-                            </td>
-                            <td>{asset.category_name || "N/A"}</td>
-                            <td>{asset.location_name || "Unassigned"}</td>
-                            <td>
-                            <span
-                                className={`badge ${
-                                asset.status === "Available"
-                                    ? "badge-success"
-                                    : asset.status === "Assigned"
-                                    ? "badge-primary"
-                                    : "badge-warning"
-                                }`}
-                            >
-                                {asset.status}
-                            </span>
-                            {asset.status === "Assigned" && asset.assign && (
-                                <div className="text-muted small mt-1">To: {asset.assign}</div>
-                            )}
-                            </td>
-                            <td>{formatDate(asset.purchase_date)}</td>
-                            <td>{formatDate(asset.warranty_expiry)}</td>
-                            <td>
-                            <div className="flex gap-2">
-                                <button onClick={() => handleEdit(asset)} className="btn btn-secondary">
-                                Edit
-                                </button>
-                            </div>
-                            </td>
-                        </>
-                    )}
+                  {user?.role === "Super Admin" ? (
+                    <>
+                      <td>{asset.sn}</td>
+                      <td>{asset.aname}</td>
+                      <td>{asset.status}</td>
+                      <td>{asset.cat_name}</td>
+                      <td>{asset.loc_name}</td>
+                      <td>{asset.room_name}</td>
+                      <td>{asset.warranty_expiry}</td>
+                      <td>{asset.purchase_cost}</td>
+                    </>
+                  ) : (
+                    <>
+                      <td>{asset.serial_number || "N/A"}</td>
+                      <td>
+                        <div className="fw-bold">{asset.name}</div>
+                      </td>
+                      <td>{asset.category_name || "N/A"}</td>
+                      <td>{asset.location_name || "Unassigned"}</td>
+                      <td>
+                        <span
+                          className={`badge ${asset.status === "Available"
+                            ? "badge-success"
+                            : asset.status === "Assigned"
+                              ? "badge-primary"
+                              : "badge-warning"
+                            }`}
+                        >
+                          {asset.status}
+                        </span>
+                        {asset.status === "Assigned" && asset.assign && (
+                          <div className="text-muted small mt-1">To: {asset.assign}</div>
+                        )}
+                      </td>
+                      <td>{formatDate(asset.purchase_date)}</td>
+                      <td>{formatDate(asset.warranty_expiry)}</td>
+                      <td>
+                        <div className="flex gap-2">
+                          <button onClick={() => handleEdit(asset)} className="btn btn-secondary">
+                            Edit
+                          </button>
+                        </div>
+                      </td>
+                    </>
+                  )}
                 </tr>
-                ))}
+              ))}
             </tbody>
-            </table>
+          </table>
         </div>
       )}
 
@@ -274,38 +276,38 @@ const Assets = () => {
               <button className="close-modal" onClick={() => { setShowModal(false); resetForm(); }}>×</button>
             </div>
             <div className="modal-body">
-                <form onSubmit={handleSubmit} style={{display: 'flex', flexDirection: 'column', gap: '1rem'}}>
-                
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+
                 {/* Step 1: Asset Type */}
                 <div className="form-group">
-                    <label className="form-label">Asset Type</label>
-                    <select className="form-select" name="asset_type" value={formData.asset_type} onChange={handleChange} required>
+                  <label className="form-label">Asset Type</label>
+                  <select className="form-select" name="asset_type" value={formData.asset_type} onChange={handleChange} required>
                     <option value="">Select Type</option>
                     <option value="Hardware">Hardware</option>
                     <option value="Software">Software</option>
-                    </select>
+                  </select>
                 </div>
 
                 {/* Step 2: Category */}
                 {formData.asset_type && (
                   <>
                     <div className="form-group">
-                        <label className="form-label">Category</label>
-                        <select className="form-select" name="category_id" value={formData.category_id} onChange={handleChange} required>
+                      <label className="form-label">Category</label>
+                      <select className="form-select" name="category_id" value={formData.category_id} onChange={handleChange} required>
                         <option value="">Select category</option>
                         {categories.filter(c => c.type === formData.asset_type).map((c) => (
-                            <option key={c.id} value={c.id}>{c.name}</option>
+                          <option key={c.id} value={c.id}>{c.name}</option>
                         ))}
-                        </select>
+                      </select>
                     </div>
                     <div className="form-group">
-                        <label className="form-label">Location</label>
-                        <select className="form-select" name="location_id" value={formData.location_id} onChange={handleChange} required>
+                      <label className="form-label">Location</label>
+                      <select className="form-select" name="location_id" value={formData.location_id} onChange={handleChange} required>
                         <option value="">Select location</option>
                         {locations.map((l) => (
-                            <option key={l.id} value={l.id}>{l.name}</option>
+                          <option key={l.id} value={l.id}>{l.name}</option>
                         ))}
-                        </select>
+                      </select>
                     </div>
                   </>
                 )}
@@ -313,60 +315,60 @@ const Assets = () => {
 
                 {/* Step 4: Company Name */}
                 {formData.asset_type && (
-                    <div className="form-group">
-                        <label className="form-label">Company Name</label>
-                        <input type="text" className="form-input" name="company_name" value={formData.company_name} onChange={handleChange} placeholder="e.g. Apple" />
-                    </div>
+                  <div className="form-group">
+                    <label className="form-label">Company Name</label>
+                    <input type="text" className="form-input" name="company_name" value={formData.company_name} onChange={handleChange} placeholder="e.g. Apple" />
+                  </div>
                 )}
 
                 {/* Step 5: Name, Purchase Date, Quantity */}
                 {formData.company_name && (
                   <>
                     <div className="form-group">
-                        <label className="form-label">Asset Name</label>
-                        <input type="text" className="form-input" name="name" value={formData.name} onChange={handleChange} placeholder="e.g. MacBook Pro" required />
+                      <label className="form-label">Asset Name</label>
+                      <input type="text" className="form-input" name="name" value={formData.name} onChange={handleChange} placeholder="e.g. MacBook Pro" required />
                     </div>
 
                     <div className="form-group">
-                        <label className="form-label">Purchase Date</label>
-                        <input type="date" className="form-input" name="purchase_date" value={formData.purchase_date} onChange={handleChange} />
+                      <label className="form-label">Purchase Date</label>
+                      <input type="date" className="form-input" name="purchase_date" value={formData.purchase_date} onChange={handleChange} />
                     </div>
 
                     <div className="form-group">
-                        <label className="form-label">Quantity</label>
-                        <input type="number" className="form-input" name="quantity" value={formData.quantity} onChange={handleChange} placeholder="e.g. 1 or 5" />
+                      <label className="form-label">Quantity</label>
+                      <input type="number" className="form-input" name="quantity" value={formData.quantity} onChange={handleChange} placeholder="e.g. 1 or 5" />
                     </div>
                   </>
                 )}
 
                 {/* Step 6: Cost, Warranty Expiry, Description */}
                 {formData.name && formData.purchase_date && (
-                   <>
+                  <>
                     <div className="form-group">
-                        <label className="form-label">Purchase Cost for single unit</label>
-                        <input type="number" className="form-input" name="purchase_cost" value={formData.purchase_cost} onChange={handleChange} placeholder="e.g. 1200" />
+                      <label className="form-label">Purchase Cost for single unit</label>
+                      <input type="number" className="form-input" name="purchase_cost" value={formData.purchase_cost} onChange={handleChange} placeholder="e.g. 1200" />
                     </div>
 
                     <div className="form-group">
-                        <label className="form-label">Warranty Expiry</label>
-                        <input type="date" className="form-input" name="warranty_expiry" value={formData.warranty_expiry} onChange={handleChange} />
+                      <label className="form-label">Warranty Expiry</label>
+                      <input type="date" className="form-input" name="warranty_expiry" value={formData.warranty_expiry} onChange={handleChange} />
                     </div>
 
                     <div className="form-group">
-                        <label className="form-label">Description</label>
-                        <textarea className="form-input" name="description" value={formData.description} onChange={handleChange} rows="3" />
+                      <label className="form-label">Description</label>
+                      <textarea className="form-input" name="description" value={formData.description} onChange={handleChange} rows="3" />
                     </div>
 
-                   </>
+                  </>
                 )}
-                </form>
+              </form>
             </div>
             <div className="modal-footer">
               <div className="flex gap-2 mt-2">
                 {formData.purchase_cost && (
-                  <button type="submit" onClick={handleSubmit} className="btn btn-primary" style={{flex: 1}}>{editingAsset ? "Update" : "Add"} Asset</button>
+                  <button type="submit" onClick={handleSubmit} className="btn btn-primary" style={{ flex: 1 }}>{editingAsset ? "Update" : "Add"} Asset</button>
                 )}
-                <button type="button" className="btn btn-secondary" style={{flex: 1}} onClick={() => { setShowModal(false); resetForm(); }}>Cancel</button>
+                <button type="button" className="btn btn-secondary" style={{ flex: 1 }} onClick={() => { setShowModal(false); resetForm(); }}>Cancel</button>
               </div>
             </div>
           </div>
