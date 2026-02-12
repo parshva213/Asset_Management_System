@@ -16,6 +16,33 @@ router.get("/Under-Maintenance", authenticateToken, async (req, res) => {
   }
 })
 
+router.get("/current-asset/:id", authenticateToken, async (req,res)=>{
+  try {
+    const {id} = req.params;
+    let query = `
+      select a.*,
+      from assets a
+      left join asset_assignments aa on aa.asset_id = a.id
+      left join users u on u.id = aa.assigned_to 
+      where a.status = 'assigned' and a.org_id = ? and aa.unassigned_by is null and u.id = ?
+    `;
+    const result = await pool.query(query, [req.user.org_id ,id]);
+    res.json(result[0]);
+  } catch (error) {
+    res.status(500).json({message: "Database error"})
+  }
+})
+
+router.get("/available-assets-to-assign/:id", authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [result] = await pool.query("SELECT * FROM assets WHERE status = 'Available' and org_id = ? and loc_id = ?", [req.user.org_id, id]);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({message: "Database error"})
+  }
+})
+
 // GET all assets
 router.get("/", authenticateToken, async (req, res) => {
   try {
@@ -35,7 +62,8 @@ router.get("/", authenticateToken, async (req, res) => {
               JOIN asset_assignments aa ON a.id = aa.asset_id AND aa.unassigned_at IS NULL AND aa.unassigned_by IS NULL
               JOIN users u ON aa.assigned_to = u.id
               WHERE a.location_id = ? AND a.org_id = ? AND u.role = ?
-              ORDER BY a.name ASC`;
+              ORDER BY a.name ASC
+            `;
         params = [location_id, req.user.org_id, role];
       } else {
         // Standard summary (Used by LocationAssets page)
