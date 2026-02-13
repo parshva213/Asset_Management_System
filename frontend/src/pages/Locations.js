@@ -115,12 +115,11 @@ const Locations = () => {
                       <button onClick={() => handleEditLocation(location)} className="btn btn-secondary">
                         Edit
                       </button>
-                      <div
+                       <div
                         className="dropdown-container"
-                        onMouseEnter={() => setOpenDropdownId(location.id)}
-                        onMouseLeave={() => setOpenDropdownId(null)}
                       >
                         <button
+                          onClick={() => setOpenDropdownId(openDropdownId === location.id ? null : location.id)} 
                           className="btn btn-secondary"
                         >
                           View ►

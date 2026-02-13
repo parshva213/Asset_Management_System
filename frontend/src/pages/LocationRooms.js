@@ -196,7 +196,7 @@ const LocationRooms = () => {
                                 onClick={() => setOpenDropdownId(openDropdownId === room.id ? null : room.id)} 
                                 className="btn btn-secondary"
                               >
-                                View ▼
+                                View ►
                               </button>
                               {openDropdownId === room.id && (
                                 <div className="dropdown-menu">
