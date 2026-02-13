@@ -160,7 +160,7 @@ const Profile = () => {
                     onChange={handleProfileChange}
                     disabled={isReadOnly}
                   >
-                    <option value="Active">Active</option>
+                    <option value="Active">On Work</option>
                     <option value="On Leave">On Leave</option>
                   </select>
                 </div>
