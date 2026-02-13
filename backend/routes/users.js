@@ -112,12 +112,12 @@ router.get("/", verifyToken, async (req, res) => {
   }
 })
 
-router.get("/maintenance", verifyToken, async (req, res) => {
+router.get("/:role", verifyToken, async (req, res) => {
   try {
     if (req.user.role === "Employee" || req.user.role === "Maintenance" || req.user.role === "Vendor") {
       return res.status(403).json({ message: "Access denied" })
     }
-
+    let { role } = req.params;
     let query = `
       SELECT u.id, u.name, u.email, u.role, u.department, u.phone, u.status, u.loc_id, u.room_id, l.name as location_name, r.name as room_name, u.created_at,
              GROUP_CONCAT(CONCAT(a.id, ':', a.name, ':', a.serial_number, ':', COALESCE(asum.quantity, 0), ':', COALESCE(asum.assigned_total, 0), ':', COALESCE(asum.available_total, 0)) SEPARATOR '|') AS assigned_assets_raw
@@ -131,15 +131,26 @@ router.get("/maintenance", verifyToken, async (req, res) => {
         FROM assets
         GROUP BY name, location_id
       ) asum ON a.name = asum.name AND a.location_id = asum.location_id
-      WHERE u.role = 'Maintenance' AND u.org_id = ?
     `;
-    let params = [req.user.org_id];
+    let params = [];
 
-    if (req.query.location_id) {
-      query += " AND u.loc_id = ?";
-      params.push(req.query.location_id);
+    if (role === "Vendor") {
+      query += `
+        LEFT JOIN vendor_org vo ON vo.vendor_id = u.id
+        LEFT JOIN organizations o ON o.v_opk = vo.org_key
+        WHERE o.id = ?
+      `;
+      params.push(req.user.org_id);
     } else {
-      query += " AND u.loc_id IS NULL";
+      query += " WHERE u.role = ? AND u.org_id = ?";
+      params.push(role, req.user.org_id);
+
+      if (req.query.location_id) {
+        query += " AND u.loc_id = ?";
+        params.push(req.query.location_id);
+      } else {
+        query += " AND u.loc_id IS NULL";
+      }
     }
 
     query += " GROUP BY u.id, u.name, u.email, u.role, u.department, u.phone, u.loc_id, l.name, u.created_at ORDER BY u.id ASC";

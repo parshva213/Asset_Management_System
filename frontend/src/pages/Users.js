@@ -22,13 +22,14 @@ const Users = () => {
   const [assignForm, setAssignForm] = useState({ asset_ids: [], location_id: "" })
   const [modalLoading, setModalLoading] = useState(false)
   const [locationError, setLocationError] = useState(false)
+  const [role, setRole] = useState("Maintenance")
 
   const fetchUsers = useCallback(async () => {
     setLoading(true)
     try {
       let url = `/users`
       if (user.role === "Super Admin") {
-        url += `/maintenance`
+        url += `/${role}`
       }
       const response = await api.get(url)
       setUsers(response.data)
@@ -37,14 +38,11 @@ const Users = () => {
     } finally {
       setLoading(false)
     }
-  }, [user.role])
+  }, [user.role, role])
 
   const fetchAvailableAssets = useCallback(async (locationId = null) => {
     try {
-      let url = "/assets?status=Available";
-      if (locationId) {
-        url += `&location_id=${locationId}`;
-      }
+      let url = `/assets/available-assets-to-assign/${locationId}}`;
       const response = await api.get(url)
       setAvailableAssets(response.data)
     } catch (error) {
@@ -205,6 +203,9 @@ const Users = () => {
     <div className="content">
       <div className="flex-between mb-4">
         <h2>Users</h2>
+        <button className="btn btn-primary" onClick={() => setRole(role === "Maintenance" ? "Vendor" : "Maintenance")}>
+          {role === "Maintenance" ? "View Vendors" : "View Maintenance"}
+        </button>
       </div>
       {users.length === 0 ? (
         <div className="empty-state">
@@ -222,17 +223,18 @@ const Users = () => {
               </div>
               <div className="card-body">
                 <p><strong>Email:</strong> {user.email}</p>
-                <p><strong>Department:</strong> {user.department || "N/A"}</p>
-                <p><strong>Assigned Assets:</strong> {user.assigned_assets?.length || 0}</p>
+                <p><strong>Phone:</strong> {user.phone}</p>
+                <p><strong>{role === "Maintence" ? "Department" : "Company"}:</strong> {user.department || "N/A"}</p>
+                {role === "Maintence" && <p><strong>Assigned Assets:</strong> {user.assigned_assets?.length || 0}</p>}
               </div>
-              <div className="card-footer">
-                 <button 
-                  className="btn btn-primary w-full" 
+              {role === "Maintence" && <div className="card-footer">
+                <button
+                  className="btn btn-primary w-full"
                   onClick={() => handleOpenModal(user)}
-                 >
-                   Set Users Assets and Location
-                 </button>
-              </div>
+                >
+                  Set Users Assets and Location
+                </button>
+              </div>}
             </div>
           ))}
         </div>
