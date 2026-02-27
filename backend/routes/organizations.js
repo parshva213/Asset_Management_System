@@ -11,8 +11,8 @@ router.get("/", verifyToken, async (req, res) => {
   try {
     const userRole = (req.user.role || "").trim().toLowerCase();
     if (userRole !== "software developer") {
-      return res.status(403).json({ 
-        message: `Access denied. Your role is: '${req.user.role}' (normalized: '${userRole}'). Required: 'software developer'` 
+      return res.status(403).json({
+        message: `Access denied. Your role is: '${req.user.role}' (normalized: '${userRole}'). Required: 'software developer'`
       });
     }
 
@@ -33,7 +33,7 @@ router.get("/:id", verifyToken, async (req, res) => {
 
     const { id } = req.params;
     const [rows] = await pool.query("SELECT * FROM organizations");
-    
+
     if (rows.length === 0) {
       return res.status(404).json({ message: "Organization not found" });
     }
@@ -52,7 +52,7 @@ router.post("/", verifyToken, async (req, res) => {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    let { name, description, member} = req.body;
+    let { name, description, member } = req.body;
 
     if (!name || name.trim().length < 2) {
       return res.status(400).json({ message: "Organization name must be at least 2 characters" });
@@ -86,7 +86,7 @@ router.put("/:id", verifyToken, async (req, res) => {
     }
 
     const { id } = req.params;
-    const { name, description, member,} = req.body;
+    const { name, description, member, } = req.body;
 
     if (!name || name.trim().length < 2) {
       return res.status(400).json({ message: "Organization name must be at least 2 characters" });
@@ -120,14 +120,14 @@ router.put("/:id/:name", verifyToken, async (req, res) => {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    const { id,name } = req.params;
+    const { id, name } = req.params;
 
     const [rows] = await pool.query("SELECT name FROM organizations WHERE id = ?", [id]);
     if (rows.length === 0) {
       return res.status(404).json({ message: "Organization not found" });
     }
 
-    await pool.query("update organizations SET status = ? WHERE id = ?", [name,id]);
+    await pool.query("update organizations SET status = ? WHERE id = ?", [name, id]);
 
     res.json({ message: `Organization ${name} successfully` });
   } catch (error) {

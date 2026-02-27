@@ -42,15 +42,21 @@ router.post("/", verifyToken, async (req, res) => {
 
     const { vendor_id, asset_name, quantity, quote } = req.body;
 
-    if (!vendor_id || !asset_name || !quantity) {
+    if (!asset_name || !quantity) {
         return res.status(400).json({ message: "Missing required fields" });
     }
+
+    if (quantity <= 0) {
+        return res.status(400).json({ message: "Quantity must be greater than zero" });
+    }
+
 
     try {
         const [result] = await pool.query(
             "INSERT INTO purchase_orders (supervisor_id, vendor_id, asset_name, quantity, quote) VALUES (?, ?, ?, ?, ?)",
-            [req.user.id, vendor_id, asset_name, quantity, quote || null]
+            [req.user.id, vendor_id || null, asset_name, quantity, quote || null]
         );
+
         res.status(201).json({ message: "Purchase order created", id: result.insertId });
     } catch (err) {
         console.error(err);

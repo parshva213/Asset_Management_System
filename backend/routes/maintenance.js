@@ -67,14 +67,19 @@ router.get("/tasks", verifyToken, async (req, res) => {
 
 // POST create maintenance record (Supervisor/Admin)
 router.post("/", verifyToken, async (req, res) => {
-    if (!["Super Admin", "Supervisor"].includes(req.user.role)) {
+    if (!["Super Admin", "Supervisor", "Maintenance"].includes(req.user.role)) {
         return res.status(403).json({ message: "Access denied" });
     }
 
-    const { asset_id, maintenance_by, maintenance_type, description, priority } = req.body;
+    let { asset_id, maintenance_by, maintenance_type, description, priority } = req.body;
 
     if (!asset_id || !maintenance_by || !maintenance_type) {
         return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    // Handle "self" or maintenance staff recording their own work
+    if (maintenance_by === "self" || req.user.role === "Maintenance") {
+        maintenance_by = req.user.id;
     }
 
     try {
@@ -93,6 +98,7 @@ router.post("/", verifyToken, async (req, res) => {
 
         // Update asset status
         await pool.query("UPDATE assets SET status = 'Under Maintenance' WHERE id = ?", [asset_id]);
+
 
         res.status(201).json({ message: "Maintenance record created", id: result.insertId });
     } catch (err) {
