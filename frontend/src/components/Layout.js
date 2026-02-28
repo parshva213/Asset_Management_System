@@ -64,7 +64,7 @@ const MENU_ITEMS = {
   ],
   "Supervisor": [
     { name: "Dashboard", path: ["/dashboard/supervisor"], icon: "dashboard" },
-    { name: "My Team", path: ["/users"], icon: "users" },
+    { name: "My Team", path: ["/team-user"], icon: "users" },
     { name: "Assets", path: ["/assets"], icon: "assets" },
     { name: "Orders", path: ["/purchase-orders"], icon: "orders" },
     { name: "Requests", path: ["/requests"], icon: "requests" },

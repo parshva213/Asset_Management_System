@@ -5,8 +5,8 @@ import { useAuth } from "../contexts/AuthContext"
 import api from "../api"
 
 const TeamUser = () => {
-  useAuth()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [searchParams] = useSearchParams()
   const [users, setUsers] = useState([])
   const [locationName, setLocationName] = useState("")
@@ -29,8 +29,8 @@ const TeamUser = () => {
   // Track previous location to detect actual changes
   const prevLocationIdRef = useRef(null)
 
-  const locid = searchParams.get("locid")
-  const roomid = searchParams.get("roomid")
+  const locid = searchParams.get("locid") ?? user.loc_id
+  const roomid = searchParams.get("roomid") ?? user.room_id
   const role = searchParams.get("role")
 
   console.log("TeamUser Params - locid:", locid, "roomid:", roomid, "role:", role)

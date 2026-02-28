@@ -202,7 +202,7 @@ const Users = () => {
       {}
     <div className="content">
       <div className="flex-between mb-4">
-        <h2>Users</h2>
+        <h2>Users {role === "Vendor" ? "Key":""}</h2>
         <button className="btn btn-primary" onClick={() => setRole(role === "Maintenance" ? "Vendor" : "Maintenance")}>
           {role === "Maintenance" ? "View Vendors" : "View Maintenance"}
         </button>

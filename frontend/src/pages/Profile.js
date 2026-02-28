@@ -165,7 +165,10 @@ const Profile = () => {
                   </select>
                 </div>
               )}
-              {!isReadOnly && (
+            </form>
+          </div>
+          <div className="card-footer">
+            {!isReadOnly && (
                 <button
                   type="submit"
                   className="btn btn-primary w-full mt-2"
@@ -174,9 +177,6 @@ const Profile = () => {
                   {profileLoading ? "Updating..." : "Update Profile"}
                 </button>
               )}
-            </form>
-          </div>
-          <div className="card-footer">
           </div>
         </div>
 
