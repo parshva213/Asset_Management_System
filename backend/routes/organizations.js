@@ -10,16 +10,71 @@ const router = express.Router();
 router.get("/", verifyToken, async (req, res) => {
   try {
     const userRole = (req.user.role || "").trim().toLowerCase();
-    if (userRole !== "software developer") {
-      return res.status(403).json({
-        message: `Access denied. Your role is: '${req.user.role}' (normalized: '${userRole}'). Required: 'software developer'`
-      });
+    if (userRole === "software developer") {
+      const [rows] = await pool.query("SELECT * FROM organizations where status <> 'Deleted' ORDER BY id ASC");
+      return res.json(rows);
     }
 
-    const [rows] = await pool.query("SELECT * FROM organizations where status <> 'Deleted' ORDER BY id ASC");
-    res.json(rows);
+    if (userRole === "vendor") {
+      const [rows] = await pool.query(
+        `SELECT o.id, o.name, o.description, o.status, o.created_at,
+                CASE WHEN vo.id IS NULL THEN 0 ELSE 1 END AS is_registered
+         FROM organizations o
+         LEFT JOIN vendor_org vo ON vo.org_key = o.v_opk AND vo.vendor_id = ?
+         WHERE o.status <> 'Deleted'
+         ORDER BY o.id ASC`,
+        [req.user.id]
+      );
+      return res.json(rows);
+    }
+
+    return res.status(403).json({ message: "Access denied" });
   } catch (error) {
     console.error("Error fetching organizations:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Vendor one-click registration for organization requirements
+router.post("/:id/register", verifyToken, async (req, res) => {
+  try {
+    if ((req.user.role || "").trim().toLowerCase() !== "vendor") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const { id } = req.params;
+
+    const [orgRows] = await pool.query(
+      "SELECT id, name, v_opk, status FROM organizations WHERE id = ?",
+      [id]
+    );
+
+    if (orgRows.length === 0) {
+      return res.status(404).json({ message: "Organization not found" });
+    }
+
+    const org = orgRows[0];
+    if (org.status !== "Active") {
+      return res.status(400).json({ message: "Organization is not active" });
+    }
+
+    const [existing] = await pool.query(
+      "SELECT id FROM vendor_org WHERE vendor_id = ? AND org_key = ?",
+      [req.user.id, org.v_opk]
+    );
+
+    if (existing.length > 0) {
+      return res.json({ message: `Already registered with ${org.name}` });
+    }
+
+    await pool.query(
+      "INSERT INTO vendor_org (vendor_id, org_key) VALUES (?, ?)",
+      [req.user.id, org.v_opk]
+    );
+
+    return res.status(201).json({ message: `Registered with ${org.name}` });
+  } catch (error) {
+    console.error("Error registering vendor organization:", error);
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -32,7 +87,7 @@ router.get("/:id", verifyToken, async (req, res) => {
     }
 
     const { id } = req.params;
-    const [rows] = await pool.query("SELECT * FROM organizations");
+    const [rows] = await pool.query("SELECT * FROM organizations WHERE id = ?", [id]);
 
     if (rows.length === 0) {
       return res.status(404).json({ message: "Organization not found" });

@@ -80,7 +80,6 @@ const MENU_ITEMS = {
     { name: "Dashboard", path: ["/dashboard/vendor"], icon: "dashboard" },
     { name: "Organizations", path: ["/organizations"], icon: "organizations" },
     { name: "Supply", path: ["/supply-assets"], icon: "assets" },
-    { name: "Warranty", path: ["/warranty-docs"], icon: "file" },
     { name: "Products", path: ["/vendor-assets"], icon: "assets" },
     { name: "Requests", path: ["/vendor-requests"], icon: "requests" },
     { name: "Profile", path: ["/profile"], icon: "profile" },

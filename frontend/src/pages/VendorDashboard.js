@@ -91,7 +91,7 @@ const VendorDashboard = () => {
                         </h3>
                     </div>
                    <div className="stat-footer">
-                         <Link to="/vendor-requests">
+                         <Link to="/supply-assets">
                             Manage Orders →
                         </Link>
                     </div>
@@ -107,8 +107,8 @@ const VendorDashboard = () => {
                         </h3>
                     </div>
                      <div className="stat-footer">
-                         <Link to="/vendor-history">
-                            View History →
+                         <Link to="/vendor-assets">
+                            View Products →
                         </Link>
                     </div>
                 </div>

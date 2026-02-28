@@ -39,7 +39,6 @@ import EmployeeDashboard from "./pages/EmployeeDashboard"
 
 // ---------- VENDOR PAGES ----------
 import SupplyAssets from "./pages/SupplyAssets"
-import WarrantyDocs from "./pages/WarrantyDocs"
 import VendorDashboard from "./pages/VendorDashboard"
 import VendorAssets from "./pages/VendorAssets"
 import VendorRequests from "./pages/VendorRequests"
@@ -117,7 +116,6 @@ function App() {
               {/* Vendor */}
               <Route path="dashboard/vendor" element={<ProtectedRoute roles={['Vendor']}><VendorDashboard /></ProtectedRoute>} />
               <Route path="supply-assets" element={<ProtectedRoute roles={['Vendor']}><SupplyAssets /></ProtectedRoute>} />
-              <Route path="warranty-docs" element={<ProtectedRoute roles={['Vendor']}><WarrantyDocs /></ProtectedRoute>} />
               <Route path="vendor-assets" element={<ProtectedRoute roles={['Vendor']}><VendorAssets /></ProtectedRoute>} />
               <Route path="vendor-requests" element={<ProtectedRoute roles={['Vendor']}><VendorRequests /></ProtectedRoute>} />
 
