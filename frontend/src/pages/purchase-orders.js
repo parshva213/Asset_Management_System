@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { useAuth } from "../contexts/AuthContext"
 import api from "../api"
+import { formatDate } from "../utils/dateUtils"
 
 export default function PurchaseOrders() {
   const { user } = useAuth()
@@ -67,9 +68,8 @@ export default function PurchaseOrders() {
   // Update status (for Vendor or Admin)
   const updateStatus = async (id, status) => {
     try {
-      const res = await api.put(`/purchase-orders/${id}`, { status, userId: user.id })
-      const updatedOrders = orders.map((o) => (o.id === id ? res.data : o))
-      setOrders(updatedOrders)
+      await api.put(`/purchase-orders/${id}/status`, { status })
+      await fetchOrders()
     } catch (err) {
       console.error("Error updating status:", err)
     }
@@ -102,6 +102,12 @@ export default function PurchaseOrders() {
       default:
         return "#6c757d" // Grey
     }
+  }
+
+  const formatWarrantyPeriod = (days) => {
+    const value = Number(days)
+    if (!Number.isFinite(value) || value < 0) return "-"
+    return `${value} days`
   }
 
   if (loading) {
@@ -212,6 +218,9 @@ export default function PurchaseOrders() {
                 <th>Supervisor</th>
                 <th>Vendor</th>
                 <th>Quote</th>
+                <th>Supply Date</th>
+                <th>Warranty Expiry</th>
+                <th>Warranty Period</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -234,6 +243,9 @@ export default function PurchaseOrders() {
                       :
                       "-"
                   }</td>
+                  <td>{order.supply_date ? formatDate(order.supply_date) : "-"}</td>
+                  <td>{order.warranty_expiry ? formatDate(order.warranty_expiry) : "-"}</td>
+                  <td>{formatWarrantyPeriod(order.warranty_period_days)}</td>
                   <td>
                     <span
                       style={{

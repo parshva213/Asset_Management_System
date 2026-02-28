@@ -2,11 +2,14 @@
 
 import React, { useState, useEffect } from "react"
 import { useToast } from "../contexts/ToastContext"
+import { useAuth } from "../contexts/AuthContext"
 import api from "../api"
 import Button from "../components/Button"
 import { formatDate } from "../utils/dateUtils"
+
 const Organizations = () => {
-    const { showSuccess, showError } = useToast()
+    const { user } = useAuth()
+    const { showSuccess, showError, showInfo } = useToast()
     const [organizations, setOrganizations] = useState([])
     const [loading, setLoading] = useState(true)
     const [showModal, setShowModal] = useState(false)
@@ -18,6 +21,9 @@ const Organizations = () => {
     })
     const [submitting, setSubmitting] = useState(false)
     const [error, setError] = useState(null)
+    const [registeringOrgId, setRegisteringOrgId] = useState(null)
+
+    const isVendor = (user?.role || "").toLowerCase() === "vendor"
 
     useEffect(() => {
         fetchOrganizations()
@@ -27,12 +33,36 @@ const Organizations = () => {
     const fetchOrganizations = async () => {
         try {
             const response = await api.get("/organizations")
-            setOrganizations(response.data)
+            setOrganizations(Array.isArray(response.data) ? response.data : [])
         } catch (err) {
             console.error("Error fetching organizations:", err)
             showError("Failed to load organizations")
         } finally {
             setLoading(false)
+        }
+    }
+
+    const handleVendorRegister = async (organization) => {
+        const alreadyRegistered = Number(organization.is_registered) === 1
+        if (alreadyRegistered) {
+            showInfo(`Already registered with ${organization.name}`)
+            return
+        }
+        if (organization.status !== "Active") {
+            showError("Only active organizations can be registered")
+            return
+        }
+
+        setRegisteringOrgId(organization.id)
+        try {
+            await api.post(`/organizations/${organization.id}/register`)
+            showSuccess(`Registered with ${organization.name}`)
+            await fetchOrganizations()
+        } catch (err) {
+            console.error("Error registering organization:", err)
+            showError(err?.message || "Failed to register")
+        } finally {
+            setRegisteringOrgId(null)
         }
     }
 
@@ -50,7 +80,6 @@ const Organizations = () => {
             if (editingOrganization) {
                 await api.put(`/organizations/${editingOrganization.id}`, formData)
                 showSuccess("Organization updated successfully")
-                // Update the organization in the local state immediately
                 setOrganizations(prev => prev.map(org =>
                     org.id === editingOrganization.id
                         ? { ...org, ...formData }
@@ -59,7 +88,6 @@ const Organizations = () => {
             } else {
                 const response = await api.post("/organizations", formData)
                 showSuccess("Organization added successfully")
-                // Add the new organization to the local state immediately
                 setOrganizations(prev => [...prev, {
                     id: response.data.id,
                     ...formData,
@@ -90,7 +118,6 @@ const Organizations = () => {
     const handleDelete = async (id, name) => {
         try {
             await api.put(`/organizations/${id}/${name}`)
-            // Remove the organization from local state immediately
             setOrganizations(prev => prev.filter(org => org.id !== id))
             showSuccess(`organization ${name} successfully`)
             fetchOrganizations()
@@ -110,170 +137,229 @@ const Organizations = () => {
 
     if (loading) return <div className="loading">Loading organizations...</div>
 
-    return (
-    <div className="page-container">
-        <div className="flex-between mb-4">
-            <h2>Organizations Management</h2>
-            <Button onClick={() => {
-                setEditingOrganization(null)
-                setFormData({
-                    name: "",
-                    description: "",
-                    member: "1",
-                })
-                setShowModal(true)
-            }}>
-                Add Organization
-            </Button>
-        </div>
+    if (isVendor) {
+        return (
+            <div className="page-container">
+                <div className="flex-between mb-4">
+                    <h2>Organizations</h2>
+                </div>
 
-        {organizations.length === 0 || organizations.filter(org => org.id !== 1).length === 0 ? (
-            <div className="empty-state">
-                <p>No organizations found</p>
-            </div>
-        ) : (
-            <div className="table-container">
-                <table className="table">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Description</th>
-                            <th>Org PK</th>
-                            <th>Member</th>
-                            <th>V OPK</th>
-                            <th>Created At</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {organizations.filter(org => org.id !== 1).map((organization) => (
-                            <tr key={organization.id} id={`org-${organization.id}`}>
-                                <td>{organization.name}</td>
-                                <td>{organization.description || "N/A"}</td>
-                                <td>{organization.orgpk}</td>
-                                <td>{organization.member}</td>
-                                <td>{organization.v_opk}</td>
-                                <td>{organization.created_at ? formatDate(organization.created_at) : "-"}</td>
-                                <td>
-                                    <div className="flex gap-2">
-                                        <Button variant="secondary" onClick={() => handleEdit(organization)}>
-                                            Edit
-                                        </Button>
-                                        {organization.status !== "Active" && (
-                                            <Button variant="success" onClick={() => handleDelete(organization.id,"Active")}>
-                                                Active
-                                            </Button>
-                                        )}
-                                        {organization.status !== "Suspended" && (
-                                            <Button variant="warning" onClick={() => handleDelete(organization.id,"Suspended")}>
-                                                Suspended
-                                            </Button>
-                                        )}
-                                        {organization.status !== "Closed" && (
-                                            <Button variant="danger" onClick={() => handleDelete(organization.id,"Closed")}>
-                                                Closed
-                                            </Button>
-                                        )}
-                                        {organization.status !== "Deleted" && (
-                                            <Button variant="danger" onClick={() => handleDelete(organization.id,"Deleted")}>
-                                                Delete
-                                            </Button>
-                                        )}
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-        )}
+                <p className="text-secondary mb-4">
+                    Register with an organization to see its supply requirements.
+                </p>
 
-        {showModal && (
-            <div className="modal-overlay" role="dialog" aria-modal="true">
-                <div className="modal-content">
-                    <div className="modal-header">
-                        <h2 className="modal-title">{editingOrganization ? "Edit Organization" : "Add New Organization"}</h2>
-                        <button
-                            className="close-modal"
-                            aria-label="Close"
-                            onClick={() => {
-                                setShowModal(false)
-                                setEditingOrganization(null)
-                                resetForm()
-                                setError(null)
-                            }}
-                        >
-                            ×
-                        </button>
+                {organizations.length === 0 ? (
+                    <div className="empty-state">
+                        <p>No organizations found</p>
                     </div>
+                ) : (
+                    <div className="table-container">
+                        <table className="table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Description</th>
+                                    <th>Status</th>
+                                    <th>Registration</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {organizations.map((organization) => {
+                                    const registered = Number(organization.is_registered) === 1
+                                    return (
+                                        <tr key={organization.id} id={`org-${organization.id}`}>
+                                            <td>{organization.name}</td>
+                                            <td>{organization.description || "N/A"}</td>
+                                            <td>{organization.status || "N/A"}</td>
+                                            <td>{registered ? "Registered" : "Not Registered"}</td>
+                                            <td>
+                                                <Button
+                                                    onClick={() => handleVendorRegister(organization)}
+                                                    disabled={registered || registeringOrgId === organization.id || organization.status !== "Active"}
+                                                >
+                                                    {registered
+                                                        ? "Registered"
+                                                        : registeringOrgId === organization.id
+                                                            ? "Registering..."
+                                                            : "Register"}
+                                                </Button>
+                                            </td>
+                                        </tr>
+                                    )
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
+        )
+    }
 
-                    <div className="modal-body">
-                        <form onSubmit={handleSubmit}>
-                            <div className="form-group">
-                                <label className="form-label">Organization Name *</label>
-                                <input
-                                    type="text"
-                                    name="name"
-                                    className="form-input"
-                                    value={formData.name}
-                                    onChange={handleChange}
-                                    required
-                                    minLength={2}
-                                    maxLength={150}
-                                    placeholder="Enter organization name"
-                                />
-                            </div>
+    return (
+        <div className="page-container">
+            <div className="flex-between mb-4">
+                <h2>Organizations Management</h2>
+                <Button onClick={() => {
+                    setEditingOrganization(null)
+                    setFormData({
+                        name: "",
+                        description: "",
+                        member: "1",
+                    })
+                    setShowModal(true)
+                }}>
+                    Add Organization
+                </Button>
+            </div>
 
-                            <div className="form-group">
-                                <label className="form-label">Description</label>
-                                <input
-                                    type="text"
-                                    name="description"
-                                    className="form-input"
-                                    value={formData.description}
-                                    onChange={handleChange}
-                                    placeholder="Enter organization description"
-                                    maxLength={255}
-                                />
-                            </div>
+            {organizations.length === 0 || organizations.filter(org => org.id !== 1).length === 0 ? (
+                <div className="empty-state">
+                    <p>No organizations found</p>
+                </div>
+            ) : (
+                <div className="table-container">
+                    <table className="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Org PK</th>
+                                <th>Member</th>
+                                <th>V OPK</th>
+                                <th>Created At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {organizations.filter(org => org.id !== 1).map((organization) => (
+                                <tr key={organization.id} id={`org-${organization.id}`}>
+                                    <td>{organization.name}</td>
+                                    <td>{organization.description || "N/A"}</td>
+                                    <td>{organization.orgpk}</td>
+                                    <td>{organization.member}</td>
+                                    <td>{organization.v_opk}</td>
+                                    <td>{organization.created_at ? formatDate(organization.created_at) : "-"}</td>
+                                    <td>
+                                        <div className="flex gap-2">
+                                            <Button variant="secondary" onClick={() => handleEdit(organization)}>
+                                                Edit
+                                            </Button>
+                                            {organization.status !== "Active" && (
+                                                <Button variant="success" onClick={() => handleDelete(organization.id, "Active")}>
+                                                    Active
+                                                </Button>
+                                            )}
+                                            {organization.status !== "Suspended" && (
+                                                <Button variant="warning" onClick={() => handleDelete(organization.id, "Suspended")}>
+                                                    Suspended
+                                                </Button>
+                                            )}
+                                            {organization.status !== "Closed" && (
+                                                <Button variant="danger" onClick={() => handleDelete(organization.id, "Closed")}>
+                                                    Closed
+                                                </Button>
+                                            )}
+                                            {organization.status !== "Deleted" && (
+                                                <Button variant="danger" onClick={() => handleDelete(organization.id, "Deleted")}>
+                                                    Delete
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
 
-                            <div className="form-group">
-                                <label className="form-label">Member</label>
-                                <input
-                                    type="number"
-                                    name="member"
-                                    className="form-input"
-                                    value={formData.member}
-                                    onChange={handleChange}
-                                    placeholder="Enter Org Member"
-                                />
-                            </div>
+            {showModal && (
+                <div className="modal-overlay" role="dialog" aria-modal="true">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h2 className="modal-title">{editingOrganization ? "Edit Organization" : "Add New Organization"}</h2>
+                            <button
+                                className="close-modal"
+                                aria-label="Close"
+                                onClick={() => {
+                                    setShowModal(false)
+                                    setEditingOrganization(null)
+                                    resetForm()
+                                    setError(null)
+                                }}
+                            >
+                                ×
+                            </button>
+                        </div>
 
-                            {error && <div className="alert alert-error mb-4">{error}</div>}
+                        <div className="modal-body">
+                            <form onSubmit={handleSubmit}>
+                                <div className="form-group">
+                                    <label className="form-label">Organization Name *</label>
+                                    <input
+                                        type="text"
+                                        name="name"
+                                        className="form-input"
+                                        value={formData.name}
+                                        onChange={handleChange}
+                                        required
+                                        minLength={2}
+                                        maxLength={150}
+                                        placeholder="Enter organization name"
+                                    />
+                                </div>
 
-                            <div className="flex gap-2 mt-6">
-                                <Button type="submit" disabled={submitting}>
-                                    {submitting ? (editingOrganization ? "Updating..." : "Adding...") : editingOrganization ? "Update Organization" : "Add Organization"}
-                                </Button>
-                                <Button
-                                    type="button"
-                                    variant="secondary"
-                                    onClick={() => {
-                                        setShowModal(false)
-                                        setEditingOrganization(null)
-                                        resetForm()
-                                        setError(null)
-                                    }}
-                                >
-                                    Cancel
-                                </Button>
-                            </div>
-                        </form>
+                                <div className="form-group">
+                                    <label className="form-label">Description</label>
+                                    <input
+                                        type="text"
+                                        name="description"
+                                        className="form-input"
+                                        value={formData.description}
+                                        onChange={handleChange}
+                                        placeholder="Enter organization description"
+                                        maxLength={255}
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Member</label>
+                                    <input
+                                        type="number"
+                                        name="member"
+                                        className="form-input"
+                                        value={formData.member}
+                                        onChange={handleChange}
+                                        placeholder="Enter Org Member"
+                                    />
+                                </div>
+
+                                {error && <div className="alert alert-error mb-4">{error}</div>}
+
+                                <div className="flex gap-2 mt-6">
+                                    <Button type="submit" disabled={submitting}>
+                                        {submitting ? (editingOrganization ? "Updating..." : "Adding...") : editingOrganization ? "Update Organization" : "Add Organization"}
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="secondary"
+                                        onClick={() => {
+                                            setShowModal(false)
+                                            setEditingOrganization(null)
+                                            resetForm()
+                                            setError(null)
+                                        }}
+                                    >
+                                        Cancel
+                                    </Button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
-            </div>
-        )}
-    </div>
+            )}
+        </div>
     )
 }
 
