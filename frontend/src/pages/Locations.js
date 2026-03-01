@@ -76,14 +76,19 @@ const Locations = () => {
 
   return (
     <div>
-      <div className="flex-between mb-4">
-        <h2>Locations Management</h2>
-        <button
-          className="btn btn-primary"
-          onClick={() => setShowLocationModal(true)}
-        >
-          Add New Location
-        </button>
+      <h2 className="page-title">Locations Management</h2>
+      <div className="action-bar mb-4">
+        <div className="action-bar-left">
+          {/* No back button for top level locations */}
+        </div>
+        <div className="action-bar-right">
+          <button
+            className="btn btn-primary"
+            onClick={() => setShowLocationModal(true)}
+          >
+            Add New Location
+          </button>
+        </div>
       </div>
 
       {locations.length === 0 ? (
@@ -194,6 +199,7 @@ const Locations = () => {
                     required
                   />
                 </div>
+                {locationFormData.name && ( <>
                 <div className="form-group">
                   <label className="form-label">Address</label>
                   <textarea
@@ -213,11 +219,15 @@ const Locations = () => {
                     onChange={handleLocationChange}
                     rows="1"
                   />
-                </div>
-                <div className="flex gap-2 modal-footer">
-                  <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
+                </div></>)}
+
+              </form>
+            </div>
+            <div className="modal-footer">
+              <div className="flex gap-2">
+                {locationFormData.name && <button type="submit" onClick={handleLocationSubmit} className="btn btn-primary" style={{ flex: 1 }}>
                     {editingLocation ? "Update Location" : "Add Location"}
-                  </button>
+                  </button>}
                   <button
                     type="button"
                     className="btn btn-secondary"
@@ -231,7 +241,6 @@ const Locations = () => {
                     Cancel
                   </button>
                 </div>
-              </form>
             </div>
           </div>
         </div>

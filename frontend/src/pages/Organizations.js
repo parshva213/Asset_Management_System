@@ -102,6 +102,7 @@ const Organizations = () => {
             showError(err?.response?.data?.message || "Error saving organization")
         } finally {
             setSubmitting(false)
+            window.location.reload()
         }
     }
 
@@ -140,8 +141,14 @@ const Organizations = () => {
     if (isVendor) {
         return (
             <div className="page-container">
-                <div className="flex-between mb-4">
-                    <h2>Organizations</h2>
+                <h2 className="page-title">Organizations</h2>
+                <div className="action-bar mb-4">
+                    <div className="action-bar-left">
+                        {/* Back button if needed */}
+                    </div>
+                    <div className="action-bar-right">
+                        {/* Action buttons could go here */}
+                    </div>
                 </div>
 
                 <p className="text-secondary mb-4">
@@ -165,7 +172,7 @@ const Organizations = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {organizations.map((organization) => {
+                                {organizations.filter(org => org.id !== 1).map((organization) => {
                                     const registered = Number(organization.is_registered) === 1
                                     return (
                                         <tr key={organization.id} id={`org-${organization.id}`}>
@@ -198,19 +205,24 @@ const Organizations = () => {
 
     return (
         <div className="page-container">
-            <div className="flex-between mb-4">
-                <h2>Organizations Management</h2>
-                <Button onClick={() => {
-                    setEditingOrganization(null)
-                    setFormData({
-                        name: "",
-                        description: "",
-                        member: "1",
-                    })
-                    setShowModal(true)
-                }}>
-                    Add Organization
-                </Button>
+            <h2 className="page-title">Organizations Management</h2>
+            <div className="action-bar mb-4">
+                <div className="action-bar-left">
+                    {/* Back button if needed */}
+                </div>
+                <div className="action-bar-right">
+                    <Button onClick={() => {
+                        setEditingOrganization(null)
+                        setFormData({
+                            name: "",
+                            description: "",
+                            member: "1",
+                        })
+                        setShowModal(true)
+                    }}>
+                        Add Organization
+                    </Button>
+                </div>
             </div>
 
             {organizations.length === 0 || organizations.filter(org => org.id !== 1).length === 0 ? (
@@ -223,11 +235,11 @@ const Organizations = () => {
                         <thead>
                             <tr>
                                 <th>Name</th>
-                                <th>Description</th>
-                                <th>Org PK</th>
+                                <th>Address (Head office)</th>
+                                <th>Org_PK</th>
                                 <th>Member</th>
-                                <th>V OPK</th>
-                                <th>Created At</th>
+                                <th>V_OPK</th>
+                                <th>Created_At</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -309,9 +321,11 @@ const Organizations = () => {
                                         placeholder="Enter organization name"
                                     />
                                 </div>
-
+                                
+                                {formData.name && 
+                                    <>
                                 <div className="form-group">
-                                    <label className="form-label">Description</label>
+                                    <label className="form-label">Address *</label>
                                     <input
                                         type="text"
                                         name="description"
@@ -334,11 +348,16 @@ const Organizations = () => {
                                         placeholder="Enter Org Member"
                                     />
                                 </div>
+                                    </>
+                                }
 
                                 {error && <div className="alert alert-error mb-4">{error}</div>}
 
+                            </form>
+                        </div>
+                        <div className="modal-footer">
                                 <div className="flex gap-2 mt-6">
-                                    <Button type="submit" disabled={submitting}>
+                                    <Button type="submit" disabled={submitting} onClick={handleSubmit}>
                                         {submitting ? (editingOrganization ? "Updating..." : "Adding...") : editingOrganization ? "Update Organization" : "Add Organization"}
                                     </Button>
                                     <Button
@@ -354,7 +373,6 @@ const Organizations = () => {
                                         Cancel
                                     </Button>
                                 </div>
-                            </form>
                         </div>
                     </div>
                 </div>

@@ -92,7 +92,6 @@ const MENU_ITEMS = {
     { name: "Profile", path: ["/profile"], icon: "profile" },
   ],
   "Software Developer": [
-    { name: "Dashboard", path: ["/dashboard/software-developer"], icon: "dashboard" },
     { name: "Org", path: ["/organizations"], icon: "organizations" },
     { name: "Profile", path: ["/profile"], icon: "profile" },
   ]

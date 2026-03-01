@@ -222,26 +222,31 @@ Description: ${formData.description}`;
 
   return (
     <div>
-      <div className="flex-between mb-4">
-        <h2>
-          {user?.role === "Employee"
-            ? "My Requests"
-            : user?.role === "Supervisor"
-              ? "Request Management"
-              : "All Requests"}
-        </h2>
-        {user?.role === "Employee" && (
-          <button
-            className="btn btn-primary"
-            onClick={() => {
-              setEditingRequest(null)
-              resetForm()
-              setShowModal(true)
-            }}
-          >
-            + New Request
-          </button>
-        )}
+      <h2 className="page-title">
+        {user?.role === "Employee"
+          ? "My Requests"
+          : user?.role === "Supervisor"
+            ? "Request Management"
+            : "All Requests"}
+      </h2>
+      <div className="action-bar mb-4">
+        <div className="action-bar-left">
+          {/* Back button if needed */}
+        </div>
+        <div className="action-bar-right">
+          {user?.role === "Employee" && (
+            <button
+              className="btn btn-primary"
+              onClick={() => {
+                setEditingRequest(null)
+                resetForm()
+                setShowModal(true)
+              }}
+            >
+              + New Request
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="filters">

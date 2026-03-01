@@ -105,8 +105,14 @@ const Employees = () => {
 
   return (
     <div>
-      <div className="flex-between mb-4">
-        <h2>User Management</h2>
+      <h2 className="page-title">User Management</h2>
+      <div className="action-bar mb-4">
+        <div className="action-bar-left">
+          {/* No standard back button here as it's a top level page or handled by sidebar */}
+        </div>
+        <div className="action-bar-right">
+          {/* Action buttons could go here */}
+        </div>
       </div>
 
       {employees.length === 0 ? (

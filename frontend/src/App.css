@@ -902,7 +902,6 @@ a.quick-action-btn:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     z-index: 1000;
     min-width: 150px;
-    margin-left: 4px;
     overflow: hidden;
     animation: fadeIn 0.2s ease;
 }
@@ -2326,7 +2325,6 @@ body.dark .transform-input {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
 }
 
 .modal-header h2 {

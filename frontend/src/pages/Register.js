@@ -137,8 +137,8 @@ const Register = () => {
         phone: formData.phone,
         orgId: location.state?.orgId,
         unpk: location.state?.regKey || "",
-        loc_id: role === "Supervisor" ? selectedLocation : null,
-        room_id: role === "Supervisor" ? selectedRoom : null
+        loc_id: role === "Supervisor" ? selectedLocation : (location.state?.locId || null),
+        room_id: role === "Supervisor" ? selectedRoom : (location.state?.roomId || null)
       })
 
       setMessage("Registration successful! Redirecting to login...")

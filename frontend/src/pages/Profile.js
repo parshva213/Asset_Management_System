@@ -169,7 +169,8 @@ const Profile = () => {
           </div>
           <div className="card-footer">
             {!isReadOnly && (
-                <button
+              <button
+                onClick={handleProfileSubmit}
                   type="submit"
                   className="btn btn-primary w-full mt-2"
                   disabled={profileLoading}

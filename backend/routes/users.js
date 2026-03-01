@@ -16,7 +16,10 @@ router.get("/", verifyToken, async (req, res) => {
       return res.status(403).json({ message: "Access denied" })
     }
 
-    const { location_id, room_id } = req.query;
+    let { location_id, room_id } = req.query;
+    location_id = location_id ? parseInt(location_id) : null;
+    room_id = room_id ? parseInt(room_id) : null;
+    console.log("location_id: ", location_id, "room_id: ", room_id);
 
     let query = `
       SELECT u.id, u.name, u.email, u.role, u.department, u.phone, u.status, u.loc_id, u.room_id, l.name as location_name, r.name as room_name, u.created_at,
@@ -42,9 +45,9 @@ router.get("/", verifyToken, async (req, res) => {
     }
 
     if (req.user.role === "Super Admin") {
-      if (room_id) {
-        query += " AND u.room_id = ? AND (u.role = 'Employee' or u.role = 'Supervisor')";
-        params.push(room_id);
+      if (room_id && location_id) {
+        query += " AND u.room_id = ? AND u.loc_id = ? AND u.role in ('Employee', 'Supervisor')";
+        params.push(room_id, location_id);
       } else if (location_id) {
         query += " AND u.loc_id = ? AND u.role = 'Maintenance'";
         params.push(location_id);
@@ -52,16 +55,14 @@ router.get("/", verifyToken, async (req, res) => {
         query += " AND u.role = 'Maintenance'";
       }
     } else if (req.user.role === "Supervisor") {
-      // Supervisor can only see employees in the same room
-      const [supervisorRows] = await db.execute("SELECT room_id FROM users WHERE id = ?", [req.user.id]);
-      const supervisorRoomId = supervisorRows[0]?.room_id;
-      if (supervisorRoomId) {
-        query += " AND u.room_id = ? AND u.role = 'Employee'";
-        params.push(supervisorRoomId);
+      // Supervisor can only see employees whose unpk matches supervisor's ownpk
+      if (currentUser?.ownpk) {
+        query += " AND u.unpk = ? AND u.role = 'Employee'";
+        params.push(currentUser.ownpk);
       } else {
-        // If supervisor has no room, show no employees
+        // If supervisor has no ownpk, show no employees
         query += " AND 1=0";
-        return res.status(403).json({ message: "Access denied" })
+        return res.status(403).json({ message: "Access denied or supervisor PK not found" });
       }
     }
 
@@ -284,6 +285,7 @@ router.put("/:id", verifyToken, async (req, res) => {
     // We update only what's provided, focusing on loc_id for the user request
     let updates = [];
     let params = [];
+    let query = "";
 
     if (loc_id !== undefined) {
       updates.push("loc_id = ?");
@@ -293,6 +295,7 @@ router.put("/:id", verifyToken, async (req, res) => {
     if (room_id !== undefined) {
       updates.push("room_id = ?");
       params.push(room_id);
+      await conn.query("Update assets set room_id = ? where id in (select asset_id from asset_assignment where  ")
     }
 
     if (req.body.role !== undefined) {

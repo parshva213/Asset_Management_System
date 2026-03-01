@@ -13,6 +13,7 @@ const Assets = () => {
   const [editingAsset, setEditingAsset] = useState(null);
   const [categories, setCategories] = useState([]);
   const [locations, setLocations] = useState([]);
+  const [rooms, setRooms] = useState([]);
 
 
   const [formData, setFormData] = useState({
@@ -25,23 +26,11 @@ const Assets = () => {
     asset_type: "",
     category_id: "",
     location_id: "",
+    room_id: "",
     purchase_date: "",
   });
 
-  const fetchInitial = useCallback(async () => {
-    try {
-      setLoading(true);
-      await Promise.all([fetchAssets()]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchInitial();
-  }, [fetchInitial]);
-
-  const fetchAssets = async () => {
+  const fetchAssets = useCallback(async () => {
     try {
       let path = "/assets";
       if (user?.role === "Employee") {
@@ -53,25 +42,51 @@ const Assets = () => {
     } catch (err) {
       console.error("Error fetching assets:", err);
     }
-  };
+  }, [user]);
 
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     try {
       const res = await api.get("/categories");
       setCategories(res.data) ? console.log("cat success") : console.log("cat Error");
     } catch (err) {
       console.error("Error fetching categories:", err);
     }
-  };
+  }, []);
 
-  const fetchLocations = async () => {
+  const fetchLocations = useCallback(async () => {
     try {
       const res = await api.get("/locations");
       setLocations(res.data) ? console.log("loc success") : console.log("loc Error");
     } catch (err) {
       console.error("Error fetching locations:", err);
     }
-  };
+  }, []);
+
+  const fetchInitial = useCallback(async () => {
+    try {
+      setLoading(true);
+      await Promise.all([fetchAssets(), fetchCategories(), fetchLocations()]);
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchAssets, fetchCategories, fetchLocations]);
+
+  useEffect(() => {
+    fetchInitial();
+  }, [fetchInitial]);
+  
+  const fetchRooms = useCallback(async (locationId) => {
+    try {
+      if (!locationId) {
+        setRooms([]);
+        return;
+      }
+      const res = await api.get(`/locations/${locationId}/rooms`);
+      setRooms(res.data);
+    } catch (err) {
+      console.error("Error fetching rooms:", err);
+    }
+  }, []);
 
 
 
@@ -86,9 +101,11 @@ const Assets = () => {
       asset_type: "",
       category_id: "",
       location_id: "",
+      room_id: "",
       purchase_date: "",
     });
     setEditingAsset(null);
+    setRooms([]);
   };
 
   const handleChange = (e) => {
@@ -96,7 +113,8 @@ const Assets = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
 
     if (name === "location_id") {
-      // Rooms are no longer needed in creation
+      setFormData(prev => ({ ...prev, room_id: "" }));
+      fetchRooms(value);
     }
   };
 
@@ -109,6 +127,7 @@ const Assets = () => {
         name: finalName,
         category_id: formData.category_id ? Number(formData.category_id) : null,
         location_id: formData.location_id ? Number(formData.location_id) : null,
+        room_id: formData.room_id ? Number(formData.room_id) : null,
         purchase_cost: formData.purchase_cost ? Number(formData.purchase_cost) : null,
       };
 
@@ -143,8 +162,12 @@ const Assets = () => {
       asset_type: asset.asset_type,
       category_id: asset.category_id || "",
       location_id: asset.location_id || "",
+      room_id: asset.room_id || "",
       purchase_date: asset.purchase_date || "",
     });
+    if (asset.location_id) {
+      fetchRooms(asset.location_id);
+    }
   };
   const dataFetch = () => {
     fetchCategories();
@@ -170,13 +193,18 @@ const Assets = () => {
 
   return (
     <div>
-      <div className="flex-between mb-4">
-        <h2> {(user?.role === "Super Admin") ? "List of Assets Not Working" : "Assets Management"}</h2>
-        {(user?.role === "Super Admin" || user?.role === "Supervisor") && (
-          <button onClick={() => dataFetch()} className="btn btn-primary">
-            Add Asset
-          </button>
-        )}
+      <h2 className="page-title">{(user?.role === "Super Admin") ? "List of Assets Not Working" : "Assets Management"}</h2>
+      <div className="action-bar mb-4">
+        <div className="action-bar-left">
+          {/* Back Button if needed */}
+        </div>
+        <div className="action-bar-right">
+          {(user?.role === "Super Admin") && (
+            <button onClick={() => dataFetch()} className="btn btn-primary">
+              Add Asset
+            </button>
+          )}
+        </div>
       </div>
 
       {assets.length === 0 ? (
@@ -309,16 +337,22 @@ const Assets = () => {
                         ))}
                       </select>
                     </div>
+                    {formData.location_id && (
+                      <div className="form-group">
+                        <label className="form-label">Room</label>
+                        <select className="form-select" name="room_id" value={formData.room_id} onChange={handleChange} required>
+                          <option value="">Select room</option>
+                          {rooms.map((r) => (
+                            <option key={r.id} value={r.id}>{r.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                    <div className="form-group">
+                      <label className="form-label">Company Name</label>
+                      <input type="text" className="form-input" name="company_name" value={formData.company_name} onChange={handleChange} placeholder="e.g. Apple" />
+                    </div>
                   </>
-                )}
-
-
-                {/* Step 4: Company Name */}
-                {formData.asset_type && (
-                  <div className="form-group">
-                    <label className="form-label">Company Name</label>
-                    <input type="text" className="form-input" name="company_name" value={formData.company_name} onChange={handleChange} placeholder="e.g. Apple" />
-                  </div>
                 )}
 
                 {/* Step 5: Name, Purchase Date, Quantity */}
@@ -336,17 +370,17 @@ const Assets = () => {
 
                     <div className="form-group">
                       <label className="form-label">Quantity</label>
-                      <input type="number" className="form-input" name="quantity" value={formData.quantity} onChange={handleChange} placeholder="e.g. 1 or 5" />
+                      <input type="number" className="form-input" name="quantity" min="1" value={formData.quantity} onChange={handleChange} placeholder="e.g. 1 or 5" />
                     </div>
                   </>
                 )}
 
                 {/* Step 6: Cost, Warranty Expiry, Description */}
-                {formData.name && formData.purchase_date && (
+                {formData.name && formData.purchase_date && formData.quantity && (
                   <>
                     <div className="form-group">
                       <label className="form-label">Purchase Cost for single unit</label>
-                      <input type="number" className="form-input" name="purchase_cost" value={formData.purchase_cost} onChange={handleChange} placeholder="e.g. 1200" />
+                      <input type="number" className="form-input" name="purchase_cost" min="0" value={formData.purchase_cost} onChange={handleChange} placeholder="e.g. 1200" />
                     </div>
 
                     <div className="form-group">

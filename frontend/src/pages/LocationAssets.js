@@ -70,6 +70,7 @@ const LocationAssets = () => {
                 <th>Active</th>
                 <th>Not Active</th>
                 <th>Category</th>
+                <th>Price</th>
                 </tr>
             </thead>
             <tbody>
@@ -81,6 +82,7 @@ const LocationAssets = () => {
                     <td>{asset.active}</td>
                     <td>{asset.not_active}</td>
                     <td>{asset.cat_name || "N/A"}</td>
+                    <td>{asset.price}</td>
                 </tr>
                 ))}
             </tbody>

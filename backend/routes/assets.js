@@ -73,7 +73,7 @@ router.get("/", authenticateToken, async (req, res) => {
         // Detailed rows for specific role (Requested for Maintenance View)
         query = `
               SELECT DISTINCT a.id, a.name AS aname, u.name AS uname, u.role, a.asset_type, 
-              a.serial_number, a.warranty_expiry, c.name AS cat_name, a.purchase_date
+              a.serial_number, a.warranty_expiry, c.name AS cat_name, a.purchase_date, a.purchase_cost AS price
               FROM assets a
               LEFT JOIN categories c ON a.category_id = c.id
               JOIN asset_assignments aa ON a.id = aa.asset_id AND aa.unassigned_at IS NULL AND aa.unassigned_by IS NULL
@@ -90,7 +90,7 @@ router.get("/", authenticateToken, async (req, res) => {
               SUM(a.status = 'Available') AS available_total,
               SUM(a.status IN ('Available','Assigned')) AS active,
               SUM(a.status NOT IN ('Available','Assigned')) AS not_active,
-              c.name AS cat_name
+              c.name AS cat_name, MAX(a.purchase_cost) AS price
               FROM assets a
               LEFT JOIN categories c ON a.category_id = c.id
               WHERE a.location_id = ? AND a.org_id = ?
@@ -125,7 +125,12 @@ router.get("/", authenticateToken, async (req, res) => {
           COALESCE(asum.assigned_total, 0) as assigned_total,
           COALESCE(asum.available_total, 0) as available_total
           FROM assets a 
-          LEFT JOIN users u ON a.assigned_to = u.id
+          LEFT JOIN (
+              SELECT asset_id, assigned_to 
+              FROM asset_assignments 
+              WHERE unassigned_at IS NULL
+          ) aa ON a.id = aa.asset_id
+          LEFT JOIN users u ON aa.assigned_to = u.id
           LEFT JOIN categories c ON a.category_id = c.id
           LEFT JOIN locations l ON a.location_id = l.id
           LEFT JOIN rooms r ON a.room_id = r.id
@@ -147,7 +152,7 @@ router.get("/", authenticateToken, async (req, res) => {
 
       // Filter for Employees: Only show assigned assets
       if (req.user.role === "Employee") {
-        whereClauses.push("a.assigned_to = ?");
+        whereClauses.push("aa.assigned_to = ?");
         params.push(req.user.id);
       }
 

@@ -21,6 +21,8 @@ const RoleSelection = () => {
         role: roleName,
         regKey: unpk,
         orgId: verificationData?.orgId,
+        locId: verificationData?.locId,
+        roomId: verificationData?.roomId,
       }
     })
   }, [navigate, unpk, verificationData]);
