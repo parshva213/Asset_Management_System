@@ -183,22 +183,6 @@ const Users = () => {
     )
   }
 
-<<<<<<< Updated upstream
-  return (
-    <>
-    <div className="content">
-      <div className="flex-between mb-4">
-        <h2>Users</h2>
-        <button className="btn btn-primary" onClick={() => setRole(role === "Maintenance" ? "Vendor" : "Maintenance")}>
-          {role === "Maintenance" ? "View Vendors" : "View Maintenance"}
-        </button>
-      </div>
-      {users.length === 0 ? (
-        <div className="empty-state">
-          <p>No users found for this filter.</p>
-        </div>
-      ) : (
-=======
   if (user?.role === "Supervisor") {
     return (
       <div className="content">
@@ -217,35 +201,35 @@ const Users = () => {
               </div>
               {users.length === 0 ? (
                 <div className="empty-state">
-            <p>No users found for this filter.</p>
-          </div>
+                  <p>No users found for this filter.</p>
+                </div>
               ) : (
-                  <div className="user-grid">
-            {users.map((user) => (
-              <div key={user.id} className="card user-card" id={`user-${user.id}`}>
-                <div className="card-header flex-between">
-                  <div>
-                    <h3 className="text-lg font-bold">{user.name}</h3>
-                  </div>
-                  <span className="badge badge-primary">{user.role}</span>
+                <div className="user-grid">
+                  {users.map((user) => (
+                    <div key={user.id} className="card user-card" id={`user-${user.id}`}>
+                      <div className="card-header flex-between">
+                        <div>
+                          <h3 className="text-lg font-bold">{user.name}</h3>
+                        </div>
+                        <span className="badge badge-primary">{user.role}</span>
+                      </div>
+                      <div className="card-body">
+                        <p><strong>Email:</strong> {user.email}</p>
+                        <p><strong>Phone:</strong> {user.phone}</p>
+                        <p><strong>{user.role === "Maintenance" ? "Department" : "Company"}:</strong> {user.department || "N/A"}</p>
+                        {user.role === "Maintenance" && <p><strong>Assigned Assets:</strong> {user.assigned_assets?.length || 0}</p>}
+                      </div>
+                      {user.role === "Maintenance" && <div className="card-footer">
+                        <button
+                          className="btn btn-primary w-full"
+                          onClick={() => handleOpenModal(user)}
+                        >
+                          Set Users Assets and Location
+                        </button>
+                      </div>}
+                    </div>
+                  ))}
                 </div>
-                <div className="card-body">
-                  <p><strong>Email:</strong> {user.email}</p>
-                  <p><strong>Phone:</strong> {user.phone}</p>
-                  <p><strong>{role === "Maintence" ? "Department" : "Company"}:</strong> {user.department || "N/A"}</p>
-                  {role === "Maintence" && <p><strong>Assigned Assets:</strong> {user.assigned_assets?.length || 0}</p>}
-                </div>
-                {role === "Maintence" && <div className="card-footer">
-                  <button
-                    className="btn btn-primary w-full"
-                    onClick={() => handleOpenModal(user)}
-                  >
-                    Set Users Assets and Location
-                  </button>
-                </div>}
-              </div>
-            ))}
-          </div>
               )}
             </>
           )
@@ -254,22 +238,22 @@ const Users = () => {
     )
   }
 
-  if (user?.role === "Super Admin"){
+  if (user?.role === "Super Admin") {
     return (
       <>
-      <div className="content">
-        <div className="flex-between mb-4">
-          <h2>Users</h2>
-          <button className="btn btn-primary" onClick={() => setRole(role === "Maintenance" ? "Vendor" : "Maintenance")}>
-            {role === "Maintenance" ? "View Vendors" : "View Maintenance"}
-          </button>
-        </div>
-        {users.length === 0 ? (
-          <div className="empty-state">
-            <p>No users found for this filter.</p>
+        <div className="content">
+          <div className="flex-between mb-4">
+            <h2>Users</h2>
+            <button className="btn btn-primary" onClick={() => setRole(role === "Maintenance" ? "Vendor" : "Maintenance")}>
+              {role === "Maintenance" ? "View Vendors" : "View Maintenance"}
+            </button>
           </div>
-        ) : (
->>>>>>> Stashed changes
+          {users.length === 0 ? (
+            <div className="empty-state">
+              <p>No users found for this filter.</p>
+            </div>
+          ) : (
+
           <div className="user-grid">
             {users.map((user) => (
               <div key={user.id} className="card user-card" id={`user-${user.id}`}>
@@ -282,17 +266,11 @@ const Users = () => {
                 <div className="card-body">
                   <p><strong>Email:</strong> {user.email}</p>
                   <p><strong>Phone:</strong> {user.phone}</p>
-<<<<<<< Updated upstream
-                  <p><strong>{user.role === "Maintenance" ? "Department" : "Company"}:</strong> {user.department || "N/A"}</p>
+                  <p><strong>{role === "Maintenance" ? "Department" : "Company"}:</strong> {user.department || "N/A"}</p>
                   {role === "Maintenance" && <p><strong>Assigned Assets:</strong> {user.assigned_assets?.length || 0}</p>}
                 </div>
                 {role === "Maintenance" && <div className="card-footer">
-=======
-                  <p><strong>{role === "Maintence" ? "Department" : "Company"}:</strong> {user.department || "N/A"}</p>
-                  {role === "Maintence" && <p><strong>Assigned Assets:</strong> {user.assigned_assets?.length || 0}</p>}
-                </div>
-                {role === "Maintence" && <div className="card-footer">
->>>>>>> Stashed changes
+
                   <button
                     className="btn btn-primary w-full"
                     onClick={() => handleOpenModal(user)}
@@ -440,16 +418,13 @@ const Users = () => {
             </div>
           </div>
         )}
-<<<<<<< Updated upstream
-      </div>
-    </>
-  )
-=======
         </div>
       </>
     )
   }
->>>>>>> Stashed changes
+
+  return null;
+
 }
 
 export default Users
