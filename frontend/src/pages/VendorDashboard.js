@@ -126,20 +126,6 @@ const VendorDashboard = () => {
                          <span>Lifetime stats</span>
                     </div>
                 </div>
-                <div className="stat-widget">
-                     <div>
-                        <div className="stat-icon orange">
-                             ⭐
-                        </div>
-                        <span className="stat-label">Rating</span>
-                        <h3 className="stat-value">
-                            4.8
-                        </h3>
-                     </div>
-                      <div className="stat-footer">
-                         <span>Based on reviews</span>
-                    </div>
-                </div>
             </div>
         </div>
     </div>

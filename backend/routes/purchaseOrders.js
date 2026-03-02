@@ -10,6 +10,8 @@ router.get("/", verifyToken, async (req, res) => {
     try {
         let query = `
       SELECT po.*, u.name as supervisor_name, v.name as vendor_name, a.name as admin_name,
+             o.id AS organization_id, COALESCE(o.name, 'Unknown Company') AS organization_name,
+             sl.name AS supervisor_location_name, sr.name AS supervisor_room_name,
              COALESCE(sp.supplied_quantity, 0) AS supplied_quantity,
              sp.supply_date,
              sp.warranty_expiry,
@@ -18,6 +20,9 @@ router.get("/", verifyToken, async (req, res) => {
       LEFT JOIN users u ON po.supervisor_id = u.id
       LEFT JOIN users v ON po.vendor_id = v.id
       LEFT JOIN users a ON po.admin_id = a.id
+      LEFT JOIN organizations o ON u.org_id = o.id
+      LEFT JOIN locations sl ON u.loc_id = sl.id
+      LEFT JOIN rooms sr ON u.room_id = sr.id
       LEFT JOIN (
         SELECT
           CAST(SUBSTRING_INDEX(description, '#', -1) AS UNSIGNED) AS po_id,
@@ -59,7 +64,8 @@ router.get("/vendor/requirements", verifyToken, async (req, res) => {
     try {
         const [rows] = await pool.query(
             `SELECT po.*, u.name as supervisor_name, v.name as vendor_name, a.name as admin_name,
-                    o.id as organization_id, o.name as organization_name,
+                    o.id as organization_id, COALESCE(o.name, 'Unknown Company') as organization_name,
+                    sl.name AS supervisor_location_name, sr.name AS supervisor_room_name,
                     COALESCE(sp.supplied_quantity, 0) AS supplied_quantity,
                     sp.supply_date,
                     sp.warranty_expiry,
@@ -69,6 +75,8 @@ router.get("/vendor/requirements", verifyToken, async (req, res) => {
              LEFT JOIN users v ON po.vendor_id = v.id
              LEFT JOIN users a ON po.admin_id = a.id
              LEFT JOIN organizations o ON u.org_id = o.id
+             LEFT JOIN locations sl ON u.loc_id = sl.id
+             LEFT JOIN rooms sr ON u.room_id = sr.id
              LEFT JOIN (
                 SELECT
                     CAST(SUBSTRING_INDEX(description, '#', -1) AS UNSIGNED) AS po_id,

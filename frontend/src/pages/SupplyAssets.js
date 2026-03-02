@@ -12,6 +12,7 @@ const SupplyAssets = () => {
   const [supplyDetails, setSupplyDetails] = useState({})
   const [loading, setLoading] = useState(true)
   const [submittingId, setSubmittingId] = useState(null)
+  const [companyFilter, setCompanyFilter] = useState("")
 
   const fetchRequirements = useCallback(async () => {
     try {
@@ -118,15 +119,24 @@ const SupplyAssets = () => {
     }
   }
 
+  const filteredRequirements = useMemo(() => {
+    if (!companyFilter) return requirements
+    return requirements.filter((row) => (row.organization_name || "Unknown Company") === companyFilter)
+  }, [requirements, companyFilter])
+
+  const companyOptions = useMemo(() => {
+    const set = new Set()
+    requirements.forEach((row) => set.add(row.organization_name || "Unknown Company"))
+    return Array.from(set).sort((a, b) => a.localeCompare(b))
+  }, [requirements])
+
   const stats = useMemo(() => {
     const uniqueCompanies = new Set()
     let requestedCount = 0
     let approvedQuantity = 0
 
-    requirements.forEach((row) => {
-      if (row.organization_name) {
-        uniqueCompanies.add(row.organization_name)
-      }
+    filteredRequirements.forEach((row) => {
+      uniqueCompanies.add(row.organization_name || "Unknown Company")
       if (row.status === "Requested") {
         requestedCount += 1
       }
@@ -140,7 +150,7 @@ const SupplyAssets = () => {
       requestedCount,
       approvedQuantity,
     }
-  }, [requirements])
+  }, [filteredRequirements])
 
   const formatWarrantyPeriod = (days) => {
     const value = Number(days)
@@ -159,6 +169,22 @@ const SupplyAssets = () => {
         <p>Quotations can be submitted only for organizations you registered with.</p>
       </div>
 
+      <div className="filters mb-4">
+        <div className="filter-group">
+          <label className="form-label">Company</label>
+          <select
+            className="form-select"
+            value={companyFilter}
+            onChange={(e) => setCompanyFilter(e.target.value)}
+          >
+            <option value="">All Companies</option>
+            {companyOptions.map((name) => (
+              <option key={name} value={name}>{name}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
       <div className="flex gap-2 mb-4" style={{ flexWrap: "wrap" }}>
         <div className="card">
           <h4>Registered Companies</h4>
@@ -174,14 +200,14 @@ const SupplyAssets = () => {
         </div>
       </div>
 
-      {requirements.length === 0 ? (
+      {filteredRequirements.length === 0 ? (
         <div className="empty-state">
           <h3>No requirements found</h3>
           <p>Register organizations first, then their requirements will appear here.</p>
         </div>
       ) : (
         <div className="table-container">
-          <table className="table">
+          <table className="table" style={{ minWidth: "1700px" }}>
             <thead>
               <tr>
                 <th>Company</th>
@@ -200,9 +226,9 @@ const SupplyAssets = () => {
               </tr>
             </thead>
             <tbody>
-              {requirements.map((order) => (
+              {filteredRequirements.map((order) => (
                 <tr key={order.id} id={`supply-req-${order.id}`}>
-                  <td>{order.organization_name || "N/A"}</td>
+                  <td>{order.organization_name || "Unknown Company"}</td>
                   <td>{order.asset_name}</td>
                   <td>{order.quantity}</td>
                   <td>{order.supervisor_name || order.supervisor_id}</td>
@@ -258,26 +284,28 @@ const SupplyAssets = () => {
                     )}
                   </td>
                   <td>{order.status}</td>
-                  <td>
-                    {order.status === "Requested" && (
-                      <button
-                        className="btn btn-primary"
-                        onClick={() => submitQuote(order)}
-                        disabled={submittingId === order.id}
-                      >
-                        {submittingId === order.id ? "Submitting..." : "Submit Quote"}
-                      </button>
-                    )}
-                    {order.status === "Approved" && (
-                      <button
-                        className="btn btn-primary"
-                        onClick={() => markSupplied(order)}
-                        disabled={submittingId === order.id}
-                      >
-                        {submittingId === order.id ? "Supplying..." : "Supply"}
-                      </button>
-                    )}
-                    {order.status !== "Requested" && order.status !== "Approved" && <span>-</span>}
+                  <td style={{ minWidth: "150px", whiteSpace: "nowrap", textAlign: "center", overflow: "hidden" }}>
+                    <div style={{ display: "inline-flex", justifyContent: "center", width: "100%" }}>
+                      {order.status === "Requested" && (
+                        <button
+                          className="btn btn-primary"
+                          onClick={() => submitQuote(order)}
+                          disabled={submittingId === order.id}
+                        >
+                          {submittingId === order.id ? "Submitting..." : "Submit Quote"}
+                        </button>
+                      )}
+                      {order.status === "Approved" && (
+                        <button
+                          className="btn btn-primary"
+                          onClick={() => markSupplied(order)}
+                          disabled={submittingId === order.id}
+                        >
+                          {submittingId === order.id ? "Supplying..." : "Supply"}
+                        </button>
+                      )}
+                      {order.status !== "Requested" && order.status !== "Approved" && <span>-</span>}
+                    </div>
                   </td>
                 </tr>
               ))}

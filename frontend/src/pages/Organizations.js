@@ -22,6 +22,9 @@ const Organizations = () => {
     const [submitting, setSubmitting] = useState(false)
     const [error, setError] = useState(null)
     const [registeringOrgId, setRegisteringOrgId] = useState(null)
+    const [showVendorRegisterModal, setShowVendorRegisterModal] = useState(false)
+    const [selectedOrganization, setSelectedOrganization] = useState(null)
+    const [vendorOrgKey, setVendorOrgKey] = useState("")
 
     const isVendor = (user?.role || "").toLowerCase() === "vendor"
 
@@ -42,7 +45,7 @@ const Organizations = () => {
         }
     }
 
-    const handleVendorRegister = async (organization) => {
+    const openVendorRegisterModal = (organization) => {
         const alreadyRegistered = Number(organization.is_registered) === 1
         if (alreadyRegistered) {
             showInfo(`Already registered with ${organization.name}`)
@@ -53,11 +56,29 @@ const Organizations = () => {
             return
         }
 
+        setSelectedOrganization(organization)
+        setVendorOrgKey("")
+        setShowVendorRegisterModal(true)
+    }
+
+    const handleVendorRegister = async () => {
+        if (!selectedOrganization) return
+        if (!vendorOrgKey.trim()) {
+            showError("Please enter v_org key")
+            return
+        }
+
+        const organization = selectedOrganization
         setRegisteringOrgId(organization.id)
         try {
-            await api.post(`/organizations/${organization.id}/register`)
+            await api.post(`/organizations/${organization.id}/register`, {
+                v_org: vendorOrgKey.trim(),
+            })
             showSuccess(`Registered with ${organization.name}`)
             await fetchOrganizations()
+            setShowVendorRegisterModal(false)
+            setSelectedOrganization(null)
+            setVendorOrgKey("")
         } catch (err) {
             console.error("Error registering organization:", err)
             showError(err?.message || "Failed to register")
@@ -175,7 +196,7 @@ const Organizations = () => {
                                             <td>{registered ? "Registered" : "Not Registered"}</td>
                                             <td>
                                                 <Button
-                                                    onClick={() => handleVendorRegister(organization)}
+                                                    onClick={() => openVendorRegisterModal(organization)}
                                                     disabled={registered || registeringOrgId === organization.id || organization.status !== "Active"}
                                                 >
                                                     {registered
@@ -190,6 +211,60 @@ const Organizations = () => {
                                 })}
                             </tbody>
                         </table>
+                    </div>
+                )}
+
+                {showVendorRegisterModal && selectedOrganization && (
+                    <div className="modal-overlay" role="dialog" aria-modal="true">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h2 className="modal-title">Register Company</h2>
+                                <button
+                                    className="close-modal"
+                                    aria-label="Close"
+                                    onClick={() => {
+                                        setShowVendorRegisterModal(false)
+                                        setSelectedOrganization(null)
+                                        setVendorOrgKey("")
+                                    }}
+                                >
+                                    ×
+                                </button>
+                            </div>
+                            <div className="modal-body">
+                                <p style={{ marginBottom: "1rem" }}>
+                                    Enter <strong>v_org</strong> key for <strong>{selectedOrganization.name}</strong>.
+                                </p>
+                                <div className="form-group">
+                                    <label className="form-label">v_org Key</label>
+                                    <input
+                                        type="text"
+                                        className="form-input"
+                                        value={vendorOrgKey}
+                                        onChange={(e) => setVendorOrgKey(e.target.value)}
+                                        placeholder="Enter company v_org key"
+                                    />
+                                </div>
+                                <div className="flex gap-2 mt-4">
+                                    <Button
+                                        onClick={handleVendorRegister}
+                                        disabled={registeringOrgId === selectedOrganization.id}
+                                    >
+                                        {registeringOrgId === selectedOrganization.id ? "Registering..." : "Register"}
+                                    </Button>
+                                    <Button
+                                        variant="secondary"
+                                        onClick={() => {
+                                            setShowVendorRegisterModal(false)
+                                            setSelectedOrganization(null)
+                                            setVendorOrgKey("")
+                                        }}
+                                    >
+                                        Cancel
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 )}
             </div>
