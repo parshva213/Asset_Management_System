@@ -67,12 +67,7 @@ router.get("/", verifyToken, async (req, res) => {
 
     query += " GROUP BY u.id, u.name, u.email, u.role, u.department, u.phone, u.loc_id, l.name, u.created_at ORDER BY u.id ASC";
 
-    console.log("Users Query:", query);
-    console.log("Params:", params);
-
     const [users] = await db.execute(query, params);
-    console.log("Users Found in Query:", users.length);
-    console.log("First User:", users[0]);
 
     const usersWithAssets = users.map((u) => {
       const assigned_assets = [];
@@ -201,41 +196,134 @@ router.post("/assign-asset", verifyToken, async (req, res) => {
       return res.status(403).json({ message: "Access denied" })
     }
 
-    const { user_id, asset_id, notes } = req.body
-
-    console.log("[ASSIGN-ASSET] Request body:", { user_id, asset_id, notes });
-    console.log("[ASSIGN-ASSET] req.user:", req.user);
+    const { user_id, asset_id, asset_name, location_id, quantity, notes } = req.body
 
     // Validate required parameters
-    if (!user_id || !asset_id) {
-      console.log("[ASSIGN-ASSET] Validation failed - missing user_id or asset_id");
-      return res.status(400).json({ message: "user_id and asset_id are required" });
+    if (!user_id) {
+      return res.status(400).json({ message: "user_id is required" });
     }
+
+    const parsedQty = Math.max(1, parseInt(quantity, 10) || 1);
 
     await conn.query('START TRANSACTION');
 
-    // 1. Fetch User's room_id
-    const [userRows] = await conn.execute("SELECT room_id FROM users WHERE id = ?", [user_id]);
-    const userRoomId = (userRows.length > 0 && userRows[0].room_id) ? userRows[0].room_id : null;
-    console.log("[ASSIGN-ASSET] userRoomId:", userRoomId);
+    const rollbackAndRespond = async (statusCode, payload) => {
+      await conn.query('ROLLBACK');
+      return res.status(statusCode).json(payload);
+    };
 
-    // 2. Create Assignment Record (ensure all values are non-undefined)
-    const assignmentParams = [user_id, asset_id, notes ?? '', req.user?.id ?? null];
-    console.log("[ASSIGN-ASSET] Assignment params:", assignmentParams);
-    
-    await conn.execute(
-      "INSERT INTO asset_assignments (assigned_to, asset_id, description, assigned_by) VALUES (?, ?, ?, ?)",
-      assignmentParams
-    )
+    // 1. Validate target user and fetch room for assignment
+    const [userRows] = await conn.execute(
+      "SELECT id, org_id, role, room_id FROM users WHERE id = ?",
+      [user_id]
+    );
+    if (userRows.length === 0) {
+      return rollbackAndRespond(404, { message: "User not found" });
+    }
+    const targetUser = userRows[0];
 
-    // 3. Update Asset Status and Room ID (assignment tracked in asset_assignments table)
+    if (String(targetUser.org_id) !== String(req.user.org_id)) {
+      return rollbackAndRespond(403, { message: "Access denied" });
+    }
+
+    if (req.user.role === "Supervisor") {
+      const [supervisorRows] = await conn.execute("SELECT room_id FROM users WHERE id = ?", [req.user.id]);
+      const supervisorRoomId = supervisorRows[0]?.room_id;
+      if (!supervisorRoomId || String(supervisorRoomId) !== String(targetUser.room_id) || targetUser.role !== "Employee") {
+        return rollbackAndRespond(403, { message: "Access denied" });
+      }
+    }
+
+    const userRoomId = targetUser.room_id || null;
+
+    // 2. Resolve which asset IDs to assign
+    let assetIdsToAssign = [];
+
+    if (asset_id) {
+      const [singleAssetRows] = await conn.execute(
+        `
+          SELECT a.id
+          FROM assets a
+          LEFT JOIN asset_assignments aa
+            ON aa.asset_id = a.id
+            AND aa.unassigned_at IS NULL
+            AND aa.unassigned_by IS NULL
+          WHERE a.id = ? AND a.org_id = ? AND a.status = 'Available' AND aa.id IS NULL
+          LIMIT 1
+        `,
+        [asset_id, req.user.org_id]
+      );
+
+      if (singleAssetRows.length === 0) {
+        return rollbackAndRespond(400, { message: "Asset is not available for assignment" });
+      }
+
+      assetIdsToAssign = [parseInt(asset_id, 10)];
+    } else {
+      if (!asset_name || !location_id) {
+        return rollbackAndRespond(400, {
+          message: "Provide either asset_id or asset_name with location_id for quantity assignment"
+        });
+      }
+
+      const parsedLocationId = parseInt(location_id, 10);
+      if (!Number.isInteger(parsedLocationId) || parsedLocationId <= 0) {
+        return rollbackAndRespond(400, { message: "Invalid location_id" });
+      }
+
+      // MySQL prepared statements can fail with parameterized LIMIT on some setups,
+      // so keep LIMIT as a validated integer literal.
+      const [availableRows] = await conn.query(
+        `
+          SELECT a.id
+          FROM assets a
+          LEFT JOIN asset_assignments aa
+            ON aa.asset_id = a.id
+            AND aa.unassigned_at IS NULL
+            AND aa.unassigned_by IS NULL
+          WHERE
+            a.org_id = ?
+            AND a.location_id = ?
+            AND a.name = ?
+            AND a.status = 'Available'
+            AND aa.id IS NULL
+          ORDER BY a.id ASC
+          LIMIT ${parsedQty}
+        `,
+        [req.user.org_id, parsedLocationId, asset_name]
+      );
+
+      if (availableRows.length < parsedQty) {
+        return rollbackAndRespond(400, {
+          message: `Only ${availableRows.length} asset(s) are available for ${asset_name}`
+        });
+      }
+
+      assetIdsToAssign = availableRows.map(row => row.id);
+    }
+
+    // 3. Create assignment rows
+    for (const currentAssetId of assetIdsToAssign) {
+      const assignmentParams = [user_id, currentAssetId, notes ?? '', req.user?.id ?? null];
+      await conn.execute(
+        "INSERT INTO asset_assignments (assigned_to, asset_id, description, assigned_by) VALUES (?, ?, ?, ?)",
+        assignmentParams
+      );
+    }
+
+    // 4. Update assets status and room
+    const placeholders = assetIdsToAssign.map(() => "?").join(", ");
     await conn.execute(
-      "UPDATE assets SET status = 'Assigned', room_id = ? WHERE id = ?",
-      [userRoomId, asset_id]
-    )
+      `UPDATE assets SET status = 'Assigned', room_id = ? WHERE id IN (${placeholders})`,
+      [userRoomId, ...assetIdsToAssign]
+    );
 
     await conn.query('COMMIT');
-    res.json({ message: "Asset assigned successfully" })
+    res.json({
+      message: "Asset assigned successfully",
+      assigned_count: assetIdsToAssign.length,
+      asset_ids: assetIdsToAssign
+    })
   } catch (error) {
     if (conn) await conn.query('ROLLBACK');
     console.error("Error assigning asset:", error)

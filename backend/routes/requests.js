@@ -19,6 +19,12 @@ router.get("/", verifyToken, async (req, res) => {
     if (req.user.role === "Employee") {
       query += " AND ar.requested_by = ?"
       params.push(req.user.id)
+    } else if (req.user.role === "Software Developer") {
+      query += " AND ar.requested_by = ?"
+      params.push(req.user.id)
+    } else if (req.user.org_id) {
+      query += " AND u1.org_id = ?"
+      params.push(req.user.org_id)
     }
 
     query += " ORDER BY ar.id ASC"
@@ -34,6 +40,13 @@ router.get("/", verifyToken, async (req, res) => {
 router.post("/", verifyToken, async (req, res) => {
   try {
     const { asset_id, request_type, reason, description, priority, assigned_to, response } = req.body
+
+    if (asset_id) {
+      const [assetRows] = await db.execute("SELECT id FROM assets WHERE id = ? AND org_id = ?", [asset_id, req.user.org_id])
+      if (assetRows.length === 0) {
+        return res.status(403).json({ message: "Access denied" })
+      }
+    }
 
     const [result] = await db.execute(
       `INSERT INTO asset_requests (asset_id, request_type, reason, description, priority, status, requested_by, assigned_to, response)
@@ -55,12 +68,26 @@ router.put("/:id", verifyToken, async (req, res) => {
     const { id } = req.params
     const { asset_id, request_type, reason, description, priority } = req.body
 
-    const [requests] = await db.execute("SELECT requested_by FROM asset_requests WHERE id = ?", [id])
+    const [requests] = await db.execute(
+      `SELECT ar.requested_by, u.org_id
+       FROM asset_requests ar
+       LEFT JOIN users u ON ar.requested_by = u.id
+       WHERE ar.id = ?`,
+      [id]
+    )
     if (requests.length === 0) {
       return res.status(404).json({ message: "Request not found" })
     }
 
     if (req.user.role === "Employee" && requests[0].requested_by !== req.user.id) {
+      return res.status(403).json({ message: "Access denied" })
+    }
+
+    if (req.user.role === "Software Developer" && requests[0].requested_by !== req.user.id) {
+      return res.status(403).json({ message: "Access denied" })
+    }
+
+    if (req.user.org_id && String(requests[0].org_id) !== String(req.user.org_id)) {
       return res.status(403).json({ message: "Access denied" })
     }
 
@@ -81,12 +108,23 @@ router.put("/:id", verifyToken, async (req, res) => {
 
 router.put("/:id/status", verifyToken, async (req, res) => {
   try {
-    if (req.user.role === "Employee") {
+    if (req.user.role === "Employee" || req.user.role === "Software Developer") {
       return res.status(403).json({ message: "Access denied" })
     }
 
     const { id } = req.params
     const { status, response } = req.body
+
+    const [requestRows] = await db.execute(
+      `SELECT ar.id
+       FROM asset_requests ar
+       LEFT JOIN users u ON ar.requested_by = u.id
+       WHERE ar.id = ? AND u.org_id = ?`,
+      [id, req.user.org_id]
+    )
+    if (requestRows.length === 0) {
+      return res.status(404).json({ message: "Request not found" })
+    }
 
     await db.execute("UPDATE asset_requests SET status = ?, response = ?, assigned_to = ? WHERE id = ?", [
       status,
@@ -108,12 +146,26 @@ router.delete("/:id", verifyToken, async (req, res) => {
   try {
     const { id } = req.params
 
-    const [requests] = await db.execute("SELECT requested_by FROM asset_requests WHERE id = ?", [id])
+    const [requests] = await db.execute(
+      `SELECT ar.requested_by, u.org_id
+       FROM asset_requests ar
+       LEFT JOIN users u ON ar.requested_by = u.id
+       WHERE ar.id = ?`,
+      [id]
+    )
     if (requests.length === 0) {
       return res.status(404).json({ message: "Request not found" })
     }
 
     if (req.user.role === "Employee" && requests[0].requested_by !== req.user.id) {
+      return res.status(403).json({ message: "Access denied" })
+    }
+
+    if (req.user.role === "Software Developer" && requests[0].requested_by !== req.user.id) {
+      return res.status(403).json({ message: "Access denied" })
+    }
+
+    if (req.user.org_id && String(requests[0].org_id) !== String(req.user.org_id)) {
       return res.status(403).json({ message: "Access denied" })
     }
 

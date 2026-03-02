@@ -16,7 +16,9 @@ const SupervisorDashboard = () => {
         totalOrders: 0,
         departmentUsers: 0,
         assignedAssetsList: [],
-        pendingRequestsList: []
+        pendingRequestsList: [],
+        currentLocationName: "",
+        currentRoomName: ""
     })
     const [loading, setLoading] = useState(true)
     
@@ -45,7 +47,9 @@ const SupervisorDashboard = () => {
                     totalRooms: data.totalRooms || 0,
                     totalOrders: data.totalOrders || 0,
                     assignedAssetsList: data.assignedAssetsList || [],
-                    pendingRequestsList: data.pendingRequestsList || []
+                    pendingRequestsList: data.pendingRequestsList || [],
+                    currentLocationName: data.currentLocationName || "",
+                    currentRoomName: data.currentRoomName || ""
                 })
             }
         } catch (error) {
@@ -152,10 +156,10 @@ const SupervisorDashboard = () => {
                             <span className="info-icon">🔑</span> {user?.ownpk || "Not set"}
                         </div>
                         <div className="info-row">
-                            <span className="info-icon">📍</span> {user?.room_name || "Not assigned"}
+                            <span className="info-icon">📍</span> {stats.currentRoomName || user?.room_name || "Not assigned"}
                         </div>
                         <div className="info-row">
-                            <span className="info-icon">🏢</span> {user?.location_name || "Not assigned"}
+                            <span className="info-icon">🏢</span> {stats.currentLocationName || user?.location_name || "Not assigned"}
                         </div>
                     </div>
                     <div className="profile-footer-new">
@@ -251,20 +255,15 @@ const SupervisorDashboard = () => {
                     <div className="stat-widget">
                         <div>
                             <div className="stat-icon rose">🚪</div>
-                            <span className="stat-label">Total Rooms</span>
+                            <span className="stat-label">My Room</span>
                             <h3 className="stat-value text-xl">
-                                {user?.loc_id ? stats.totalRooms : "Location not set"}
+                                {stats.currentRoomName || "Not assigned"}
                             </h3>
                         </div>
                         <div className="stat-footer">
-                             {user?.loc_id ? (
-                                <Link to="#" onClick={(e) => {
-                                    e.preventDefault()
-                                    setShowRoomModal(true)
-                                }}>
-                                    Register Room →
-                                </Link>
-                             ) : ""}
+                            <span className="text-secondary">
+                                {stats.currentLocationName || "Location not set"}
+                            </span>
                         </div>
                     </div>
                 </div>

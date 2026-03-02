@@ -20,11 +20,30 @@ router.get("/current-asset/:id", authenticateToken, async (req,res)=>{
   try {
     const {id} = req.params;
     let query = `
-      SELECT a.*
+      SELECT
+        a.*,
+        c.name AS category_name,
+        l.name AS location_name,
+        r.name AS room_name,
+        aa.assigned_at,
+        uab.name AS assigned_by_name
       FROM assets a
-      LEFT JOIN asset_assignments aa ON a.id =  aa.asset_id 
-      LEFT JOIN users u ON  aa.assigned_to = u.id
-      WHERE a.org_id = ? AND aa.unassigned_by IS NULL AND u.id = ?
+      JOIN (
+        SELECT aa1.asset_id, aa1.assigned_to, aa1.assigned_by, aa1.assigned_at
+        FROM asset_assignments aa1
+        JOIN (
+          SELECT asset_id, MAX(id) AS max_id
+          FROM asset_assignments
+          WHERE unassigned_at IS NULL AND unassigned_by IS NULL
+          GROUP BY asset_id
+        ) latest ON latest.max_id = aa1.id
+      ) aa ON aa.asset_id = a.id
+      LEFT JOIN categories c ON a.category_id = c.id
+      LEFT JOIN locations l ON a.location_id = l.id
+      LEFT JOIN rooms r ON a.room_id = r.id
+      LEFT JOIN users uab ON aa.assigned_by = uab.id
+      WHERE a.org_id = ? AND aa.assigned_to = ?
+      ORDER BY aa.assigned_at DESC, a.id ASC
     `;
     const result = await pool.query(query, [req.user.org_id, id]);
     res.json(result[0]);
@@ -42,15 +61,15 @@ router.get("/available-assets-to-assign/:id", authenticateToken, async (req, res
         MIN(CASE WHEN a.status = 'Available' THEN a.id END) AS available_min_id,
         a.name,
         COUNT(*) AS total_assets,
-        SUM(a.status = 'Available') AS available_count,
-        SUM(a.status = 'Assigned') AS assigned_count
+        SUM(a.status = 'Available') AS available_assets,
+        SUM(a.status = 'Assigned') AS assigned_assets
       FROM assets a
       WHERE 
         a.location_id = ?
         AND a.org_id = ?
       GROUP BY 
-        a.name,
-        SUBSTRING_INDEX(a.serial_number, '/', 1)
+        a.name
+      HAVING SUM(a.status = 'Available') > 0
       ORDER BY 
         a.name ASC;
       `, [id, req.user.org_id]);
@@ -121,11 +140,22 @@ router.get("/", authenticateToken, async (req, res) => {
           c.name as category_name,
           l.name as location_name,
           r.name as room_name,
+          aa_current.assigned_at,
           COALESCE(asum.quantity, 0) as quantity,
           COALESCE(asum.assigned_total, 0) as assigned_total,
           COALESCE(asum.available_total, 0) as available_total
           FROM assets a 
-          LEFT JOIN users u ON a.assigned_to = u.id
+          LEFT JOIN (
+            SELECT aa1.asset_id, aa1.assigned_to, aa1.assigned_at
+            FROM asset_assignments aa1
+            JOIN (
+              SELECT asset_id, MAX(id) AS max_id
+              FROM asset_assignments
+              WHERE unassigned_at IS NULL AND unassigned_by IS NULL
+              GROUP BY asset_id
+            ) latest ON latest.max_id = aa1.id
+          ) aa_current ON a.id = aa_current.asset_id
+          LEFT JOIN users u ON aa_current.assigned_to = u.id
           LEFT JOIN categories c ON a.category_id = c.id
           LEFT JOIN locations l ON a.location_id = l.id
           LEFT JOIN rooms r ON a.room_id = r.id
@@ -147,7 +177,7 @@ router.get("/", authenticateToken, async (req, res) => {
 
       // Filter for Employees: Only show assigned assets
       if (req.user.role === "Employee") {
-        whereClauses.push("a.assigned_to = ?");
+        whereClauses.push("aa_current.assigned_to = ?");
         params.push(req.user.id);
       }
 

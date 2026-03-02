@@ -208,7 +208,7 @@ const Assets = () => {
                     <th>Status</th>
                     <th>Purchased</th>
                     <th>Warranty</th>
-                    <th>Actions</th>
+                    <th>{user?.role === "Employee" ? "Assigned On" : "Actions"}</th>
                   </>
                 )}
               </tr>
@@ -253,11 +253,15 @@ const Assets = () => {
                       <td>{formatDate(asset.purchase_date)}</td>
                       <td>{formatDate(asset.warranty_expiry)}</td>
                       <td>
-                        <div className="flex gap-2">
-                          <button onClick={() => handleEdit(asset)} className="btn btn-secondary">
-                            Edit
-                          </button>
-                        </div>
+                        {user?.role === "Employee" ? (
+                          formatDate(asset.assigned_at)
+                        ) : (
+                          <div className="flex gap-2">
+                            <button onClick={() => handleEdit(asset)} className="btn btn-secondary">
+                              Edit
+                            </button>
+                          </div>
+                        )}
                       </td>
                     </>
                   )}
