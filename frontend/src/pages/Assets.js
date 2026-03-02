@@ -14,6 +14,19 @@ const Assets = () => {
   const [categories, setCategories] = useState([]);
   const [locations, setLocations] = useState([]);
   const [rooms, setRooms] = useState([]);
+  const [locationName, setLocationName] = useState("");
+  const [roomName, setRoomName] = useState("");
+  const [showItemsModal, setShowItemsModal] = useState(false);
+  const [itemsList, setItemsList] = useState([]);
+  const [selectedItemName, setSelectedItemName] = useState("");
+  const [selectedItemType, setSelectedItemType] = useState("");
+  const [itemsLoading, setItemsLoading] = useState(false);
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [itemToAssign, setItemToAssign] = useState(null);
+  const [assigningLoading, setAssigningLoading] = useState(false);
+  const [selectedAssignee, setSelectedAssignee] = useState("");
+
 
 
   const [formData, setFormData] = useState({
@@ -35,6 +48,8 @@ const Assets = () => {
       let path = "/assets";
       if (user?.role === "Employee") {
         path = `/assets/current-asset/${user?.id}`;
+      } else if (user?.role === "Supervisor") {
+        path = `/assets?location_id=${user?.loc_id}&room_id=${user?.room_id}`;
       }
       const res = await api.get(`${path}`);
       setAssets(res.data) ? console.log("asset success") : console.log("asset Error");
@@ -61,34 +76,74 @@ const Assets = () => {
       console.error("Error fetching locations:", err);
     }
   }, []);
-
-  const fetchInitial = useCallback(async () => {
-    try {
-      setLoading(true);
-      await Promise.all([fetchAssets(), fetchCategories(), fetchLocations()]);
-    } finally {
-      setLoading(false);
-    }
-  }, [fetchAssets, fetchCategories, fetchLocations]);
-
-  useEffect(() => {
-    fetchInitial();
-  }, [fetchInitial]);
   
-  const fetchRooms = useCallback(async (locationId) => {
+  const fetchRooms = useCallback(async () => {
     try {
-      if (!locationId) {
+      if (!user?.loc_id) {
         setRooms([]);
         return;
       }
-      const res = await api.get(`/locations/${locationId}/rooms`);
+      const res = await api.get(`/locations/${user?.loc_id}/rooms`);
       setRooms(res.data);
     } catch (err) {
       console.error("Error fetching rooms:", err);
     }
-  }, []);
+  }, [user?.loc_id]);
 
+  const fetchLocationName = useCallback(async () => {
+    try {
+      if (!user?.loc_id) {
+        setLocationName("");
+        return;
+      }
+      const res = await api.get(`/locations/${user?.loc_id}`);
+      setLocationName(res.data.name);
+    } catch (err) {
+      console.error("Error fetching location name:", err);
+    }
+  }, [user?.loc_id]); 
 
+  const fetchRoomName = useCallback(async () => {
+    try {
+      if (!user?.room_id) {
+        if(user?.role === "Supervisor") {
+          setRoomName("");
+        }
+        return;
+      }
+      const res = await api.get(`/locations/rooms/${user?.room_id}`);
+      setRoomName(res.data.name);
+    } catch (err) {
+      console.error("Error fetching room name:", err);
+    }
+  }, [user?.room_id, user?.role]);
+
+  const fetchTeamMembers = useCallback(async () => {
+    try {
+      if (user?.role !== "Supervisor") return;
+      const res = await api.get("/users");
+      setTeamMembers(res.data);
+    } catch (err) {
+      console.error("Error fetching team members:", err);
+    }
+  }, [user]);
+
+  const fetchInitial = useCallback(async () => {
+    try {
+      setLoading(true);
+      const promises = [fetchAssets(), fetchCategories(), fetchLocations(), fetchLocationName(), fetchRoomName(), fetchRooms()];
+      if (user?.role === "Supervisor") {
+        promises.push(fetchTeamMembers());
+      }
+      await Promise.all(promises);
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchAssets, fetchCategories, fetchLocations, fetchLocationName, fetchRoomName, fetchRooms, fetchTeamMembers, user?.role]);
+
+  useEffect(() => {
+    fetchInitial();
+  }, [fetchInitial]);
 
   const resetForm = () => {
     setFormData({
@@ -169,6 +224,71 @@ const Assets = () => {
       fetchRooms(asset.location_id);
     }
   };
+
+  const handleViewItems = async (assetName, assetType) => {
+    try {
+      setItemsLoading(true);
+      setSelectedItemName(assetName);
+      setSelectedItemType(assetType);
+      setShowItemsModal(true);
+      const res = await api.get(`/assets?location_id=${user.loc_id}&room_id=${user.room_id}&detailed=true&name=${encodeURIComponent(assetName)}`);
+      setItemsList(res.data);
+    } catch (err) {
+      console.error("Error fetching individual items:", err);
+      showError("Error fetching individual items");
+    } finally {
+      setItemsLoading(false);
+    }
+  };
+
+  const handleUnassign = async (assetId) => {
+    if (!window.confirm("Are you sure you want to unassign this asset?")) return;
+    try {
+      setAssigningLoading(true);
+      await api.post("/users/unassign-asset", { asset_id: assetId });
+      showSuccess("Asset unassigned successfully");
+      // Refresh items list
+      handleViewItems(selectedItemName, selectedItemType);
+      fetchAssets();
+    } catch (err) {
+      console.error("Error unassigning asset:", err);
+      showError("Error unassigning asset");
+    } finally {
+      setAssigningLoading(false);
+    }
+  };
+
+  const handleAssignClick = (item) => {
+    setItemToAssign(item);
+    setShowAssignModal(true);
+  };
+
+  const confirmAssign = async () => {
+    if (!selectedAssignee) {
+      showError("Please select a user");
+      return;
+    }
+    try {
+      setAssigningLoading(true);
+      await api.post("/users/assign-asset", { 
+        user_id: selectedAssignee, 
+        asset_id: itemToAssign.id,
+        notes: "Assigned via Assets page"
+      });
+      showSuccess("Asset assigned successfully");
+      setShowAssignModal(false);
+      setItemToAssign(null);
+      setSelectedAssignee("");
+      // Refresh items list
+      handleViewItems(selectedItemName, selectedItemType);
+      fetchAssets();
+    } catch (err) {
+      console.error("Error assigning asset:", err);
+      showError("Error assigning asset");
+    } finally {
+      setAssigningLoading(false);
+    }
+  };
   const dataFetch = () => {
     fetchCategories();
     fetchLocations();
@@ -193,20 +313,26 @@ const Assets = () => {
 
   return (
     <div>
-      <h2 className="page-title">{(user?.role === "Super Admin") ? "List of Assets Not Working" : "Assets Management"}</h2>
-      <div className="action-bar mb-4">
-        <div className="action-bar-left">
-          {/* Back Button if needed */}
+      <div className="flex-between mb-4">
+        <div>
+          <h2 className="page-title">
+            {user?.role === "Super Admin"
+              ? "List of Assets Not Working"
+              : user?.role === "Supervisor"
+                ? `Manage Assets for ${locationName} - ${roomName}`
+                : "Assets Management"}
+          </h2>
         </div>
         <div className="action-bar-right">
-          {(user?.role === "Super Admin") && (
+          {user?.role === "Super Admin" && (
             <button onClick={() => dataFetch()} className="btn btn-primary">
               Add Asset
             </button>
           )}
         </div>
       </div>
-
+      {(user?.role === "Super Admin" || user?.role === "Supervisor") && (
+      <>
       {assets.length === 0 ? (
         <div className="empty-state">
           <p>No assets found</p>
@@ -227,6 +353,16 @@ const Assets = () => {
                     <th>Warranty</th>
                     <th>Purchase Cost</th>
                   </>
+                ) : user?.role === "Supervisor" ? (
+                  <>
+                    <th>NAME</th>
+                    <th>QUANTITY</th>
+                    <th>ASSIGNED</th>
+                    <th>ACTIVE</th>
+                    <th>NOT ACTIVE</th>
+                    <th>CATEGORY</th>
+                    <th>ACTIONS</th>
+                  </>
                 ) : (
                   <>
                     <th>Serial Number</th>
@@ -242,8 +378,8 @@ const Assets = () => {
               </tr>
             </thead>
             <tbody>
-              {assets.map((asset) => (
-                <tr key={asset.id} id={`asset-${asset.id}`}>
+              {assets.map((asset, index) => (
+                <tr key={asset.id || index} id={asset.id ? `asset-${asset.id}` : `asset-row-${index}`}>
                   {user?.role === "Super Admin" ? (
                     <>
                       <td>{asset.sn}</td>
@@ -254,6 +390,24 @@ const Assets = () => {
                       <td>{asset.room_name}</td>
                       <td>{asset.warranty_expiry}</td>
                       <td>{asset.purchase_cost}</td>
+                    </>
+                  ) : user?.role === "Supervisor" ? (
+                    <>
+                      <td>{asset.aname}</td>
+                      <td>{asset.quantity}</td>
+                      <td>{asset.assigned_total || 0}</td>
+                      <td>{asset.active}</td>
+                      <td>{asset.not_active}</td>
+                      <td>{asset.cat_name || "N/A"}</td>
+                      <td>
+                        <button 
+                          className="btn btn-primary" 
+                          style={{ padding: '0.4rem 0.8rem', fontSize: '13px' }}
+                          onClick={() => handleViewItems(asset.aname, asset.asset_type)}
+                        >
+                          View Items
+                        </button>
+                      </td>
                     </>
                   ) : (
                     <>
@@ -295,7 +449,8 @@ const Assets = () => {
           </table>
         </div>
       )}
-
+      </>
+      )}
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -404,6 +559,169 @@ const Assets = () => {
                 )}
                 <button type="button" className="btn btn-secondary" style={{ flex: 1 }} onClick={() => { setShowModal(false); resetForm(); }}>Cancel</button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {showItemsModal && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ width: '90vw', maxWidth: '1000px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div className="modal-header" style={{ padding: '2rem', background: 'linear-gradient(135deg, #1a1d3a 0%, #2a2e5d 100%)', borderBottom: '1px solid #3d447a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px' }}>
+                <h2 style={{ margin: 0, fontSize: '1.8rem', fontWeight: '700', color: '#fff' }}>{selectedItemName}</h2>
+                <span style={{ fontSize: '0.9rem', color: '#a3b1c6', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '1px' }}>{selectedItemType}</span>
+              </div>
+              <button className="close-modal" onClick={() => setShowItemsModal(false)} style={{ fontSize: '32px', color: '#fff', opacity: '0.8', transition: 'opacity 0.2s', background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
+            </div>
+            <div className="modal-body" style={{ overflowY: 'auto', flex: 1, padding: '0 2rem 2rem 2rem', background: '#13152a' }}>
+              {itemsLoading ? (
+                <div className="text-center p-12"><div className="spinner-inline"></div><p style={{ marginTop: '1rem', color: '#a3b1c6' }}>Loading items...</p></div>
+              ) : itemsList.length === 0 ? (
+                <div className="text-center p-12"><p style={{ color: '#a3b1c6', fontSize: '1.1rem' }}>No individual items found.</p></div>
+              ) : (
+                  <table className="table" style={{ borderCollapse: 'separate', borderSpacing: '0 8px', width: '100%' }}>
+                    <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
+                      <tr>
+                        <th style={{ backgroundColor: '#13152a', color: '#7e8db4', padding: '20px 15px 10px 15px', textAlign: 'left', textTransform: 'uppercase', fontSize: '12px', fontWeight: '600', letterSpacing: '1px', borderBottom: '1px solid #3d447a' }}>Serial Number</th>
+                        <th style={{ backgroundColor: '#13152a', color: '#7e8db4', padding: '20px 15px 10px 15px', textAlign: 'left', textTransform: 'uppercase', fontSize: '12px', fontWeight: '600', letterSpacing: '1px', borderBottom: '1px solid #3d447a' }}>Status</th>
+                        <th style={{ backgroundColor: '#13152a', color: '#7e8db4', padding: '20px 15px 10px 15px', textAlign: 'left', textTransform: 'uppercase', fontSize: '12px', fontWeight: '600', letterSpacing: '1px', borderBottom: '1px solid #3d447a' }}>Assigned To</th>
+                        <th style={{ backgroundColor: '#13152a', color: '#7e8db4', padding: '20px 15px 10px 15px', textAlign: 'left', textTransform: 'uppercase', fontSize: '12px', fontWeight: '600', letterSpacing: '1px', borderBottom: '1px solid #3d447a' }}>Warranty</th>
+                        <th style={{ backgroundColor: '#13152a', color: '#7e8db4', padding: '20px 15px 10px 15px', textAlign: 'left', textTransform: 'uppercase', fontSize: '12px', fontWeight: '600', letterSpacing: '1px', borderBottom: '1px solid #3d447a' }}>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {itemsList.map((item) => (
+                        <tr key={item.id} className="premium-row" style={{ backgroundColor: '#1a1d3a', transition: 'transform 0.2s, background-color 0.2s' }}>
+                          <td style={{ padding: '15px', fontSize: '14px', fontWeight: '500', color: '#fff', borderTopLeftRadius: '8px', borderBottomLeftRadius: '8px' }}>{item.sn}</td>
+                          <td style={{ padding: '15px' }}>
+                            <span className={`badge ${
+                              item.status === 'Available' ? 'badge-success' : 
+                              item.status === 'Assigned' ? 'badge-primary' : 'badge-warning'
+                            }`} style={{ padding: '0.4rem 0.8rem', borderRadius: '6px', fontSize: '11px', fontWeight: '700', letterSpacing: '0.5px', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
+                              {item.status.toUpperCase()}
+                            </span>
+                          </td>
+                          <td style={{ padding: '15px', fontSize: '14px', color: '#e2e8f0', fontWeight: '500' }}>{item.assign_to || "-"}</td>
+                          <td style={{ padding: '15px', fontSize: '14px', color: '#a3b1c6' }}>{formatDate(item.warranty_expiry)}</td>
+                          <td style={{ padding: '15px', borderTopRightRadius: '8px', borderBottomRightRadius: '8px' }}>
+                            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                              <button 
+                                onClick={() => {
+                                  setShowItemsModal(false);
+                                  handleEdit({
+                                    ...item,
+                                    name: item.aname || item.name,
+                                    category_id: item.category_id,
+                                    location_id: item.location_id,
+                                    room_id: item.room_id
+                                  });
+                                }} 
+                                className="btn-polish-secondary"
+                                style={{ 
+                                  padding: '0.5rem 1rem', 
+                                  fontSize: '12px', 
+                                  fontWeight: '600',
+                                  borderRadius: '6px',
+                                  border: '1px solid #3d447a',
+                                  backgroundColor: 'transparent',
+                                  color: '#fff',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s',
+                                  width: '70px',
+                                  textAlign: 'center'
+                                }}
+                              >
+                                Edit
+                              </button>
+                              {item.status === 'Available' ? (
+                                <button 
+                                  onClick={() => handleAssignClick(item)}
+                                  className="btn-polish-primary"
+                                  style={{ 
+                                    padding: '0.5rem 0', 
+                                    fontSize: '12px', 
+                                    fontWeight: '600',
+                                    borderRadius: '6px',
+                                    border: 'none',
+                                    backgroundColor: '#4e54c8',
+                                    color: '#fff',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s',
+                                    boxShadow: '0 4px 6px rgba(78, 84, 200, 0.3)',
+                                    width: '85px',
+                                    textAlign: 'center'
+                                  }}
+                                >
+                                  Assign
+                                </button>
+                              ) : (
+                                item.status === 'Assigned' && item.assignee_ownpk === null && item.assignee_unpk === user?.ownpk && (
+                                  <button 
+                                    onClick={() => handleUnassign(item.id)}
+                                    className="btn-polish-danger"
+                                    style={{ 
+                                      padding: '0.5rem 0', 
+                                      fontSize: '12px', 
+                                      fontWeight: '600',
+                                      borderRadius: '6px',
+                                      border: 'none',
+                                      backgroundColor: '#ff4b2b',
+                                      color: '#fff',
+                                      cursor: 'pointer',
+                                      transition: 'all 0.2s',
+                                      boxShadow: '0 4px 6px rgba(255, 75, 43, 0.3)',
+                                      width: '85px',
+                                      textAlign: 'center'
+                                    }}
+                                  >
+                                    Unassign
+                                  </button>
+                                )
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Assign User Modal */}
+      {showAssignModal && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '400px' }}>
+            <div className="modal-header">
+              <h2>Assign {itemToAssign?.sn}</h2>
+              <button className="close-modal" onClick={() => setShowAssignModal(false)}>&times;</button>
+            </div>
+            <div className="modal-body">
+              <div className="form-group mb-4">
+                <label className="form-label">Select Team Member</label>
+                <select 
+                  className="form-input"
+                  value={selectedAssignee}
+                  onChange={(e) => setSelectedAssignee(e.target.value)}
+                >
+                  <option value="">Select User</option>
+                  {teamMembers.map(member => (
+                    <option key={member.id} value={member.id}>{member.name} ({member.email})</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={() => setShowAssignModal(false)}>Cancel</button>
+              <button 
+                className="btn btn-primary" 
+                onClick={confirmAssign}
+                disabled={assigningLoading || !selectedAssignee}
+              >
+                {assigningLoading ? "Assigning..." : "Confirm Assign"}
+              </button>
             </div>
           </div>
         </div>

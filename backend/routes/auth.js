@@ -43,11 +43,7 @@ router.post("/register", async (req, res) => {
     // For now, if provided ownpk exists, we might error or retry? 
     // The implementation plan says: Check if ownpk is provided. If so, verify uniqueness. If duplicate, return 400.
 
-<<<<<<< Updated upstream
     let ownpk = null;
-=======
-    const ownpk = null;
->>>>>>> Stashed changes
     if (role === "Super Admin" || role === "Supervisor") {
       ownpk = await generateUniqueKey();
     }
@@ -123,7 +119,7 @@ router.post("/login", async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user.id, name: user.name, email: user.email, role: user.role, org_id: user.org_id, loc_id: user.loc_id, room_id: user.room_id },
+      { id: user.id, name: user.name, email: user.email, role: user.role, org_id: user.org_id, loc_id: user.loc_id, room_id: user.room_id, ownpk: user.ownpk },
       JWT_SECRET,
       { expiresIn: "1d" }
     );
