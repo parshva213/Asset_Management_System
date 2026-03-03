@@ -312,10 +312,10 @@ app.get("/api/admin/dashboard", authenticate(["Super Admin", "Admin"]), async (r
         
         const [totalLocations] = await pool.query("SELECT COUNT(*) as count FROM locations WHERE org_id = ?", [req.user.org_id]);
         const [totalRooms] = await pool.query("SELECT COUNT(*) as count FROM rooms WHERE location_id IN (SELECT id from locations where org_id = ?) ", [req.user.org_id]);
-        const [pendingRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE status = 'Pending' and asset_id IN (SELECT id from assets where org_id = ?)", [req.user.org_id]);
+        const [pendingRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE status IN ('Pending', 'In Progress') and asset_id IN (SELECT id from assets where org_id = ?)", [req.user.org_id]);
         const [approvedRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE status = 'Approved' and asset_id IN (SELECT id from assets where org_id = ?)", [req.user.org_id]);
-        const [pendingOrders] = await pool.query("SELECT COUNT(*) as count FROM purchase_orders WHERE status = 'Pending' and admin_id IN (SELECT id from users where org_id = ? and role = 'Super Admin')", [req.user.org_id]);
-        const [completedOrders] = await pool.query("SELECT COUNT(*) as count FROM purchase_orders WHERE status = 'Completed' and admin_id IN (SELECT id from users where org_id = ? and role = 'Super Admin')", [req.user.org_id]);
+        const [pendingOrders] = await pool.query("SELECT COUNT(*) as count FROM purchase_orders WHERE status IN ('Requested', 'Quoted', 'Approved') and admin_id IN (SELECT id from users where org_id = ? and role = 'Super Admin')", [req.user.org_id]);
+        const [completedOrders] = await pool.query("SELECT COUNT(*) as count FROM purchase_orders WHERE status = 'Delivered' and admin_id IN (SELECT id from users where org_id = ? and role = 'Super Admin')", [req.user.org_id]);
 
         res.json({
             assignedAssets: assignedAssets[0].count,

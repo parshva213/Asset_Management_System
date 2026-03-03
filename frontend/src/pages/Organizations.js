@@ -22,9 +22,6 @@ const Organizations = () => {
     const [submitting, setSubmitting] = useState(false)
     const [error, setError] = useState(null)
     const [registeringOrgId, setRegisteringOrgId] = useState(null)
-    const [showVendorRegisterModal, setShowVendorRegisterModal] = useState(false)
-    const [selectedOrganization, setSelectedOrganization] = useState(null)
-    const [vendorOrgKey, setVendorOrgKey] = useState("")
 
     const isVendor = (user?.role || "").toLowerCase() === "vendor"
 
@@ -45,7 +42,7 @@ const Organizations = () => {
         }
     }
 
-    const openVendorRegisterModal = (organization) => {
+    const handleVendorRegister = async (organization) => {
         const alreadyRegistered = Number(organization.is_registered) === 1
         if (alreadyRegistered) {
             showInfo(`Already registered with ${organization.name}`)
@@ -56,29 +53,11 @@ const Organizations = () => {
             return
         }
 
-        setSelectedOrganization(organization)
-        setVendorOrgKey("")
-        setShowVendorRegisterModal(true)
-    }
-
-    const handleVendorRegister = async () => {
-        if (!selectedOrganization) return
-        if (!vendorOrgKey.trim()) {
-            showError("Please enter v_org key")
-            return
-        }
-
-        const organization = selectedOrganization
         setRegisteringOrgId(organization.id)
         try {
-            await api.post(`/organizations/${organization.id}/register`, {
-                v_org: vendorOrgKey.trim(),
-            })
+            await api.post(`/organizations/${organization.id}/register`)
             showSuccess(`Registered with ${organization.name}`)
             await fetchOrganizations()
-            setShowVendorRegisterModal(false)
-            setSelectedOrganization(null)
-            setVendorOrgKey("")
         } catch (err) {
             console.error("Error registering organization:", err)
             showError(err?.message || "Failed to register")
@@ -123,6 +102,7 @@ const Organizations = () => {
             showError(err?.response?.data?.message || "Error saving organization")
         } finally {
             setSubmitting(false)
+            window.location.reload()
         }
     }
 
@@ -161,8 +141,14 @@ const Organizations = () => {
     if (isVendor) {
         return (
             <div className="page-container">
-                <div className="flex-between mb-4">
-                    <h2>Organizations</h2>
+                <h2 className="page-title">Organizations</h2>
+                <div className="action-bar mb-4">
+                    <div className="action-bar-left">
+                        {/* Back button if needed */}
+                    </div>
+                    <div className="action-bar-right">
+                        {/* Action buttons could go here */}
+                    </div>
                 </div>
 
                 <p className="text-secondary mb-4">
@@ -186,7 +172,7 @@ const Organizations = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {organizations.map((organization) => {
+                                {organizations.filter(org => org.id !== 1).map((organization) => {
                                     const registered = Number(organization.is_registered) === 1
                                     return (
                                         <tr key={organization.id} id={`org-${organization.id}`}>
@@ -196,7 +182,7 @@ const Organizations = () => {
                                             <td>{registered ? "Registered" : "Not Registered"}</td>
                                             <td>
                                                 <Button
-                                                    onClick={() => openVendorRegisterModal(organization)}
+                                                    onClick={() => handleVendorRegister(organization)}
                                                     disabled={registered || registeringOrgId === organization.id || organization.status !== "Active"}
                                                 >
                                                     {registered
@@ -213,79 +199,30 @@ const Organizations = () => {
                         </table>
                     </div>
                 )}
-
-                {showVendorRegisterModal && selectedOrganization && (
-                    <div className="modal-overlay" role="dialog" aria-modal="true">
-                        <div className="modal-content">
-                            <div className="modal-header">
-                                <h2 className="modal-title">Register Company</h2>
-                                <button
-                                    className="close-modal"
-                                    aria-label="Close"
-                                    onClick={() => {
-                                        setShowVendorRegisterModal(false)
-                                        setSelectedOrganization(null)
-                                        setVendorOrgKey("")
-                                    }}
-                                >
-                                    ×
-                                </button>
-                            </div>
-                            <div className="modal-body">
-                                <p style={{ marginBottom: "1rem" }}>
-                                    Enter <strong>v_org</strong> key for <strong>{selectedOrganization.name}</strong>.
-                                </p>
-                                <div className="form-group">
-                                    <label className="form-label">v_org Key</label>
-                                    <input
-                                        type="text"
-                                        className="form-input"
-                                        value={vendorOrgKey}
-                                        onChange={(e) => setVendorOrgKey(e.target.value)}
-                                        placeholder="Enter company v_org key"
-                                    />
-                                </div>
-                                <div className="flex gap-2 mt-4">
-                                    <Button
-                                        onClick={handleVendorRegister}
-                                        disabled={registeringOrgId === selectedOrganization.id}
-                                    >
-                                        {registeringOrgId === selectedOrganization.id ? "Registering..." : "Register"}
-                                    </Button>
-                                    <Button
-                                        variant="secondary"
-                                        onClick={() => {
-                                            setShowVendorRegisterModal(false)
-                                            setSelectedOrganization(null)
-                                            setVendorOrgKey("")
-                                        }}
-                                    >
-                                        Cancel
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
             </div>
         )
     }
 
     return (
         <div className="page-container">
-            <div className="flex-between mb-4">
-                <h2>Organizations Management</h2>
-                <Button onClick={() => {
-                    setEditingOrganization(null)
-                    setFormData({
-                        name: "",
-                        description: "",
-                        member: "1",
-                    })
-                    setShowModal(true)
-                }}>
-                    Add Organization
-                </Button>
+            <h2 className="page-title">Organizations Management</h2>
+            <div className="action-bar mb-4">
+                <div className="action-bar-left">
+                    {/* Back button if needed */}
+                </div>
+                <div className="action-bar-right">
+                    <Button onClick={() => {
+                        setEditingOrganization(null)
+                        setFormData({
+                            name: "",
+                            description: "",
+                            member: "1",
+                        })
+                        setShowModal(true)
+                    }}>
+                        Add Organization
+                    </Button>
+                </div>
             </div>
 
             {organizations.length === 0 || organizations.filter(org => org.id !== 1).length === 0 ? (
@@ -298,11 +235,11 @@ const Organizations = () => {
                         <thead>
                             <tr>
                                 <th>Name</th>
-                                <th>Description</th>
-                                <th>Org PK</th>
+                                <th>Address (Head office)</th>
+                                <th>Org_PK</th>
                                 <th>Member</th>
-                                <th>V OPK</th>
-                                <th>Created At</th>
+                                <th>V_OPK</th>
+                                <th>Created_At</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -384,9 +321,11 @@ const Organizations = () => {
                                         placeholder="Enter organization name"
                                     />
                                 </div>
-
+                                
+                                {formData.name && 
+                                    <>
                                 <div className="form-group">
-                                    <label className="form-label">Description</label>
+                                    <label className="form-label">Address *</label>
                                     <input
                                         type="text"
                                         name="description"
@@ -409,11 +348,16 @@ const Organizations = () => {
                                         placeholder="Enter Org Member"
                                     />
                                 </div>
+                                    </>
+                                }
 
                                 {error && <div className="alert alert-error mb-4">{error}</div>}
 
+                            </form>
+                        </div>
+                        <div className="modal-footer">
                                 <div className="flex gap-2 mt-6">
-                                    <Button type="submit" disabled={submitting}>
+                                    <Button type="submit" disabled={submitting} onClick={handleSubmit}>
                                         {submitting ? (editingOrganization ? "Updating..." : "Adding...") : editingOrganization ? "Update Organization" : "Add Organization"}
                                     </Button>
                                     <Button
@@ -429,7 +373,6 @@ const Organizations = () => {
                                         Cancel
                                     </Button>
                                 </div>
-                            </form>
                         </div>
                     </div>
                 </div>

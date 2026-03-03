@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
 import api from "../api";
@@ -13,6 +14,8 @@ const Assets = () => {
   const [editingAsset, setEditingAsset] = useState(null);
   const [categories, setCategories] = useState([]);
   const [locations, setLocations] = useState([]);
+  const [locationName, setLocationName] = useState("");
+  const navigate = useNavigate();
 
 
   const [formData, setFormData] = useState({
@@ -31,7 +34,7 @@ const Assets = () => {
   const fetchInitial = useCallback(async () => {
     try {
       setLoading(true);
-      await Promise.all([fetchAssets()]);
+      await Promise.all([fetchAssets(), fetchLocations()]);
     } finally {
       setLoading(false);
     }
@@ -44,11 +47,21 @@ const Assets = () => {
   const fetchAssets = async () => {
     try {
       let path = "/assets";
-      if (user?.role === "Employee") {
+      // Supervisor: show location summary for their assigned location
+      if (user?.role === "Supervisor") {
+        path = `/assets?location_id=${user.loc_id}`;
+        try {
+          const locRes = await api.get(`/locations/${user.loc_id}`);
+          setLocationName(locRes.data.name || "");
+        } catch (err) {
+          console.warn("Unable to fetch supervisor location name", err);
+        }
+      } else if (user?.role === "Employee") {
         path = `/assets/current-asset/${user?.id}`;
       }
+
       const res = await api.get(`${path}`);
-      setAssets(res.data) ? console.log("asset success") : console.log("asset Error");
+      setAssets(res.data || []);
 
     } catch (err) {
       console.error("Error fetching assets:", err);
@@ -153,6 +166,113 @@ const Assets = () => {
     setShowModal(true);
   };
 
+  const modal = showModal && (
+    <div className="modal-overlay">
+      <div className="modal-content">
+        <div className="modal-header">
+          <h2>{editingAsset ? "Edit Asset" : "Add Asset"}</h2>
+          <button className="close-modal" onClick={() => { setShowModal(false); resetForm(); }}>×</button>
+        </div>
+        <div className="modal-body">
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+
+            {/* Step 1: Asset Type */}
+            <div className="form-group">
+              <label className="form-label">Asset Type</label>
+              <select className="form-select" name="asset_type" value={formData.asset_type} onChange={handleChange} required>
+                <option value="">Select Type</option>
+                <option value="Hardware">Hardware</option>
+                <option value="Software">Software</option>
+              </select>
+            </div>
+
+            {/* Step 2: Category */}
+            {formData.asset_type && (
+              <>
+                <div className="form-group">
+                  <label className="form-label">Category</label>
+                  <select className="form-select" name="category_id" value={formData.category_id} onChange={handleChange} required>
+                    <option value="">Select category</option>
+                    {categories.filter(c => c.type === formData.asset_type).map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Location</label>
+                  <select className="form-select" name="location_id" value={formData.location_id} onChange={handleChange} required>
+                    <option value="">Select location</option>
+                    {locations.map((l) => (
+                      <option key={l.id} value={l.id}>{l.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
+
+
+            {/* Step 4: Company Name */}
+            {formData.asset_type && (
+              <div className="form-group">
+                <label className="form-label">Company Name</label>
+                <input type="text" className="form-input" name="company_name" value={formData.company_name} onChange={handleChange} placeholder="e.g. Apple" />
+              </div>
+            )}
+
+            {/* Step 5: Name, Purchase Date, Quantity */}
+            {formData.company_name && (
+              <>
+                <div className="form-group">
+                  <label className="form-label">Asset Name</label>
+                  <input type="text" className="form-input" name="name" value={formData.name} onChange={handleChange} placeholder="e.g. MacBook Pro" required />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Purchase Date</label>
+                  <input type="date" className="form-input" name="purchase_date" value={formData.purchase_date} onChange={handleChange} />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Quantity</label>
+                  <input type="number" className="form-input" name="quantity" value={formData.quantity} onChange={handleChange} placeholder="e.g. 1 or 5" />
+                </div>
+              </>
+            )}
+
+            {/* Step 6: Cost, Warranty Expiry, Description */}
+            {formData.name && formData.purchase_date && (
+              <>
+                <div className="form-group">
+                  <label className="form-label">Purchase Cost for single unit</label>
+                  <input type="number" className="form-input" name="purchase_cost" value={formData.purchase_cost} onChange={handleChange} placeholder="e.g. 1200" />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Warranty Expiry</label>
+                  <input type="date" className="form-input" name="warranty_expiry" value={formData.warranty_expiry} onChange={handleChange} />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Description</label>
+                  <textarea className="form-input" name="description" value={formData.description} onChange={handleChange} rows="3" />
+                </div>
+
+              </>
+            )}
+          </form>
+        </div>
+        <div className="modal-footer">
+          <div className="flex gap-2 mt-2">
+            {formData.purchase_cost && (
+              <button type="submit" onClick={handleSubmit} className="btn btn-primary" style={{ flex: 1 }}>{editingAsset ? "Update" : "Add"} Asset</button>
+            )}
+            <button type="button" className="btn btn-secondary" style={{ flex: 1 }} onClick={() => { setShowModal(false); resetForm(); }}>Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   if (loading) return <div className="loading">Loading assets...</div>;
 
   if ((user?.role === "Supervisor" || user?.role === "Employee") && !user?.room_id) {
@@ -166,6 +286,69 @@ const Assets = () => {
         </div>
       </div>
     )
+  }
+
+  // Supervisor-specific summary view
+  if (user?.role === "Supervisor") {
+    return (
+      <div>
+        <div className="flex-between mb-4">
+          <div>
+            <h2>Manage Assets for {locationName || "your Location"}</h2>
+          </div>
+          {(user?.role === "Super Admin" || user?.role === "Supervisor") && (
+            <button onClick={() => dataFetch()} className="btn btn-primary">
+              Add Asset
+            </button>
+          )}
+        </div>
+
+        {assets.length === 0 ? (
+          <div className="empty-state">
+            <p>No assets found</p>
+          </div>
+        ) : (
+          <div className="table-container">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Quantity</th>
+                  <th>Assigned</th>
+                  <th>Active</th>
+                  <th>Not Active</th>
+                  <th>Category</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {assets.map((asset) => (
+                  <tr key={asset.id} id={`asset-${asset.id}`}>
+                    <td>{asset.aname}</td>
+                    <td>{asset.quantity}</td>
+                    <td>{asset.assigned_total || 0}</td>
+                    <td>{asset.active}</td>
+                    <td>{asset.not_active}</td>
+                    <td>{asset.cat_name || "N/A"}</td>
+                    <td>
+                      <div className="flex gap-2">
+                        <button
+                          className="btn btn-secondary"
+                          onClick={() => navigate(`/lr-assets?locid=${user.loc_id}&roomid=${user.room_id}`)}
+                        >
+                          View Items
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        {modal}
+      </div>
+    );
   }
 
   return (
@@ -271,113 +454,7 @@ const Assets = () => {
           </table>
         </div>
       )}
-
-      {showModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h2>{editingAsset ? "Edit Asset" : "Add Asset"}</h2>
-              <button className="close-modal" onClick={() => { setShowModal(false); resetForm(); }}>×</button>
-            </div>
-            <div className="modal-body">
-              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-
-                {/* Step 1: Asset Type */}
-                <div className="form-group">
-                  <label className="form-label">Asset Type</label>
-                  <select className="form-select" name="asset_type" value={formData.asset_type} onChange={handleChange} required>
-                    <option value="">Select Type</option>
-                    <option value="Hardware">Hardware</option>
-                    <option value="Software">Software</option>
-                  </select>
-                </div>
-
-                {/* Step 2: Category */}
-                {formData.asset_type && (
-                  <>
-                    <div className="form-group">
-                      <label className="form-label">Category</label>
-                      <select className="form-select" name="category_id" value={formData.category_id} onChange={handleChange} required>
-                        <option value="">Select category</option>
-                        {categories.filter(c => c.type === formData.asset_type).map((c) => (
-                          <option key={c.id} value={c.id}>{c.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="form-group">
-                      <label className="form-label">Location</label>
-                      <select className="form-select" name="location_id" value={formData.location_id} onChange={handleChange} required>
-                        <option value="">Select location</option>
-                        {locations.map((l) => (
-                          <option key={l.id} value={l.id}>{l.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </>
-                )}
-
-
-                {/* Step 4: Company Name */}
-                {formData.asset_type && (
-                  <div className="form-group">
-                    <label className="form-label">Company Name</label>
-                    <input type="text" className="form-input" name="company_name" value={formData.company_name} onChange={handleChange} placeholder="e.g. Apple" />
-                  </div>
-                )}
-
-                {/* Step 5: Name, Purchase Date, Quantity */}
-                {formData.company_name && (
-                  <>
-                    <div className="form-group">
-                      <label className="form-label">Asset Name</label>
-                      <input type="text" className="form-input" name="name" value={formData.name} onChange={handleChange} placeholder="e.g. MacBook Pro" required />
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label">Purchase Date</label>
-                      <input type="date" className="form-input" name="purchase_date" value={formData.purchase_date} onChange={handleChange} />
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label">Quantity</label>
-                      <input type="number" className="form-input" name="quantity" value={formData.quantity} onChange={handleChange} placeholder="e.g. 1 or 5" />
-                    </div>
-                  </>
-                )}
-
-                {/* Step 6: Cost, Warranty Expiry, Description */}
-                {formData.name && formData.purchase_date && (
-                  <>
-                    <div className="form-group">
-                      <label className="form-label">Purchase Cost for single unit</label>
-                      <input type="number" className="form-input" name="purchase_cost" value={formData.purchase_cost} onChange={handleChange} placeholder="e.g. 1200" />
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label">Warranty Expiry</label>
-                      <input type="date" className="form-input" name="warranty_expiry" value={formData.warranty_expiry} onChange={handleChange} />
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label">Description</label>
-                      <textarea className="form-input" name="description" value={formData.description} onChange={handleChange} rows="3" />
-                    </div>
-
-                  </>
-                )}
-              </form>
-            </div>
-            <div className="modal-footer">
-              <div className="flex gap-2 mt-2">
-                {formData.purchase_cost && (
-                  <button type="submit" onClick={handleSubmit} className="btn btn-primary" style={{ flex: 1 }}>{editingAsset ? "Update" : "Add"} Asset</button>
-                )}
-                <button type="button" className="btn btn-secondary" style={{ flex: 1 }} onClick={() => { setShowModal(false); resetForm(); }}>Cancel</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+    {modal}
     </div>
   );
 };
