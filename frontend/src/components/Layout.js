@@ -121,7 +121,7 @@ const Layout = () => {
     <div className={`layout-container ${theme}`}>
       <Header user={user} logout={logout} toggleSidebar={toggleSidebar} />
 
-      <div className="layout-body">
+      <div className={`layout-body ${location.pathname.includes('dashboard') ? 'dashboard-mode' : ''}`}>
         <aside className={`sidebar ${!isSidebarOpen ? 'closed' : ''}`}>
           <nav className="sidebar-nav">
             <ul>

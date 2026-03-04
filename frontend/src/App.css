@@ -1519,6 +1519,7 @@ body.dark .transform-input {
     padding: 1.5rem;
     box-shadow: var(--shadow);
     border: 1px solid var(--border);
+    /* overflow-x: auto; */
 }
 
 .table-header-row {
@@ -2756,4 +2757,13 @@ body.dark .transform-input {
 
 .bg-blue {
     background: #3b82f6;
+}
+
+.layout-body.dashboard-mode {
+    overflow: visible;
+}
+
+.stats-container{
+    display: grid;
+    gap: 1.5rem;
 }

@@ -307,11 +307,10 @@ app.get("/api/admin/dashboard", authenticate(["Super Admin", "Admin"]), async (r
         
         const [totalLocations] = await pool.query("SELECT COUNT(*) as count FROM locations WHERE org_id = ?", [req.user.org_id]);
         const [totalRooms] = await pool.query("SELECT COUNT(*) as count FROM rooms WHERE location_id IN (SELECT id from locations where org_id = ?) ", [req.user.org_id]);
-        const [pendingRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE status = 'Pending' and asset_id IN (SELECT id from assets where org_id = ?)", [req.user.org_id]);
-        const [approvedRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE status = 'Approved' and asset_id IN (SELECT id from assets where org_id = ?)", [req.user.org_id]);
-        const [pendingOrders] = await pool.query("SELECT COUNT(*) as count FROM purchase_orders WHERE status = 'Pending' and admin_id IN (SELECT id from users where org_id = ? and role = 'Super Admin')", [req.user.org_id]);
-        const [completedOrders] = await pool.query("SELECT COUNT(*) as count FROM purchase_orders WHERE status = 'Completed' and admin_id IN (SELECT id from users where org_id = ? and role = 'Super Admin')", [req.user.org_id]);
-
+        const [pendingRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE status IN ('Pending', 'In Progress') and requested_by IN (SELECT id from users where org_id = ?)", [req.user.org_id]);
+        const [approvedRequests] = await pool.query("select count(*) as count from asset_requests where status in ('Approved', 'Completed', 'Rejected') and  requested_by in (select id from users where org_id = ?);", [req.user.org_id]);
+        const [pendingOrders] = await pool.query("SELECT COUNT(*) as count FROM purchase_orders WHERE status IN ('Requested', 'Quoted', 'Approved') and admin_id IN (SELECT id from users where org_id = ? and role = 'Super Admin')", [req.user.org_id]);
+        const [completedOrders] = await pool.query("SELECT COUNT(*) as count FROM purchase_orders WHERE status = 'Delivered' and admin_id IN (SELECT id from users where org_id = ? and role = 'Super Admin')", [req.user.org_id]);
         res.json({
             assignedAssets: assignedAssets[0].count,
             maintainedAssets: maintainedAssets[0].count,
@@ -429,35 +428,7 @@ app.get("/api/employee/dashboard", authenticate(["Employee"]), async (req, res) 
     }
 });
 
-// ------------------ SOFTWARE DEVELOPER DASHBOARD ------------------
-app.get("/api/sd/dashboard", authenticate(["Software Developer"]), async (req, res) => {
-    try {
-        const [assignedAssets] = await pool.query("SELECT COUNT(*) as count FROM asset_assignments WHERE assigned_to = ? AND unassigned_at IS NULL", [req.user.id]);
-        const [pendingRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE requested_by = ? AND status = 'Pending'", [req.user.id]);
-        const [approvedRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE requested_by = ? AND status = 'Approved'", [req.user.id]);
-        const [totalRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE requested_by = ?", [req.user.id]);
-        const [assignedAssetsList] = await pool.query(`
-            SELECT a.id, a.name, a.status, a.serial_number 
-            FROM assets a
-            JOIN asset_assignments aa ON a.id = aa.asset_id
-            WHERE aa.assigned_to = ? AND aa.unassigned_at IS NULL
-            ORDER BY a.id ASC
-        `, [req.user.id]);
-        const [myRequests] = await pool.query("SELECT id, description, status, created_at FROM asset_requests WHERE requested_by = ? ORDER BY id ASC", [req.user.id]);
 
-        res.json({
-            assignedAssets: assignedAssets[0].count,
-            pendingRequests: pendingRequests[0].count,
-            approvedRequests: approvedRequests[0].count,
-            totalRequests: totalRequests[0].count,
-            assignedAssetsList,
-            myRequests,
-        });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Server error" });
-    }
-});
 
 // ------------------ VENDOR DASHBOARD ------------------
 app.get("/api/vendor/dashboard", authenticate(["Vendor"]), async (req, res) => {

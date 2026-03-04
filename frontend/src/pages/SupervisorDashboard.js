@@ -293,7 +293,7 @@ const SupervisorDashboard = () => {
                     </div>
 
                     {/* Location Asset Request Card */}
-                    <div className="stat-widget">
+                    {/* <div className="stat-widget">
                         <div className="widget-header">
                             <div className="stat-icon bg-violet">📋</div>
                             <span className="widget-title">Location Asset Request</span>
@@ -311,7 +311,7 @@ const SupervisorDashboard = () => {
                         <div className="stat-footer">
                             {user?.loc_id ? <Link to="/requests">View full details →</Link> : ""}
                         </div>
-                    </div>
+                    </div> */}
                 </div>
             </div>
 
