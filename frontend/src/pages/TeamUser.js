@@ -5,8 +5,8 @@ import { useAuth } from "../contexts/AuthContext"
 import api from "../api"
 
 const TeamUser = () => {
-  useAuth()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [searchParams] = useSearchParams()
   const [users, setUsers] = useState([])
   const [locationName, setLocationName] = useState("")
@@ -29,9 +29,13 @@ const TeamUser = () => {
   // Track previous location to detect actual changes
   const prevLocationIdRef = useRef(null)
 
-  const locid = searchParams.get("locid")
-  const roomid = searchParams.get("roomid")
+  const locidParam = searchParams.get("locid")
+  const roomidParam = searchParams.get("roomid")
   const role = searchParams.get("role")
+
+  // Fallback for Supervisor if no params provided
+  const locid = (user?.role === "Supervisor" && !locidParam && !roomidParam) ? user.loc_id : locidParam
+  const roomid = (user?.role === "Supervisor" && !locidParam && !roomidParam) ? user.room_id : roomidParam
 
   console.log("TeamUser Params - locid:", locid, "roomid:", roomid, "role:", role)
 
@@ -39,6 +43,8 @@ const TeamUser = () => {
     setLoading(true)
     try {
       const params = new URLSearchParams(searchParams)
+      
+      // Use the derived locid and roomid (which handle the Supervisor fallback)
       if (locid) {
         params.delete("locid")
         params.append("location_id", locid)
@@ -61,17 +67,17 @@ const TeamUser = () => {
 
   const fetchLocationName = useCallback(async () => {
     try {
-      if (locid) {
-        const response = await api.get(`/locations/${locid}`)
-        setLocationName(response.data.name)
-        setDerivedLocationId(locid)
-      } else if (roomid) {
+      if (roomid) {
         console.log("TeamUser Fetching Room Name for ID:", roomid)
         const response = await api.get(`/locations/rooms/${roomid}`)
         console.log("TeamUser Room Response:", response.data)
         setLocationName(`${response.data.name} in ${response.data.location_name}`)
         // Store the location_id from the room data for back navigation
         setDerivedLocationId(response.data.location_id)
+      } else if (locid) {
+        const response = await api.get(`/locations/${locid}`)
+        setLocationName(response.data.name)
+        setDerivedLocationId(locid)
       }
     } catch (error) {
       console.error("Error fetching location name:", error)
@@ -248,21 +254,26 @@ const TeamUser = () => {
     )
   }
 
-  const title = roomid ? "Team (Supervisor & Employees) in " + locationName : "Maintenance Team at " + locationName
   const totalToAssign = Object.values(assignQuantities).reduce((sum, qty) => sum + (Number(qty) || 0), 0)
+  const title = user?.role === "Supervisor" ? "My Employee Team" : (roomid ? "Team (Supervisor & Employees) in " + locationName : "Team (Employees & Maintenance) at " + locationName)
 
   return (
     <div className="content">
-      <div className="flex-between mb-4">
-        <div>
-          <button 
-            onClick={() => navigate(roomid ? `/rooms?location_id=${locid || derivedLocationId}` : "/locations")} 
-            className="btn btn-secondary mb-2"
-            style={{ padding: '0.4rem 0.8rem', fontSize: '13px' }}
-          >
-            ← {roomid ? "Back to Rooms" : "Back to Locations"}
-          </button>
-          <h2>{title}</h2>
+      <h2 className="page-title">{title}</h2>
+      <div className="action-bar mb-4">
+        <div className="action-bar-left">
+          {user?.role !== "Supervisor" && (
+            <button 
+              onClick={() => navigate(roomid ? `/rooms?location_id=${locid || derivedLocationId}` : "/locations")} 
+              className="btn btn-secondary"
+              style={{ padding: '0.4rem 0.8rem', fontSize: '13px' }}
+            >
+              ← {roomid ? "Back to Rooms" : "Back to Locations"}
+            </button>
+          )}
+        </div>
+        <div className="action-bar-right">
+          {/* Add future filters or actions here */}
         </div>
       </div>
 
@@ -272,29 +283,36 @@ const TeamUser = () => {
         </div>
       ) : (
         <div className="user-grid">
-          {users.map((user) => (
-            <div key={user.id} className="card user-card" id={`user-${user.id}`}>
+          {users.map((u) => (
+            <div key={u.id} className="card user-card" id={`user-${u.id}`}>
               <div className="card-header flex-between">
                 <div>
-                  <h3 className="text-lg font-bold">{user.name}</h3>
+                  <h3 className="text-lg font-bold">{u.name}</h3>
                 </div>
-                <span className="badge badge-primary">{user.role}</span>
+                {user?.role !== "Supervisor" && (
+                  <span className="badge badge-primary">{u.role}</span>
+                )}
               </div>
               <div className="card-body">
-                <p><strong>Email:</strong> {user.email}</p>
-                <p><strong>Department:</strong> {user.department || "N/A"}</p>
-                <p><strong>Assigned Assets:</strong> {user.assigned_assets?.length || 0}</p>
+                <p><strong>Email:</strong> {u.email}</p>
+                {(user?.role === "Supervisor" || user?.role === "Super Admin") && (
+                  <p><strong>Phone:</strong> {u.phone || "N/A"}</p>
+                )}
+                <p><strong>Department:</strong> {u.department || "N/A"}</p>
+                <p><strong>Assigned Assets:</strong> {u.assigned_assets?.length || 0}</p>
               </div>
               <div className="card-footer">
+                {user?.role !== "Supervisor" && (
+                  <button 
+                    className="btn btn-primary" 
+                    onClick={() => handleOpenModal(u, 'location')}
+                  >
+                    Change Location
+                  </button>
+                )}
                 <button 
                   className="btn btn-primary" 
-                  onClick={() => handleOpenModal(user, 'location')}
-                >
-                  Change Location
-                </button>
-                <button 
-                  className="btn btn-success" 
-                  onClick={() => handleOpenModal(user, 'assets')}
+                  onClick={() => handleOpenModal(u, 'assets')}
                 >
                   Assets
                 </button>

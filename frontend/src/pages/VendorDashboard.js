@@ -7,11 +7,9 @@ import { Link } from "react-router-dom"
 const VendorDashboard = () => {
   const { user, logout } = useAuth()
   const [stats, setStats] = useState({ 
-      pending: 0, 
-      completed: 0, 
-      totalSupplied: 0,
       pendingOrders: [],
-      completedOrders: []
+      completedOrders: [],
+      totalSupplied: 0,
   })
 
   /* Dashboard State */
@@ -21,8 +19,6 @@ const VendorDashboard = () => {
       const response = await api.get("/vendor/dashboard")
       const data = response.data
       setStats({
-        pending: data.pendingCount || 0,
-        completed: data.completedCount || 0,
         totalSupplied: data.totalSupplied || 0,
         pendingOrders: data.pendingOrders || [],
         completedOrders: data.completedOrders || []
@@ -79,52 +75,42 @@ const VendorDashboard = () => {
             </div>
 
             {/* Stats Grid */}
-            <div className="stats-grid-2">
-                <div className="stat-widget">
-                    <div>
-                        <div className="stat-icon purple">
-                            📋
+            <div className="stats-container">
+                <div className="stats-grid-2">
+                    <div className="stat-widget">
+                        <div>
+                            <div className="stat-icon purple">📋</div>
+                            <span className="stat-label">Pending Orders</span>
+                            <h3 className="stat-value">{stats.pendingOrders?.length || 0}</h3>
                         </div>
-                        <span className="stat-label">Pending Orders</span>
-                        <h3 className="stat-value">
-                            {stats.pendingOrders.length > 0 ? stats.pendingOrders.length : 0}
-                        </h3>
+                        <div className="stat-footer">
+                            <Link to="/supply-assets">Manage Orders →</Link>
+                        </div>
                     </div>
-                   <div className="stat-footer">
-                         <Link to="/supply-assets">
-                            Manage Orders →
-                        </Link>
+
+                    <div className="stat-widget">
+                        <div>
+                            <div className="stat-icon green">✅</div>
+                            <span className="stat-label">Completed Orders</span>
+                            <h3 className="stat-value">{stats.completedOrders?.length || 0}</h3>
+                        </div>
+                        <div className="stat-footer">
+                            <Link to="/vendor-assets">View Products →</Link>
+                        </div>
                     </div>
                 </div>
-                <div className="stat-widget">
-                    <div>
-                        <div className="stat-icon green">
-                             ✅
+                <div className="stats-grid-1">
+                    <div className="stat-widget full-width">
+                        <div>
+                            <div className="stat-icon blue">📦</div>
+                            <span className="stat-label">Total Supplied</span>
+                            <h3 className="stat-value">{stats.totalSupplied || 0}</h3>
                         </div>
-                        <span className="stat-label">Completed Orders</span>
-                        <h3 className="stat-value">
-                            {stats.completedOrders.length > 0 ? stats.completedOrders.length : 0}
-                        </h3>
-                    </div>
-                     <div className="stat-footer">
-                         <Link to="/vendor-assets">
-                            View Products →
-                        </Link>
-                    </div>
-                </div>
-                <div className="stat-widget">
-                    <div>
-                        <div className="stat-icon blue">
-                            📦
+                        <div className="stat-footer">
+                            <span>Lifetime stats</span>
                         </div>
-                         <span className="stat-label">Total Supplied</span>
-                        <h3 className="stat-value">
-                           {stats.totalSupplied > 0 ? stats.totalSupplied : 0}
-                        </h3>
                     </div>
-                     <div className="stat-footer">
-                         <span>Lifetime stats</span>
-                    </div>
+                    
                 </div>
             </div>
         </div>

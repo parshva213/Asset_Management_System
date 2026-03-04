@@ -220,11 +220,13 @@ const authenticate = (roles = []) => {
             }
 
             if (roles.length && !roles.some(role => role.toLowerCase() === (req.user.role || "").toLowerCase())) {
+                console.warn(`[AUTH] Forbidden: User ID ${req.user.id} has role "${req.user.role}", but endpoint requires one of: ${roles.join(", ")}`);
                 return res.status(403).json({ error: "Forbidden" });
             }
 
             next();
         } catch (err) {
+            console.error(`[AUTH] Token Verification Error: ${err.message}`);
             return res.status(403).json({ error: "Invalid token" });
         }
     };
@@ -275,14 +277,7 @@ app.get("/api/dashboard", authenticate(), async (req, res) => {
         } else if (req.user.role === "Employee") {
             // User's assigned assets
             const [assignedAssets] = await pool.query(
-                `SELECT COUNT(*) as count
-                 FROM asset_assignments aa
-                 JOIN assets a ON a.id = aa.asset_id
-                 WHERE aa.assigned_to = ?
-                   AND aa.unassigned_at IS NULL
-                   AND aa.unassigned_by IS NULL
-                   AND a.org_id = ?`,
-                [req.user.id, req.user.org_id]
+                "SELECT COUNT(*) as count FROM asset_assignments WHERE assigned_to = ? AND unassigned_at IS NULL", [req.user.id]
             );
 
             stats = {
@@ -312,11 +307,10 @@ app.get("/api/admin/dashboard", authenticate(["Super Admin", "Admin"]), async (r
         
         const [totalLocations] = await pool.query("SELECT COUNT(*) as count FROM locations WHERE org_id = ?", [req.user.org_id]);
         const [totalRooms] = await pool.query("SELECT COUNT(*) as count FROM rooms WHERE location_id IN (SELECT id from locations where org_id = ?) ", [req.user.org_id]);
-        const [pendingRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE status IN ('Pending', 'In Progress') and asset_id IN (SELECT id from assets where org_id = ?)", [req.user.org_id]);
-        const [approvedRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE status = 'Approved' and asset_id IN (SELECT id from assets where org_id = ?)", [req.user.org_id]);
+        const [pendingRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE status IN ('Pending', 'In Progress') and requested_by IN (SELECT id from users where org_id = ?)", [req.user.org_id]);
+        const [approvedRequests] = await pool.query("select count(*) as count from asset_requests where status in ('Approved', 'Completed', 'Rejected') and  requested_by in (select id from users where org_id = ?);", [req.user.org_id]);
         const [pendingOrders] = await pool.query("SELECT COUNT(*) as count FROM purchase_orders WHERE status IN ('Requested', 'Quoted', 'Approved') and admin_id IN (SELECT id from users where org_id = ? and role = 'Super Admin')", [req.user.org_id]);
         const [completedOrders] = await pool.query("SELECT COUNT(*) as count FROM purchase_orders WHERE status = 'Delivered' and admin_id IN (SELECT id from users where org_id = ? and role = 'Super Admin')", [req.user.org_id]);
-
         res.json({
             assignedAssets: assignedAssets[0].count,
             maintainedAssets: maintainedAssets[0].count,
@@ -341,93 +335,62 @@ app.get("/api/admin/dashboard", authenticate(["Super Admin", "Admin"]), async (r
 // ------------------ SUPERVISOR DASHBOARD ------------------
 app.get("/api/supervisor/dashboard", authenticate(["Supervisor"]), async (req, res) => {
     try {
-        const [supervisorRows] = await pool.query(
-            `SELECT u.org_id, u.loc_id, u.room_id, l.name AS location_name, r.name AS room_name
-             FROM users u
-             LEFT JOIN locations l ON u.loc_id = l.id
-             LEFT JOIN rooms r ON u.room_id = r.id
-             WHERE u.id = ?
-             LIMIT 1`,
-            [req.user.id]
-        );
+        const orgId = req.user.org_id;
+        const locId = req.user.loc_id;
+        const roomId = req.user.room_id;
 
-        if (supervisorRows.length === 0) {
-            return res.status(404).json({ message: "Supervisor not found" });
-        }
+        const [totalAssets] = await pool.query("SELECT COUNT(*) as count FROM assets WHERE org_id = ? AND room_id = ?", [orgId, roomId]);
+        const [availableAssets] = await pool.query("SELECT COUNT(*) as count FROM assets WHERE org_id = ? AND room_id = ? AND status = 'Available'", [orgId, roomId]);
+        const [myAssets] = await pool.query("SELECT COUNT(*) as count FROM asset_assignments WHERE assigned_to = ? AND unassigned_at IS NULL", [req.user.id]);
+        const [teamAssets] = await pool.query("SELECT COUNT(*) as count FROM asset_assignments aa JOIN users u ON aa.assigned_to = u.id WHERE u.room_id = ? AND u.role = 'Employee' AND aa.unassigned_at IS NULL", [roomId]);
+        
+        const [[supervisorInfo]] = await pool.query("SELECT ownpk FROM users WHERE id = ?", [req.user.id]);
+        const ownpk = supervisorInfo?.ownpk;
 
-        const supervisor = supervisorRows[0];
-        const orgId = supervisor.org_id;
-        const locId = supervisor.loc_id;
-        const roomId = supervisor.room_id;
+        const [activeTeam] = await pool.query("SELECT COUNT(*) as count FROM users WHERE unpk = ? AND role = 'Employee' AND status = 'Active'", [ownpk]);
+        const [onLeaveTeam] = await pool.query("SELECT COUNT(*) as count FROM users WHERE unpk = ? AND role = 'Employee' AND status = 'On Leave'", [ownpk]);
+        
+        const [pendingRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE status = 'Pending' AND requested_by IN (SELECT id FROM users WHERE org_id = ? AND room_id = ?)", [orgId, roomId]);
+        const [pendingMaintenance] = await pool.query("SELECT COUNT(*) as count FROM maintenance_records WHERE status = 'Pending' AND asset_id IN (SELECT id FROM assets WHERE org_id = ? AND room_id = ?)", [orgId, roomId]);
+        const [completedMaintenance] = await pool.query("SELECT COUNT(*) as count FROM maintenance_records WHERE status = 'Completed' AND asset_id IN (SELECT id FROM assets WHERE org_id = ? AND room_id = ?)", [orgId, roomId]);
+        
+        const [totalRooms] = await pool.query("SELECT COUNT(*) as count FROM rooms WHERE location_id = ?", [locId]);
+        
+        // Split Orders logic
+        const [remainingOrders] = await pool.query("SELECT COUNT(*) as count FROM purchase_orders WHERE supervisor_id = ? AND status IN ('Requested', 'Quoted', 'Approved')", [req.user.id]);
+        const [rejectedOrders] = await pool.query("SELECT COUNT(*) as count FROM purchase_orders WHERE supervisor_id = ? AND status = 'Rejected'", [req.user.id]);
+        const [deliveredOrders] = await pool.query("SELECT COUNT(*) as count FROM purchase_orders WHERE supervisor_id = ? AND status = 'Delivered'", [req.user.id]);
 
-        // If supervisor has not been assigned to a location/room yet,
-        // return empty dashboard numbers with seat details.
-        if (!locId || !roomId) {
-            return res.json({
-                totalAssets: 0,
-                assignedAssets: 0,
-                departmentUsers: 0,
-                pendingRequests: 0,
-                maintenanceRequests: 0,
-                totalRooms: 0,
-                totalOrders: 0,
-                pendingRequestsList: [],
-                currentLocationName: supervisor.location_name || null,
-                currentRoomName: supervisor.room_name || null
-            });
-        }
+        // Location Asset Request logic
+        const [requestedAssetRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE status IN ('Pending', 'In Progress') AND requested_by IN (SELECT id FROM users WHERE org_id = ? AND room_id = ?)", [orgId, roomId]);
+        const [rejectedAssetRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE status = 'Rejected' AND requested_by IN (SELECT id FROM users WHERE org_id = ? AND room_id = ?)", [orgId, roomId]);
 
-        const [totalAssets] = await pool.query(
-            "SELECT COUNT(*) as count FROM assets WHERE org_id = ? AND location_id = ?",
-            [orgId, locId]
-        );
-        const [assignedAssets] = await pool.query(
-            "SELECT COUNT(*) as count FROM assets WHERE org_id = ? AND room_id = ? AND status = 'Assigned'",
-            [orgId, roomId]
-        );
-        const [departmentUsers] = await pool.query(
-            "SELECT COUNT(*) as count FROM users WHERE org_id = ? AND room_id = ? AND role = 'Employee'",
-            [orgId, roomId]
-        );
-        const [pendingRequests] = await pool.query(
-            `SELECT COUNT(*) as count
-             FROM asset_requests ar
-             JOIN users u ON ar.requested_by = u.id
-             WHERE u.org_id = ? AND u.room_id = ? AND ar.status = 'Pending'`,
-            [orgId, roomId]
-        );
-        const [maintenanceRequests] = await pool.query(
-            `SELECT COUNT(*) as count
-             FROM maintenance_records mr
-             JOIN assets a ON mr.asset_id = a.id
-             WHERE a.org_id = ? AND a.room_id = ? AND mr.status = 'Pending'`,
-            [orgId, roomId]
-        );
-        const [totalOrders] = await pool.query(
-            "SELECT COUNT(*) as count FROM purchase_orders WHERE supervisor_id = ?",
-            [req.user.id]
-        );
-        const [pendingRequestsList] = await pool.query(
-            `SELECT ar.id, ar.description, u.name as requested_by_name
-             FROM asset_requests ar
-             JOIN users u ON ar.requested_by = u.id
-             WHERE u.org_id = ? AND u.room_id = ? AND ar.status = 'Pending'
-             ORDER BY ar.id ASC
-             LIMIT 5`,
-            [orgId, roomId]
-        );
+        const [pendingRequestsList] = await pool.query(`
+            SELECT ar.id, ar.description, u.name as requested_by_name
+            FROM asset_requests ar
+            LEFT JOIN users u ON ar.requested_by = u.id
+            WHERE ar.status = 'Pending' AND u.org_id = ? AND u.room_id = ?
+            ORDER BY ar.id ASC
+            LIMIT 5
+        `, [orgId, roomId]);
 
         res.json({
             totalAssets: totalAssets[0].count,
-            assignedAssets: assignedAssets[0].count,
-            departmentUsers: departmentUsers[0].count,
+            myAssets: myAssets[0].count,
+            teamAssets: teamAssets[0].count,
+            availableAssets: availableAssets[0].count,
+            activeTeam: activeTeam[0].count,
+            onLeaveTeam: onLeaveTeam[0].count,
             pendingRequests: pendingRequests[0].count,
-            maintenanceRequests: maintenanceRequests[0].count,
-            totalRooms: 1,
-            totalOrders: totalOrders[0].count,
+            pendingMaintenance: pendingMaintenance[0].count,
+            completedMaintenance: completedMaintenance[0].count,
+            totalRooms: totalRooms[0].count,
+            remainingOrders: remainingOrders[0].count,
+            rejectedOrders: rejectedOrders[0].count,
+            deliveredOrders: deliveredOrders[0].count,
+            requestedAssetRequests: requestedAssetRequests[0].count,
+            rejectedAssetRequests: rejectedAssetRequests[0].count,
             pendingRequestsList,
-            currentLocationName: supervisor.location_name || null,
-            currentRoomName: supervisor.room_name || null
         });
     } catch (err) {
         console.error(err);
@@ -438,41 +401,17 @@ app.get("/api/supervisor/dashboard", authenticate(["Supervisor"]), async (req, r
 // ------------------ EMPLOYEE DASHBOARD ------------------
 app.get("/api/employee/dashboard", authenticate(["Employee"]), async (req, res) => {
     try {
-        const [assignedAssets] = await pool.query(
-            `SELECT COUNT(*) as count
-             FROM asset_assignments aa
-             JOIN assets a ON a.id = aa.asset_id
-             WHERE aa.assigned_to = ?
-               AND aa.unassigned_at IS NULL
-               AND aa.unassigned_by IS NULL
-               AND a.org_id = ?`,
-            [req.user.id, req.user.org_id]
-        );
+        const [assignedAssets] = await pool.query("SELECT COUNT(*) as count FROM asset_assignments WHERE assigned_to = ? AND unassigned_at IS NULL", [req.user.id]);
         const [pendingRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE requested_by = ? AND status = 'Pending'", [req.user.id]);
         const [approvedRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE requested_by = ? AND status = 'Approved'", [req.user.id]);
         const [totalRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE requested_by = ?", [req.user.id]);
-        const [assignedAssetsList] = await pool.query(
-            `SELECT
-               a.id,
-               a.name,
-               a.status,
-               a.serial_number,
-               c.name AS category_name,
-               l.name AS location_name,
-               r.name AS room_name,
-               aa.assigned_at
-             FROM asset_assignments aa
-             JOIN assets a ON a.id = aa.asset_id
-             LEFT JOIN categories c ON a.category_id = c.id
-             LEFT JOIN locations l ON a.location_id = l.id
-             LEFT JOIN rooms r ON a.room_id = r.id
-             WHERE aa.assigned_to = ?
-               AND aa.unassigned_at IS NULL
-               AND aa.unassigned_by IS NULL
-               AND a.org_id = ?
-             ORDER BY aa.assigned_at DESC, a.id ASC`,
-            [req.user.id, req.user.org_id]
-        );
+        const [assignedAssetsList] = await pool.query(`
+            SELECT a.id, a.name, a.status 
+            FROM assets a
+            JOIN asset_assignments aa ON a.id = aa.asset_id
+            WHERE aa.assigned_to = ? AND aa.unassigned_at IS NULL
+            ORDER BY a.id ASC
+        `, [req.user.id]);
         const [myRequests] = await pool.query("SELECT id, description, status FROM asset_requests WHERE requested_by = ? ORDER BY id ASC", [req.user.id]);
 
         res.json({
@@ -489,53 +428,7 @@ app.get("/api/employee/dashboard", authenticate(["Employee"]), async (req, res) 
     }
 });
 
-// ------------------ SOFTWARE DEVELOPER DASHBOARD ------------------
-app.get("/api/sd/dashboard", authenticate(["Software Developer"]), async (req, res) => {
-    try {
-        const [assignedAssets] = await pool.query(
-            `SELECT COUNT(*) as count
-             FROM asset_assignments aa
-             JOIN assets a ON a.id = aa.asset_id
-             WHERE aa.assigned_to = ?
-               AND aa.unassigned_at IS NULL
-               AND aa.unassigned_by IS NULL
-               AND a.org_id = ?`,
-            [req.user.id, req.user.org_id]
-        );
-        const [pendingRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE requested_by = ? AND status = 'Pending'", [req.user.id]);
-        const [approvedRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE requested_by = ? AND status = 'Approved'", [req.user.id]);
-        const [totalRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE requested_by = ?", [req.user.id]);
-        const [assignedAssetsList] = await pool.query(
-            `SELECT
-               a.id,
-               a.name,
-               a.status,
-               a.serial_number,
-               aa.assigned_at
-             FROM asset_assignments aa
-             JOIN assets a ON a.id = aa.asset_id
-             WHERE aa.assigned_to = ?
-               AND aa.unassigned_at IS NULL
-               AND aa.unassigned_by IS NULL
-               AND a.org_id = ?
-             ORDER BY aa.assigned_at DESC, a.id ASC`,
-            [req.user.id, req.user.org_id]
-        );
-        const [myRequests] = await pool.query("SELECT id, description, status, created_at FROM asset_requests WHERE requested_by = ? ORDER BY id ASC", [req.user.id]);
 
-        res.json({
-            assignedAssets: assignedAssets[0].count,
-            pendingRequests: pendingRequests[0].count,
-            approvedRequests: approvedRequests[0].count,
-            totalRequests: totalRequests[0].count,
-            assignedAssetsList,
-            myRequests,
-        });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Server error" });
-    }
-});
 
 // ------------------ VENDOR DASHBOARD ------------------
 app.get("/api/vendor/dashboard", authenticate(["Vendor"]), async (req, res) => {
@@ -566,27 +459,33 @@ app.get("/api/vendor/dashboard", authenticate(["Vendor"]), async (req, res) => {
 // ------------------ MAINTENANCE DASHBOARD ------------------
 app.get("/api/maintenance/dashboard", authenticate(["Maintenance", "Super Admin"]), async (req, res) => {
     try {
+        const orgId = req.user.org_id;
+
         const [pendingTasks] = await pool.query(`
-      SELECT mr.id, mr.maintenance_type, a.name as asset_name
-      FROM maintenance_records mr
-      LEFT JOIN assets a ON mr.asset_id = a.id
-      WHERE mr.status = 'Pending'
-      ORDER BY mr.id ASC
-    `);
+            SELECT mr.id, mr.maintenance_type, a.name as asset_name
+            FROM maintenance_records mr
+            LEFT JOIN assets a ON mr.asset_id = a.id
+            WHERE mr.status = 'Pending' AND a.org_id = ?
+            ORDER BY mr.id ASC
+        `, [orgId]);
+
         const [completedTasks] = await pool.query(`
-      SELECT mr.id, mr.maintenance_type, a.name as asset_name
-      FROM maintenance_records mr
-      LEFT JOIN assets a ON mr.asset_id = a.id
-      WHERE mr.status = 'Completed'
-      ORDER BY mr.id ASC
-    `);
+            SELECT mr.id, mr.maintenance_type, a.name as asset_name
+            FROM maintenance_records mr
+            LEFT JOIN assets a ON mr.asset_id = a.id
+            WHERE mr.status = 'Completed' AND a.org_id = ?
+            ORDER BY mr.id ASC
+        `, [orgId]);
+
         const [assetsToMaintain] = await pool.query(`
-      SELECT a.id, a.name, a.status
-      FROM assets a
-      WHERE a.status IN ('Needs Maintenance', 'Under Maintenance')
-      ORDER BY a.id ASC
-    `);
-        const [configTasks] = await pool.query("SELECT COUNT(*) as count FROM maintenance_records WHERE maintenance_type = 'Configuration'");
+            SELECT a.id, a.name, a.status
+            FROM assets a
+            WHERE a.status IN ('Needs Maintenance', 'Under Maintenance') AND a.org_id = ?
+            ORDER BY a.id ASC
+        `, [orgId]);
+
+        const [configTasks] = await pool.query("SELECT COUNT(*) as count FROM maintenance_records mr JOIN assets a ON mr.asset_id = a.id WHERE mr.maintenance_type = 'Configuration' AND a.org_id = ?", [orgId]);
+        
         const pendingCount = pendingTasks.length;
         const completedCount = completedTasks.length;
         const totalAssets = assetsToMaintain.length;

@@ -101,17 +101,22 @@ const Categories = () => {
 
     return (
         <div>
-            <div className="flex-between mb-4">
-                <h2>Categories Management</h2>
-                {['Super Admin', 'Supervisor'].includes(user?.role) && (
-                    <Button onClick={() => {
-                        setEditingCategory(null)
-                        setFormData({ name: "", description: "", type: "" })
-                        setShowModal(true)
-                    }}>
-                        Add New Category
-                    </Button>
-                )}
+            <h2 className="page-title">Categories Management</h2>
+            <div className="action-bar mb-4">
+                <div className="action-bar-left">
+                    {/* Back button if needed */}
+                </div>
+                <div className="action-bar-right">
+                    {['Super Admin', 'Supervisor'].includes(user?.role) && (
+                        <Button onClick={() => {
+                            setEditingCategory(null)
+                            setFormData({ name: "", description: "", type: "" })
+                            setShowModal(true)
+                        }}>
+                            Add New Category
+                        </Button>
+                    )}
+                </div>
             </div>
             
             <div className="mb-4" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -183,8 +188,8 @@ const Categories = () => {
                             </button>
                         </div>
 
-                        <form onSubmit={handleSubmit}>
                              <div className="modal-body">
+                        <form onSubmit={handleSubmit}>
                                 <div className="form-group">
                                     <label className="form-label">Category Type</label>
                                     <select 
@@ -229,10 +234,15 @@ const Categories = () => {
                                 )}
 
                                 {error && <div className="alert alert-error">{error}</div>}
+                        </form>
                             </div>
-                            
-                            <div className="modal-footer" style={{ borderTop: '1px solid #eee', padding: '1rem', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                                <Button
+                            <div className="modal-footer" style={{ borderTop: '1px solid #eee', padding: '1rem', display: 'flex', justifyContent: 'flex-start', gap: '0.5rem' }}>
+                            {formData.name && (
+                                    <Button type="submit" onClick={handleSubmit} disabled={submitting}>
+                                        {submitting ? (editingCategory ? "Updating..." : "Adding...") : editingCategory ? "Update Category" : "Add Category"}
+                                    </Button>
+                                )}   
+                            <Button
                                     type="button"
                                     variant="secondary"
                                     onClick={() => {
@@ -244,13 +254,8 @@ const Categories = () => {
                                 >
                                     Cancel
                                 </Button>
-                                {formData.name && (
-                                    <Button type="submit" disabled={submitting}>
-                                        {submitting ? (editingCategory ? "Updating..." : "Adding...") : editingCategory ? "Update Category" : "Add Category"}
-                                    </Button>
-                                )}
+                                
                             </div>
-                        </form>
                     </div>
                 </div>
             )}

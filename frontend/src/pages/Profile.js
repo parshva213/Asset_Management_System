@@ -126,18 +126,20 @@ const Profile = () => {
                   placeholder="Enter your email"
                 />
               </div>
-              <div className="form-group">
-                <label className="form-label">Department</label>
-                <input
-                  type="text"
-                  name="department"
-                  className="form-input"
-                  value={profileData.department}
-                  onChange={handleProfileChange}
-                  disabled={isReadOnly}
-                  placeholder="Enter your department"
-                />
-              </div>
+              {user.role !== "Super Admin" && (
+                <div className="form-group">
+                  <label className="form-label">Department</label>
+                  <input
+                    type="text"
+                    name="department"
+                    className="form-input"
+                    value={profileData.department}
+                    onChange={handleProfileChange}
+                    disabled={isReadOnly}
+                    placeholder="Enter your department"
+                  />
+                </div>
+              )}
               <div className="form-group">
                 <label className="form-label">Phone Number</label>
                 <input
@@ -165,8 +167,12 @@ const Profile = () => {
                   </select>
                 </div>
               )}
-              {!isReadOnly && (
-                <button
+            </form>
+          </div>
+          <div className="card-footer">
+            {!isReadOnly && (
+              <button
+                onClick={handleProfileSubmit}
                   type="submit"
                   className="btn btn-primary w-full mt-2"
                   disabled={profileLoading}
@@ -174,9 +180,6 @@ const Profile = () => {
                   {profileLoading ? "Updating..." : "Update Profile"}
                 </button>
               )}
-            </form>
-          </div>
-          <div className="card-footer">
           </div>
         </div>
 

@@ -129,19 +129,24 @@ export default function PurchaseOrders() {
 
   return (
     <div>
-      <div className="flex-between mb-4">
-        <h2>Purchase Orders</h2>
-        {user?.role === "Supervisor" && (
-          <button
-            className="btn btn-primary"
-            onClick={() => {
-              resetForm()
-              setShowCreateForm(true)
-            }}
-          >
-            Add Order
-          </button>
-        )}
+      <h2 className="page-title">Purchase Orders</h2>
+      <div className="action-bar mb-4">
+        <div className="action-bar-left">
+          {/* Back button if needed */}
+        </div>
+        <div className="action-bar-right">
+          {user?.role === "Supervisor" && (
+            <button
+              className="btn btn-primary"
+              onClick={() => {
+                resetForm()
+                setShowCreateForm(true)
+              }}
+            >
+              Add Order
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Filters */}

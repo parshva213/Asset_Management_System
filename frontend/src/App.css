@@ -892,8 +892,6 @@ a.quick-action-btn:hover {
     display: inline-block;
 }
 
-
-
 .dropdown-menu {
     position: absolute;
     top: 0;
@@ -904,7 +902,6 @@ a.quick-action-btn:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     z-index: 1000;
     min-width: 150px;
-    margin-left: 4px;
     overflow: hidden;
     animation: fadeIn 0.2s ease;
 }
@@ -1522,7 +1519,7 @@ body.dark .transform-input {
     padding: 1.5rem;
     box-shadow: var(--shadow);
     border: 1px solid var(--border);
-    overflow-x: auto;
+    /* overflow-x: auto; */
 }
 
 .table-header-row {
@@ -2329,7 +2326,6 @@ body.dark .transform-input {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
 }
 
 .modal-header h2 {
@@ -2761,4 +2757,13 @@ body.dark .transform-input {
 
 .bg-blue {
     background: #3b82f6;
+}
+
+.layout-body.dashboard-mode {
+    overflow: visible;
+}
+
+.stats-container{
+    display: grid;
+    gap: 1.5rem;
 }

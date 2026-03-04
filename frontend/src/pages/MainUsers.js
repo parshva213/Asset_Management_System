@@ -197,18 +197,21 @@ const MainUsers = () => {
 
   return (
     <div className="content">
-      <div className="flex-between mb-4">
-        <div>
+      <h2 className="page-title">{title}</h2>
+      <div className="action-bar mb-4">
+        <div className="action-bar-left">
           {locid && (
             <button 
               onClick={() => navigate("/locations")} 
-              className="btn btn-secondary mb-2"
+              className="btn btn-secondary"
               style={{ padding: '0.4rem 0.8rem', fontSize: '13px' }}
             >
               ← Back to Locations
             </button>
           )}
-          <h2>{title}</h2>
+        </div>
+        <div className="action-bar-right">
+          {/* Secondary actions can go here */}
         </div>
       </div>
 

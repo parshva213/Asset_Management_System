@@ -64,7 +64,7 @@ const MENU_ITEMS = {
   ],
   "Supervisor": [
     { name: "Dashboard", path: ["/dashboard/supervisor"], icon: "dashboard" },
-    { name: "My Team", path: ["/users"], icon: "users" },
+    { name: "My Team", path: ["/team-user"], icon: "users" },
     { name: "Assets", path: ["/assets"], icon: "assets" },
     { name: "Orders", path: ["/purchase-orders"], icon: "orders" },
     { name: "Requests", path: ["/requests"], icon: "requests" },
@@ -92,7 +92,6 @@ const MENU_ITEMS = {
     { name: "Profile", path: ["/profile"], icon: "profile" },
   ],
   "Software Developer": [
-    { name: "Dashboard", path: ["/dashboard/software-developer"], icon: "dashboard" },
     { name: "Org", path: ["/organizations"], icon: "organizations" },
     { name: "Profile", path: ["/profile"], icon: "profile" },
   ]
@@ -122,7 +121,7 @@ const Layout = () => {
     <div className={`layout-container ${theme}`}>
       <Header user={user} logout={logout} toggleSidebar={toggleSidebar} />
 
-      <div className="layout-body">
+      <div className={`layout-body ${location.pathname.includes('dashboard') ? 'dashboard-mode' : ''}`}>
         <aside className={`sidebar ${!isSidebarOpen ? 'closed' : ''}`}>
           <nav className="sidebar-nav">
             <ul>

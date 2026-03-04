@@ -82,130 +82,97 @@ router.get("/available-assets-to-assign/:id", authenticateToken, async (req, res
 // GET all assets
 router.get("/", authenticateToken, async (req, res) => {
   try {
+    const { status, location_id, room_id, role, detailed, name: assetName } = req.query;
+    const { org_id, role: userRole, room_id: userRoomId, id: userId } = req.user;
     let query = "";
-    let params = [];
-    const { status, location_id, category_id, room_id, role, detailed } = req.query;
+    let params = [org_id];
 
-    // Case 1: Location Summary (Used by LocationAssets page)
-    if (location_id) {
-      if (role) {
-        // Detailed rows for specific role (Requested for Maintenance View)
-        query = `
-              SELECT DISTINCT a.id, a.name AS aname, u.name AS uname, u.role, a.asset_type, 
-              a.serial_number, a.warranty_expiry, c.name AS cat_name, a.purchase_date
-              FROM assets a
-              LEFT JOIN categories c ON a.category_id = c.id
-              JOIN asset_assignments aa ON a.id = aa.asset_id AND aa.unassigned_at IS NULL AND aa.unassigned_by IS NULL
-              JOIN users u ON aa.assigned_to = u.id
-              WHERE a.location_id = ? AND a.org_id = ? AND u.role = ?
-              ORDER BY a.name ASC
-            `;
-        params = [location_id, req.user.org_id, role];
-      } else {
-        // Standard summary (Used by LocationAssets page)
-        query = `
-              SELECT MIN(a.id) AS id, a.name, a.name AS aname, COUNT(a.id) AS quantity,
-              SUM(a.status = 'Assigned') AS assigned_total, 
-              SUM(a.status = 'Available') AS available_total,
-              SUM(a.status IN ('Available','Assigned')) AS active,
-              SUM(a.status NOT IN ('Available','Assigned')) AS not_active,
-              c.name AS cat_name
-              FROM assets a
-              LEFT JOIN categories c ON a.category_id = c.id
-              WHERE a.location_id = ? AND a.org_id = ?
-              GROUP BY a.name, c.name
-              ORDER BY a.name ASC`;
-        params = [location_id, req.user.org_id];
+    // 1. Individual Asset View: Super Admin (Maintenance) or Specific Request
+    if ((userRole === "Super Admin" && !location_id) || (detailed)) {
+      query = `SELECT a.id, a.serial_number AS sn, a.name AS aname, a.status, a.warranty_expiry, a.purchase_cost, a.asset_type,
+               c.name AS cat_name, l.name AS loc_name, r.name AS room_name, u.name AS assign_to,
+               u.ownpk AS assignee_ownpk, u.unpk AS assignee_unpk
+        FROM assets a
+        LEFT JOIN categories c ON a.category_id = c.id
+        LEFT JOIN locations l ON a.location_id = l.id
+        LEFT JOIN rooms r ON a.room_id = r.id
+        LEFT JOIN (
+          SELECT asset_id, assigned_to, ROW_NUMBER() OVER(PARTITION BY asset_id ORDER BY id DESC) as rn
+          FROM asset_assignments
+        ) aa ON a.id = aa.asset_id AND aa.rn = 1
+        LEFT JOIN users u ON aa.assigned_to = u.id
+        WHERE a.org_id = ?`;
+
+      if (userRole === "Super Admin" && !location_id) {
+        query += " AND a.status NOT IN ('Available', 'Assigned')";
       }
-    }
-    // Case 2: Global Summary for Super Admin (Used by Assets page Admin view)
-    else if (req.user.role === "Super Admin" && Object.keys(req.query).length === 0) {
-      query = `
-          select a.id, a.serial_number as sn, a.name as aname, status, a.warranty_expiry, a.purchase_cost,
-          c.name as cat_name, l.name as loc_name, r.name as room_name
-          from assets a
-          left join categories c on a.category_id = c.id
-          left join locations l on a.location_id = l.id
-          left join rooms r on a.room_id = r.id
-          where 
-          a.status not in ('Available', 'Assigned')
-          and a.org_id = ?
-          order by a.id asc`;
-      params = [req.user.org_id];
-    }
-    // Case 3: Standard Asset List (Used by Supervisor/Employee or filtered requests)
-    else {
-      query = `
-          SELECT a.*, u.name as assign,
-          c.name as category_name,
-          l.name as location_name,
-          r.name as room_name,
-          aa_current.assigned_at,
-          COALESCE(asum.quantity, 0) as quantity,
-          COALESCE(asum.assigned_total, 0) as assigned_total,
-          COALESCE(asum.available_total, 0) as available_total
-          FROM assets a 
-          LEFT JOIN (
-            SELECT aa1.asset_id, aa1.assigned_to, aa1.assigned_at
-            FROM asset_assignments aa1
-            JOIN (
-              SELECT asset_id, MAX(id) AS max_id
-              FROM asset_assignments
-              WHERE unassigned_at IS NULL AND unassigned_by IS NULL
-              GROUP BY asset_id
-            ) latest ON latest.max_id = aa1.id
-          ) aa_current ON a.id = aa_current.asset_id
-          LEFT JOIN users u ON aa_current.assigned_to = u.id
-          LEFT JOIN categories c ON a.category_id = c.id
-          LEFT JOIN locations l ON a.location_id = l.id
-          LEFT JOIN rooms r ON a.room_id = r.id
-          LEFT JOIN (
-            SELECT name, location_id, org_id, COUNT(*) as quantity, 
-                   SUM(status = 'Assigned') as assigned_total, 
-                   SUM(status = 'Available') as available_total
-            FROM assets
-            GROUP BY name, location_id, org_id
-          ) asum ON a.name = asum.name AND a.location_id = asum.location_id AND a.org_id = asum.org_id`;
-
-      let whereClauses = [];
-
-      // Filter by Organization
-      if (req.user.role !== "Software Developer") {
-        whereClauses.push("a.org_id = ?");
-        params.push(req.user.org_id);
-      }
-
-      // Filter for Employees: Only show assigned assets
-      if (req.user.role === "Employee") {
-        whereClauses.push("aa_current.assigned_to = ?");
-        params.push(req.user.id);
-      }
-
-      if (status) {
-        whereClauses.push("a.status = ?");
-        params.push(status);
-      }
-
-      if (location_id) {
-        whereClauses.push("a.location_id = ?");
-        params.push(location_id);
-      }
-
       if (room_id) {
-        whereClauses.push("a.room_id = ?");
+        query += " AND a.room_id = ?";
         params.push(room_id);
       }
-
-      if (role) {
-        whereClauses.push("u.role = ?");
-        params.push(role);
+      if (status) {
+        query += " AND a.status = ?";
+        params.push(status);
       }
-
-      if (whereClauses.length > 0) {
-        query += " WHERE " + whereClauses.join(" AND ");
+      if (assetName) {
+        query += " AND a.name = ?";
+        params.push(assetName);
       }
-
       query += " ORDER BY a.id ASC";
+    } 
+    // 2. Aggregated Summary View: Used by LocationAssets page and Supervisor Dashboard
+    else if (location_id) {
+      query = `
+        SELECT MIN(a.id) AS id, a.name, a.name AS aname, COUNT(a.id) AS quantity,
+               SUM(a.status = 'Assigned') AS assigned_total, 
+               SUM(a.status = 'Available') AS available_total,
+               SUM(a.status IN ('Available', 'Assigned')) AS active,
+               SUM(a.status NOT IN ('Available', 'Assigned')) AS not_active,
+               c.name AS cat_name, MAX(a.purchase_cost) AS price, MAX(a.asset_type) AS asset_type
+        FROM assets a
+        LEFT JOIN categories c ON a.category_id = c.id
+        WHERE a.location_id = ? AND a.org_id = ?`;
+      
+      params = [location_id, org_id];
+
+      // Enforce room filtering for Supervisor or when room_id is requested
+      if (userRole === "Supervisor" || room_id) {
+        const targetRoomId = userRole === "Supervisor" ? (userRoomId || room_id) : room_id;
+        if (targetRoomId) {
+          query += " AND a.room_id = ?";
+          params.push(targetRoomId);
+        }
+      }
+
+      query += ` GROUP BY a.name, c.name ORDER BY a.name ASC`;
+    } 
+    // 3. Standard List View: Filtered by various criteria
+    else {
+      query = `
+        SELECT a.*, u.name as assign, c.name as category_name, l.name as location_name, r.name as room_name,
+               COALESCE(asum.quantity, 0) as quantity, COALESCE(asum.assigned_total, 0) as assigned_total, 
+               COALESCE(asum.available_total, 0) as available_total
+        FROM assets a 
+        LEFT JOIN asset_assignments aa ON a.id = aa.asset_id AND aa.unassigned_at IS NULL
+        LEFT JOIN users u ON aa.assigned_to = u.id
+        LEFT JOIN categories c ON a.category_id = c.id
+        LEFT JOIN locations l ON a.location_id = l.id
+        LEFT JOIN rooms r ON a.room_id = r.id
+        LEFT JOIN (
+          SELECT name, location_id, org_id, COUNT(*) as quantity, 
+                 SUM(status = 'Assigned') as assigned_total, SUM(status = 'Available') as available_total
+          FROM assets GROUP BY name, location_id, org_id
+        ) asum ON a.name = asum.name AND a.location_id = asum.location_id AND a.org_id = asum.org_id`;
+
+      let whereClauses = ["a.org_id = ?"];
+      if (userRole === "Employee") { whereClauses.push("aa.assigned_to = ?"); params.push(userId); }
+      if (userRole === "Supervisor") { whereClauses.push("a.room_id = ?"); params.push(userRoomId); }
+      if (status) { whereClauses.push("a.status = ?"); params.push(status); }
+      if (location_id) { whereClauses.push("a.location_id = ?"); params.push(location_id); }
+      if (room_id && userRole !== "Supervisor") { whereClauses.push("a.room_id = ?"); params.push(room_id); }
+      if (role) { whereClauses.push("u.role = ?"); params.push(role); }
+
+      query += " WHERE " + whereClauses.join(" AND ") + " ORDER BY a.id ASC";
     }
 
     const [result] = await pool.query(query, params);

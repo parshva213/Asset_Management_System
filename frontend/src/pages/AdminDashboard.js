@@ -189,7 +189,7 @@ const AdminDashboard = () => {
                             </div>
                         </div>
                         <div className="stat-footer">
-                             <Link to="/employees">View Maintenance Team →</Link>
+                             <Link to="/users">View Maintenance Team →</Link>
                         </div>
                     </div>
 

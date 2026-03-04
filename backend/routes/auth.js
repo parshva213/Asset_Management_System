@@ -43,7 +43,10 @@ router.post("/register", async (req, res) => {
     // For now, if provided ownpk exists, we might error or retry? 
     // The implementation plan says: Check if ownpk is provided. If so, verify uniqueness. If duplicate, return 400.
 
-    const ownpk = await generateUniqueKey();
+    let ownpk = null;
+    if (role === "Super Admin" || role === "Supervisor") {
+      ownpk = await generateUniqueKey();
+    }
     let org_id = null;
     if (orgId) {
       org_id = orgId;
@@ -116,7 +119,7 @@ router.post("/login", async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user.id, name: user.name, email: user.email, role: user.role, org_id: user.org_id, loc_id: user.loc_id, room_id: user.room_id },
+      { id: user.id, name: user.name, email: user.email, role: user.role, org_id: user.org_id, loc_id: user.loc_id, room_id: user.room_id, ownpk: user.ownpk },
       JWT_SECRET,
       { expiresIn: "1d" }
     );
@@ -288,7 +291,7 @@ router.post("/verify-registration-key", async (req, res) => {
         })
       }
       if (count[0].count >= org.member) {
-        return res.status(400).json({ message: "Organization limit reached " + org.id });
+        return res.status(400).json({ message: "Organization limit reached"});
       }
       return res.json({
         type: "organization",

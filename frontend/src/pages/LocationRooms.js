@@ -128,14 +128,14 @@ const LocationRooms = () => {
 
   return (
     <div>
-        <div className="flex-between mb-4">
-            <div className="flex items-center gap-4">
+        <h2 className="page-title">Rooms in {location ? location.name : "Location"}</h2>
+        <div className="action-bar mb-4">
+            <div className="action-bar-left">
                 <button onClick={() => navigate("/locations")} className="btn btn-secondary">
-                    &larr; Back to Locations
+                    ← Back to Locations
                 </button>
-                <h2>Rooms in {location ? location.name : "Location"}</h2>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="action-bar-right">
                 {user?.role === "Super Admin" && (
                     <>
                         <button 

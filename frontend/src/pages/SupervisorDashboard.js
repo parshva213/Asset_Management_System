@@ -8,13 +8,21 @@ const SupervisorDashboard = () => {
     const { user, logout } = useAuth()
     const [stats, setStats] = useState({
         totalAssets: 0,
-        assignedAssets: 0,
+        myAssets: 0,
+        teamAssets: 0,
         availableAssets: 0,
         pendingRequests: 0,
-        maintenanceRequests: 0,
+        pendingMaintenance: 0,
+        completedMaintenance: 0,
         totalRooms: 0,
         totalOrders: 0,
-        departmentUsers: 0,
+        activeTeam: 0,
+        onLeaveTeam: 0,
+        remainingOrders: 0,
+        rejectedOrders: 0,
+        deliveredOrders: 0,
+        requestedAssetRequests: 0,
+        rejectedAssetRequests: 0,
         assignedAssetsList: [],
         pendingRequestsList: [],
         currentLocationName: "",
@@ -40,12 +48,20 @@ const SupervisorDashboard = () => {
                 const data = dashboardRes.value.data
                 setStats({
                     totalAssets: data.totalAssets || 0,
-                    assignedAssets: data.assignedAssets || 0,
+                    myAssets: data.myAssets || 0,
+                    teamAssets: data.teamAssets || 0,
                     availableAssets: data.availableAssets || 0,
                     pendingRequests: data.pendingRequests || 0,
-                    departmentUsers: data.departmentUsers || 0,
+                    pendingMaintenance: data.pendingMaintenance || 0,
+                    completedMaintenance: data.completedMaintenance || 0,
+                    activeTeam: data.activeTeam || 0,
+                    onLeaveTeam: data.onLeaveTeam || 0,
                     totalRooms: data.totalRooms || 0,
-                    totalOrders: data.totalOrders || 0,
+                    remainingOrders: data.remainingOrders || 0,
+                    rejectedOrders: data.rejectedOrders || 0,
+                    deliveredOrders: data.deliveredOrders || 0,
+                    requestedAssetRequests: data.requestedAssetRequests || 0,
+                    rejectedAssetRequests: data.rejectedAssetRequests || 0,
                     assignedAssetsList: data.assignedAssetsList || [],
                     pendingRequestsList: data.pendingRequestsList || [],
                     currentLocationName: data.currentLocationName || "",
@@ -169,103 +185,137 @@ const SupervisorDashboard = () => {
 
                 {/* Stats Grid */}
                 <div className="stats-grid-3">
-                    {/* Team Members */}
+                    {/* Assets Card */}
                     <div className="stat-widget">
-                        <div>
-                            <div className="stat-icon purple">👥</div>
-                            <span className="stat-label">Team Members</span>
-                            <h3 className="stat-value" style={!user?.loc_id ? {fontSize: '1.25rem'} : {}}>
-                                {user?.loc_id ? stats.departmentUsers : "Location not set"}
-                            </h3>
+                        <div className="widget-header">
+                            <div className="stat-icon bg-indigo">📦</div>
+                            <span className="widget-title">Assets</span>
+                        </div>
+                        <div className="split-container">
+                            <div className="split-item left">
+                                <span className="stat-label">Total</span>
+                                <h3 className="stat-value">{user?.loc_id ? stats.totalAssets : 0}</h3>
+                            </div>
+                            <div className="split-item right">
+                                <span className="stat-label">Available</span>
+                                <h3 className="stat-value">{user?.loc_id ? stats.availableAssets : 0}</h3>
+                            </div>
                         </div>
                         <div className="stat-footer">
-                            {user?.loc_id ? (
-                                <Link to="/users">View Details →</Link>
-                            ) : (
-                                    ""
-                            )}
+                            {user?.loc_id ? <Link to="/assets">View full details →</Link> : ""}
                         </div>
                     </div>
 
-                    {/* Assigned Assets */}
+                    {/* Assigned Assets Card */}
                     <div className="stat-widget">
-                        <div>
-                            <div className="stat-icon green">📦</div>
-                            <span className="stat-label">Assigned Assets</span>
-                            <h3 className="stat-value" style={!user?.loc_id ? {fontSize: '1.25rem'} : {}}>
-                                {user?.loc_id ? stats.assignedAssets : "Location not set"}
-                            </h3>
+                        <div className="widget-header">
+                            <div className="stat-icon bg-blue">🏢</div>
+                            <span className="widget-title">Assigned Assets</span>
+                        </div>
+                        <div className="split-container">
+                            <div className="split-item left">
+                                <span className="stat-label">My Asset</span>
+                                <h3 className="stat-value">{user?.loc_id ? stats.myAssets : 0}</h3>
+                            </div>
+                            <div className="split-item right">
+                                <span className="stat-label">Team Asset</span>
+                                <h3 className="stat-value">{user?.loc_id ? stats.teamAssets : 0}</h3>
+                            </div>
+                        </div>
+                        <div className="stat-footer">
+                            {user?.loc_id ? <Link to="/assets">View full details →</Link> : ""}
+                        </div>
+                    </div>
+
+                    {/* Team Card */}
+                    <div className="stat-widget">
+                        <div className="widget-header">
+                            <div className="stat-icon bg-rose">👥</div>
+                            <span className="widget-title">Team</span>
+                        </div>
+                        <div className="split-container">
+                            <div className="split-item left">
+                                <span className="stat-label">Active</span>
+                                <h3 className="stat-value">{user?.loc_id ? stats.activeTeam : 0}</h3>
+                            </div>
+                            <div className="split-item right">
+                                <span className="stat-label">On Leave</span>
+                                <h3 className="stat-value">{user?.loc_id ? stats.onLeaveTeam : 0}</h3>
+                            </div>
                         </div>
                         <div className="stat-footer">
                             {user?.loc_id ? (
-                                <Link to="/assets">View full details →</Link>
+                                <Link to="/team-user">View Team →</Link>
                             ) : ""}
                         </div>
                     </div>
 
-                    {/* Location Assets */}
+                    {/* Orders Card */}
                     <div className="stat-widget">
-                        <div>
-                            <div className="stat-icon blue">🏢</div>
-                            <span className="stat-label">Location Assets</span>
-                            <h3 className="stat-value" style={!user?.loc_id ? {fontSize: '1.25rem'} : {}}>
-                                {user?.loc_id ? stats.totalAssets : "Location not set"}
-                            </h3>
+                        <div className="widget-header">
+                            <div className="stat-icon bg-green">🛒</div>
+                            <span className="widget-title">Orders</span>
+                        </div>
+                        <div className="split-container" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }}>
+                            <div className="split-item left">
+                                <span className="stat-label">Remaining</span>
+                                <h3 className="stat-value" style={{ fontSize: '1.2rem' }}>{user?.loc_id ? stats.remainingOrders : 0}</h3>
+                            </div>
+                            <div className="split-item center" style={{ borderLeft: '1px solid #eee', borderRight: '1px solid #eee', textAlign: 'center' }}>
+                                <span className="stat-label">Rejected</span>
+                                <h3 className="stat-value" style={{ fontSize: '1.2rem' }}>{user?.loc_id ? stats.rejectedOrders : 0}</h3>
+                            </div>
+                            <div className="split-item right">
+                                <span className="stat-label">Delivered</span>
+                                <h3 className="stat-value" style={{ fontSize: '1.2rem' }}>{user?.loc_id ? stats.deliveredOrders : 0}</h3>
+                            </div>
                         </div>
                         <div className="stat-footer">
-                            {user?.loc_id ? (
-                                <Link to="/assets">View full details →</Link>
-                            ) : ""}
+                            {user?.loc_id ? <Link to="/purchase-orders">View full details →</Link> : ""}
                         </div>
                     </div>
 
-                    {/* Pending Requests */}
+                    {/* Maintenance Requests Card */}
                     <div className="stat-widget">
-                        <div>
-                            <div className="stat-icon orange">📝</div>
-                            <span className="stat-label">Pending Req.</span>
-                            <h3 className="stat-value" style={!user?.loc_id ? {fontSize: '1.25rem'} : {}}>
-                                {user?.loc_id ? stats.pendingRequests : "Location not set"}
-                            </h3>
+                        <div className="widget-header">
+                            <div className="stat-icon bg-amber">📝</div>
+                            <span className="widget-title">Maintenance Requests</span>
+                        </div>
+                        <div className="split-container">
+                            <div className="split-item left">
+                                <span className="stat-label">Pending</span>
+                                <h3 className="stat-value">{user?.loc_id ? stats.pendingMaintenance : 0}</h3>
+                            </div>
+                            <div className="split-item right">
+                                <span className="stat-label">Completed</span>
+                                <h3 className="stat-value">{user?.loc_id ? stats.completedMaintenance : 0}</h3>
+                            </div>
                         </div>
                         <div className="stat-footer">
-                            {user?.loc_id ? (
-                                <Link to="/requests">View full details →</Link>
-                            ) : ""}
+                            {user?.loc_id ? <Link to="/requests">View full details →</Link> : ""}
                         </div>
                     </div>
 
-                    {/* Orders */}
-                    <div className="stat-widget">
-                        <div>
-                            <div className="stat-icon cyan">🛒</div>
-                            <span className="stat-label">Orders</span>
-                            <h3 className="stat-value" style={!user?.loc_id ? {fontSize: '1.25rem'} : {}}>
-                                {user?.loc_id ? stats.totalOrders : "Location not set"}
-                            </h3>
+                    {/* Location Asset Request Card */}
+                    {/* <div className="stat-widget">
+                        <div className="widget-header">
+                            <div className="stat-icon bg-violet">📋</div>
+                            <span className="widget-title">Location Asset Request</span>
+                        </div>
+                        <div className="split-container">
+                            <div className="split-item left">
+                                <span className="stat-label">Requested</span>
+                                <h3 className="stat-value">{user?.loc_id ? stats.requestedAssetRequests : 0}</h3>
+                            </div>
+                            <div className="split-item right">
+                                <span className="stat-label">Rejected</span>
+                                <h3 className="stat-value">{user?.loc_id ? stats.rejectedAssetRequests : 0}</h3>
+                            </div>
                         </div>
                         <div className="stat-footer">
-                            {user?.loc_id ? (
-                                <Link to="/purchase-orders">View full details →</Link>
-                            ) : ""}
+                            {user?.loc_id ? <Link to="/requests">View full details →</Link> : ""}
                         </div>
-                    </div>
-
-                    {/* Room Status */}
-                    <div className="stat-widget">
-                        <div>
-                            <div className="stat-icon rose">🚪</div>
-                            <span className="stat-label">My Room</span>
-                            <h3 className="stat-value text-xl">
-                                {stats.currentRoomName || "Not assigned"}
-                            </h3>
-                        </div>
-                        <div className="stat-footer">
-                            <span className="text-secondary">
-                                {stats.currentLocationName || "Location not set"}
-                            </span>
-                        </div>
-                    </div>
+                    </div> */}
                 </div>
             </div>
 

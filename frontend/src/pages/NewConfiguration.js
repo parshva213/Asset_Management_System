@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from "react"
 
+
+
 import api from "../api"
 import { useAuth } from "../contexts/AuthContext"
 
@@ -25,36 +27,7 @@ const NewConfiguration = () => {
   });
 
 
-  useEffect(() => {
-    fetchInitial()
-  }, [])
-
-  const fetchInitial = async () => {
-    try {
-      setLoading(true);
-      await Promise.all([
-        fetchConfigurations(),
-        fetchCategories()
-      ]);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-
-  const fetchCategories = async () => {
-    try {
-      const res = await api.get("/categories");
-      setCategories(res.data);
-    } catch (err) {
-      console.error("Error fetching categories:", err);
-    }
-  };
-
-
-
-
-  const fetchConfigurations = async () => {
+  const fetchConfigurations = useCallback(async () => {
     try {
       const response = await api.get("/maintenance")
       // Filter for configurations
@@ -65,7 +38,35 @@ const NewConfiguration = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  const fetchCategories = useCallback(async () => {
+    try {
+      const res = await api.get("/categories");
+      setCategories(res.data);
+    } catch (err) {
+      console.error("Error fetching categories:", err);
+    }
+  }, []);
+
+  const fetchInitial = useCallback(async () => {
+    try {
+      setLoading(true);
+      await Promise.all([
+        fetchConfigurations(),
+        fetchCategories()
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchConfigurations, fetchCategories])
+
+  useEffect(() => {
+    fetchInitial()
+  }, [fetchInitial])
+
+
+
 
   const resetForm = () => {
     setForm({
@@ -219,7 +220,7 @@ const NewConfiguration = () => {
 
 
                 {/* Step 5: Name, Purchase Date, Quantity */}
-                {form.company_name && (
+                {form.category_id && (
                   <>
                     <div className="form-group">
                       <label className="form-label">Asset Name</label>

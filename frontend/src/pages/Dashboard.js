@@ -14,6 +14,7 @@ const Dashboard = () => {
       setRedirecting(true)
       switch (user.role) {
         case "Super Admin":
+        case "Admin":
           navigate("/dashboard/admin", { replace: true })
           break
         case "Supervisor":
