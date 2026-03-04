@@ -20,12 +20,39 @@ router.get("/current-asset/:id", authenticateToken, async (req,res)=>{
   try {
     const {id} = req.params;
     let query = `
+<<<<<<< HEAD
       SELECT a.*, c.name as category_name
       FROM assets a
       LEFT JOIN asset_assignments aa ON a.id =  aa.asset_id 
       LEFT JOIN users u ON  aa.assigned_to = u.id
       LEFT JOIN categories c ON a.category_id = c.id
       WHERE a.org_id = ? AND aa.unassigned_by IS NULL AND u.id = ?
+=======
+      SELECT
+        a.*,
+        c.name AS category_name,
+        l.name AS location_name,
+        r.name AS room_name,
+        aa.assigned_at,
+        uab.name AS assigned_by_name
+      FROM assets a
+      JOIN (
+        SELECT aa1.asset_id, aa1.assigned_to, aa1.assigned_by, aa1.assigned_at
+        FROM asset_assignments aa1
+        JOIN (
+          SELECT asset_id, MAX(id) AS max_id
+          FROM asset_assignments
+          WHERE unassigned_at IS NULL AND unassigned_by IS NULL
+          GROUP BY asset_id
+        ) latest ON latest.max_id = aa1.id
+      ) aa ON aa.asset_id = a.id
+      LEFT JOIN categories c ON a.category_id = c.id
+      LEFT JOIN locations l ON a.location_id = l.id
+      LEFT JOIN rooms r ON a.room_id = r.id
+      LEFT JOIN users uab ON aa.assigned_by = uab.id
+      WHERE a.org_id = ? AND aa.assigned_to = ?
+      ORDER BY aa.assigned_at DESC, a.id ASC
+>>>>>>> 529cfb45fb3c89c89998467680e5f1168f45741c
     `;
     const result = await pool.query(query, [req.user.org_id, id]);
     res.json(result[0]);
@@ -50,8 +77,8 @@ router.get("/available-assets-to-assign/:id", authenticateToken, async (req, res
         a.location_id = ?
         AND a.org_id = ?
       GROUP BY 
-        a.name,
-        SUBSTRING_INDEX(a.serial_number, '/', 1)
+        a.name
+      HAVING SUM(a.status = 'Available') > 0
       ORDER BY 
         a.name ASC;
       `, [id, req.user.org_id]);

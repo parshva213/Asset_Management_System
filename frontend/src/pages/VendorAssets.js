@@ -9,11 +9,12 @@ const VendorAssets = () => {
   const { showError } = useToast()
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
+  const [companyFilter, setCompanyFilter] = useState("")
 
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await api.get("/purchase-orders/vendor/requirements")
+        const response = await api.get("/purchase-orders")
         setOrders(Array.isArray(response.data) ? response.data : [])
       } catch (error) {
         console.error("Error loading products summary:", error)
@@ -25,13 +26,24 @@ const VendorAssets = () => {
     fetchOrders()
   }, [showError])
 
+  const companyOptions = useMemo(() => {
+    const set = new Set()
+    orders.forEach((order) => set.add(order.organization_name || "Unknown Company"))
+    return Array.from(set).sort((a, b) => a.localeCompare(b))
+  }, [orders])
+
+  const filteredOrders = useMemo(() => {
+    if (!companyFilter) return orders
+    return orders.filter((order) => (order.organization_name || "Unknown Company") === companyFilter)
+  }, [orders, companyFilter])
+
   const summary = useMemo(() => {
     const byCompany = {}
     let totalPendingSupply = 0
     let totalSupplied = 0
 
-    orders.forEach((order) => {
-      const company = order.organization_name || "Unknown"
+    filteredOrders.forEach((order) => {
+      const company = order.organization_name || "Unknown Company"
       if (!byCompany[company]) {
         byCompany[company] = {
           company,
@@ -45,10 +57,12 @@ const VendorAssets = () => {
 
       const quantity = Number(order.quantity) || 0
       const suppliedQty = Number(order.supplied_quantity) || 0
+
       if (order.status === "Approved") {
         byCompany[company].pending_supply += quantity
         totalPendingSupply += quantity
       }
+
       byCompany[company].supplied += suppliedQty
       totalSupplied += suppliedQty
 
@@ -64,17 +78,20 @@ const VendorAssets = () => {
     })
 
     const companyRows = Object.values(byCompany).sort((a, b) => a.company.localeCompare(b.company))
-    const approvedRows = orders
-      .filter((order) => order.status === "Approved")
-      .sort((a, b) => a.id - b.id)
+    const allRows = [...filteredOrders].sort((a, b) => {
+      const aTime = a.created_at ? new Date(a.created_at).getTime() : 0
+      const bTime = b.created_at ? new Date(b.created_at).getTime() : 0
+      if (bTime !== aTime) return bTime - aTime
+      return (b.id || 0) - (a.id || 0)
+    })
 
     return {
       companyRows,
-      approvedRows,
+      allRows,
       totalPendingSupply,
       totalSupplied,
     }
-  }, [orders])
+  }, [filteredOrders])
 
   const formatWarrantyPeriod = (days) => {
     const value = Number(days)
@@ -89,8 +106,24 @@ const VendorAssets = () => {
   return (
     <div className="page-container">
       <div className="page-header">
-        <h2>Products To Supply</h2>
-        <p>Assets are supplied only after admin approval of your quotation.</p>
+        <h2>Products And Orders</h2>
+        <p>View your latest orders and supply status by company.</p>
+      </div>
+
+      <div className="filters mb-4">
+        <div className="filter-group">
+          <label className="form-label">Company</label>
+          <select
+            className="form-select"
+            value={companyFilter}
+            onChange={(e) => setCompanyFilter(e.target.value)}
+          >
+            <option value="">All Companies</option>
+            {companyOptions.map((name) => (
+              <option key={name} value={name}>{name}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div className="flex gap-2 mb-4" style={{ flexWrap: "wrap" }}>
@@ -106,8 +139,8 @@ const VendorAssets = () => {
 
       {summary.companyRows.length === 0 ? (
         <div className="empty-state">
-          <h3>No registered company requirements yet</h3>
-          <p>Register organizations and submit quotations to see supply counts.</p>
+          <h3>No orders found</h3>
+          <p>Try changing the company filter.</p>
         </div>
       ) : (
         <div className="table-container mb-4">
@@ -138,32 +171,32 @@ const VendorAssets = () => {
         </div>
       )}
 
-      {summary.approvedRows.length > 0 && (
+      {summary.allRows.length > 0 && (
         <div className="table-container">
           <table className="table">
             <thead>
               <tr>
                 <th>Company</th>
                 <th>Asset</th>
-                <th>Pending Qty</th>
+                <th>Qty</th>
                 <th>Supplied Qty</th>
+                <th>Status</th>
                 <th>Last Supply Date</th>
                 <th>Warranty Expiry</th>
                 <th>Warranty Period</th>
-                <th>Status</th>
               </tr>
             </thead>
             <tbody>
-              {summary.approvedRows.map((order) => (
-                <tr key={order.id} id={`approved-order-${order.id}`}>
-                  <td>{order.organization_name || "N/A"}</td>
+              {summary.allRows.map((order) => (
+                <tr key={order.id} id={`order-row-${order.id}`}>
+                  <td>{order.organization_name || "Unknown Company"}</td>
                   <td>{order.asset_name}</td>
                   <td>{order.quantity}</td>
                   <td>{order.supplied_quantity || 0}</td>
+                  <td>{order.status}</td>
                   <td>{order.supply_date ? formatDate(order.supply_date) : "-"}</td>
                   <td>{order.warranty_expiry ? formatDate(order.warranty_expiry) : "-"}</td>
                   <td>{formatWarrantyPeriod(order.warranty_period_days)}</td>
-                  <td>{order.status}</td>
                 </tr>
               ))}
             </tbody>

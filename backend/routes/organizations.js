@@ -43,6 +43,11 @@ router.post("/:id/register", verifyToken, async (req, res) => {
     }
 
     const { id } = req.params;
+    const { v_org } = req.body;
+
+    if (!v_org || !String(v_org).trim()) {
+      return res.status(400).json({ message: "v_org key is required" });
+    }
 
     const [orgRows] = await pool.query(
       "SELECT id, name, v_opk, status FROM organizations WHERE id = ?",
@@ -56,6 +61,10 @@ router.post("/:id/register", verifyToken, async (req, res) => {
     const org = orgRows[0];
     if (org.status !== "Active") {
       return res.status(400).json({ message: "Organization is not active" });
+    }
+
+    if (String(v_org).trim() !== String(org.v_opk).trim()) {
+      return res.status(400).json({ message: "Invalid v_org key for this company" });
     }
 
     const [existing] = await pool.query(

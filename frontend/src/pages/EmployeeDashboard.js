@@ -11,7 +11,6 @@ const EmployeeDashboard = () => {
         pendingRequests: 0,
         approvedRequests: 0,
         totalRequests: 0,
-        assignedAssetsList: [],
         myRequests: []
     })
     const [loading, setLoading] = useState(true)
@@ -32,7 +31,6 @@ const EmployeeDashboard = () => {
                 pendingRequests: dashboardRes.data.pendingRequests || 0,
                 approvedRequests: dashboardRes.data.approvedRequests || 0,
                 totalRequests: dashboardRes.data.totalRequests || 0,
-                assignedAssetsList: dashboardRes.data.assignedAssetsList || [],
                 myRequests: dashboardRes.data.myRequests || []
             })
         } catch (error) {
@@ -200,6 +198,7 @@ const EmployeeDashboard = () => {
                     </div>
                 </div>
             </div>
+
             {showRoomModal && (
                 <div className="modal-overlay">
                     <div className="modal-content">

@@ -24,7 +24,9 @@ const SupervisorDashboard = () => {
         requestedAssetRequests: 0,
         rejectedAssetRequests: 0,
         assignedAssetsList: [],
-        pendingRequestsList: []
+        pendingRequestsList: [],
+        currentLocationName: "",
+        currentRoomName: ""
     })
     const [loading, setLoading] = useState(true)
     
@@ -61,7 +63,9 @@ const SupervisorDashboard = () => {
                     requestedAssetRequests: data.requestedAssetRequests || 0,
                     rejectedAssetRequests: data.rejectedAssetRequests || 0,
                     assignedAssetsList: data.assignedAssetsList || [],
-                    pendingRequestsList: data.pendingRequestsList || []
+                    pendingRequestsList: data.pendingRequestsList || [],
+                    currentLocationName: data.currentLocationName || "",
+                    currentRoomName: data.currentRoomName || ""
                 })
             }
         } catch (error) {
@@ -168,10 +172,10 @@ const SupervisorDashboard = () => {
                             <span className="info-icon">🔑</span> {user?.ownpk || "Not set"}
                         </div>
                         <div className="info-row">
-                            <span className="info-icon">📍</span> {user?.room_name || "Not assigned"}
+                            <span className="info-icon">📍</span> {stats.currentRoomName || user?.room_name || "Not assigned"}
                         </div>
                         <div className="info-row">
-                            <span className="info-icon">🏢</span> {user?.location_name || "Not assigned"}
+                            <span className="info-icon">🏢</span> {stats.currentLocationName || user?.location_name || "Not assigned"}
                         </div>
                     </div>
                     <div className="profile-footer-new">

@@ -19,7 +19,7 @@ const Users = () => {
   const [selectedUser, setSelectedUser] = useState(null)
   const [availableAssets, setAvailableAssets] = useState([])
   const [locations, setLocations] = useState([])
-  const [assignForm, setAssignForm] = useState({ asset_ids: [], location_id: "" })
+  const [assignForm, setAssignForm] = useState({ asset_quantities: {}, location_id: "" })
   const [modalLoading, setModalLoading] = useState(false)
   const [locationError, setLocationError] = useState(false)
   const [role, setRole] = useState("Maintenance")
@@ -42,7 +42,7 @@ const Users = () => {
 
   const fetchAvailableAssets = useCallback(async (locationId = null) => {
     try {
-      let url = `/assets/available-assets-to-assign/${locationId}}`;
+      let url = `/assets/available-assets-to-assign/${locationId}`;
       const response = await api.get(url)
       setAvailableAssets(response.data)
     } catch (error) {
@@ -67,7 +67,7 @@ const Users = () => {
 
   const handleOpenModal = (user) => {
     setSelectedUser(user)
-    setAssignForm({ asset_ids: [], location_id: user.loc_id || "" })
+    setAssignForm({ asset_quantities: {}, location_id: user.loc_id || "" })
     setModalStep(1)
     setLocationError(false)
     setShowModal(true)
@@ -114,15 +114,16 @@ const Users = () => {
     }
   }
 
-  const toggleAssetSelection = (assetId) => {
-    setAssignForm(prev => {
-      const isSelected = prev.asset_ids.includes(assetId);
-      if (isSelected) {
-        return { ...prev, asset_ids: prev.asset_ids.filter(id => id !== assetId) };
-      } else {
-        return { ...prev, asset_ids: [...prev.asset_ids, assetId] };
+  const handleQuantityChange = (assetName, rawValue, maxAvailable) => {
+    const parsed = Number.parseInt(rawValue, 10)
+    const safeValue = Number.isNaN(parsed) ? 0 : Math.max(0, Math.min(parsed, maxAvailable || 0))
+    setAssignForm(prev => ({
+      ...prev,
+      asset_quantities: {
+        ...prev.asset_quantities,
+        [assetName]: safeValue
       }
-    });
+    }))
   }
 
   const handleUnassignAsset = async (assetId) => {
@@ -154,12 +155,15 @@ const Users = () => {
   const handleSaveAssignment = async () => {
     setModalLoading(true)
     try {
-      // 2. Assign Assets if selected
-      if (assignForm.asset_ids.length > 0) {
-        for (const assetId of assignForm.asset_ids) {
-          await api.post("/users/assign-asset", { 
-            user_id: selectedUser.id, 
-            asset_id: assetId 
+      // 2. Assign Assets by quantity
+      const assignEntries = Object.entries(assignForm.asset_quantities || {}).filter(([, qty]) => Number(qty) > 0)
+      if (assignEntries.length > 0) {
+        for (const [assetName, qty] of assignEntries) {
+          await api.post("/users/assign-asset", {
+            user_id: selectedUser.id,
+            asset_name: assetName,
+            location_id: assignForm.location_id,
+            quantity: qty
           })
         }
       }
@@ -183,7 +187,7 @@ const Users = () => {
     )
   }
 
-  if (user?.role === "Supervisor") {
+  if (user.role === "Supervisor") {
     return (
       <div className="content">
         {!user?.room_id ?
@@ -238,50 +242,50 @@ const Users = () => {
     )
   }
 
-  if (user?.role === "Super Admin") {
-    return (
-      <>
-        <div className="content">
-          <div className="flex-between mb-4">
-            <h2>Users</h2>
-            <button className="btn btn-primary" onClick={() => setRole(role === "Maintenance" ? "Vendor" : "Maintenance")}>
-              {role === "Maintenance" ? "View Vendors" : "View Maintenance"}
-            </button>
-          </div>
-          {users.length === 0 ? (
-            <div className="empty-state">
-              <p>No users found for this filter.</p>
-            </div>
-          ) : (
-
-          <div className="user-grid">
-            {users.map((user) => (
-              <div key={user.id} className="card user-card" id={`user-${user.id}`}>
-                <div className="card-header flex-between">
-                  <div>
-                    <h3 className="text-lg font-bold">{user.name}</h3>
-                  </div>
-                  <span className="badge badge-primary">{user.role}</span>
-                </div>
-                <div className="card-body">
-                  <p><strong>Email:</strong> {user.email}</p>
-                  <p><strong>Phone:</strong> {user.phone}</p>
-                  <p><strong>{role === "Maintenance" ? "Department" : "Company"}:</strong> {user.department || "N/A"}</p>
-                  {role === "Maintenance" && <p><strong>Assigned Assets:</strong> {user.assigned_assets?.length || 0}</p>}
-                </div>
-                {role === "Maintenance" && <div className="card-footer">
-
-                  <button
-                    className="btn btn-primary w-full"
-                    onClick={() => handleOpenModal(user)}
-                  >
-                    Set Users Assets and Location
-                  </button>
-                </div>}
-              </div>
-            ))}
-          </div>
+  return (
+    <>
+      {}
+    <div className="content">
+      <div className="flex-between mb-4">
+        <h2>Users</h2>
+        {user?.role === "Super Admin" && (
+          <button className="btn btn-primary" onClick={() => setRole(role === "Maintenance" ? "Vendor" : "Maintenance")}>
+            {role === "Maintenance" ? "View Vendors" : "View Maintenance"}
+          </button>
         )}
+      </div>
+      {users.length === 0 ? (
+        <div className="empty-state">
+          <p>No users found for this filter.</p>
+        </div>
+      ) : (
+        <div className="user-grid">
+          {users.map((user) => (
+            <div key={user.id} className="card user-card" id={`user-${user.id}`}>
+              <div className="card-header flex-between">
+                <div>
+                  <h3 className="text-lg font-bold">{user.name}</h3>
+                </div>
+                <span className="badge badge-primary">{user.role}</span>
+              </div>
+              <div className="card-body">
+                <p><strong>Email:</strong> {user.email}</p>
+                <p><strong>Phone:</strong> {user.phone}</p>
+                <p><strong>{role === "Maintenance" ? "Department" : "Company"}:</strong> {user.department || "N/A"}</p>
+                {role === "Maintenance" && <p><strong>Assigned Assets:</strong> {user.assigned_assets?.length || 0}</p>}
+              </div>
+              {role === "Maintenance" && <div className="card-footer">
+                <button
+                  className="btn btn-primary w-full"
+                  onClick={() => handleOpenModal(user)}
+                >
+                  Set Users Assets and Location
+                </button>
+              </div>}
+            </div>
+          ))}
+        </div>
+      )}
 
         {/* Assignment Modal */}
         {showModal && selectedUser && (
@@ -303,7 +307,7 @@ const Users = () => {
 
                     <div className="form-group mb-6">
                       <label className="form-label">Set Location First</label>
-                      <select 
+                      <select
                         className="form-input"
                         style={locationError ? { border: '1px solid red' } : {}}
                         value={assignForm.location_id}
@@ -327,15 +331,15 @@ const Users = () => {
                     </div>
 
                     <div className="modal-footer flex gap-4">
-                      <button 
-                        className="btn btn-secondary flex-1" 
+                      <button
+                        className="btn btn-secondary flex-1"
                         onClick={handleCancelAssignment}
                         disabled={modalLoading}
                       >
                         Cancel
                       </button>
-                      <button 
-                        className="btn btn-primary flex-1" 
+                      <button
+                        className="btn btn-primary flex-1"
                         onClick={fetchAssetsForStep2}
                         disabled={modalLoading}
                       >
@@ -358,8 +362,8 @@ const Users = () => {
                         ) : (
                           availableAssets.map(asset => (
                             <label key={asset.id} className="asset-checkbox-item flex items-center gap-2 border-b last:border-0 py-2 cursor-pointer">
-                              <input 
-                                type="checkbox" 
+                              <input
+                                type="checkbox"
                                 className="checkbox-input"
                                 checked={assignForm.asset_ids.includes(asset.id)}
                                 onChange={() => toggleAssetSelection(asset.id)}
@@ -373,58 +377,36 @@ const Users = () => {
                         )}
                       </div>
                     </div>
-
-                    {selectedUser.assigned_assets?.length > 0 && (
-                      <div className="mt-6">
-                        <h4 className="mb-2 text-secondary">Currently Assigned Assets</h4>
-                        <div className="assigned-assets-list">
-                          {selectedUser.assigned_assets.map(asset => (
-                            <div key={asset.id} className="assigned-asset-item">
-                              <span className="text-sm">{asset.name} (SN: {asset.serial_number || "N/A"})</span>
-                              <button 
-                                className="btn btn-danger btn-sm" 
-                                onClick={() => handleUnassignAsset(asset.id)}
-                              >
-                                Unassign
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
                     <div className="modal-footer mt-8 flex gap-4">
-                      <button 
-                        className="btn btn-secondary flex-1" 
-                        onClick={() => {
-                          setModalStep(1);
-                          setAssignForm(prev => ({ ...prev, asset_ids: [] }));
-                        }}
-                        disabled={modalLoading}
-                      >
-                        Back
-                      </button>
-                      <button 
-                        className="btn btn-primary flex-1" 
-                        onClick={handleSaveAssignment}
-                        disabled={modalLoading || (assignForm.asset_ids.length === 0 && String(assignForm.location_id) === String(selectedUser.loc_id))}
-                      >
-                        {modalLoading ? "Saving..." : `Save Changes ${assignForm.asset_ids.length > 0 ? `(${assignForm.asset_ids.length})` : ''}`}
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
+                    <button 
+                      className="btn btn-secondary flex-1" 
+                      onClick={() => {
+                        setModalStep(1);
+                        setAssignForm(prev => ({ ...prev, asset_quantities: {} }));
+                      }}
+                      disabled={modalLoading}
+                    >
+                      Back
+                    </button>
+                    <button 
+                      className="btn btn-primary flex-1" 
+                      onClick={handleSaveAssignment}
+                      disabled={modalLoading || (Object.values(assignForm.asset_quantities || {}).every(v => Number(v) === 0) && String(assignForm.location_id) === String(selectedUser.loc_id))}
+                    >
+                      {modalLoading
+                        ? "Saving..."
+                        : `Save Changes (${Object.values(assignForm.asset_quantities || {}).reduce((sum, qty) => sum + (Number(qty) || 0), 0)})`}
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
-        )}
         </div>
-      </>
-    )
-  }
-
-  return null;
-
+      )}
+      </div>
+    </>
+  )
 }
 
 export default Users

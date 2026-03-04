@@ -23,7 +23,7 @@ const TeamUser = () => {
   const [newRoomId, setNewRoomId] = useState("")
   const [currentAsset, setCurrentAsset] = useState(null)
   const [availableAssets, setAvailableAssets] = useState([])
-  const [assetsToAssign, setAssetsToAssign] = useState([])
+  const [assignQuantities, setAssignQuantities] = useState({})
   const [assetsToUnassign, setAssetsToUnassign] = useState([])
   
   // Track previous location to detect actual changes
@@ -156,7 +156,7 @@ const TeamUser = () => {
     } else if (type === 'assets') {
       fetchCurrentAsset(user.id)
       fetchAvailableAssets(user.loc_id)
-      setAssetsToAssign([])
+      setAssignQuantities({})
       setAssetsToUnassign([])
     }
   }
@@ -182,7 +182,7 @@ const TeamUser = () => {
     setNewLocationId("")
     setCurrentAsset(null)
     setAvailableAssets([])
-    setAssetsToAssign([])
+    setAssignQuantities({})
     setAssetsToUnassign([])
   }
 
@@ -201,10 +201,13 @@ const TeamUser = () => {
     }
   }
 
-  const toggleAssignAsset = (assetId) => {
-    setAssetsToAssign(prev => 
-      prev.includes(assetId) ? prev.filter(id => id !== assetId) : [...prev, assetId]
-    )
+  const handleAssignQuantityChange = (assetName, rawValue, maxAvailable) => {
+    const parsed = Number.parseInt(rawValue, 10)
+    const safeValue = Number.isNaN(parsed) ? 0 : Math.max(0, Math.min(parsed, maxAvailable || 0))
+    setAssignQuantities((prev) => ({
+      ...prev,
+      [assetName]: safeValue
+    }))
   }
 
   const toggleUnassignAsset = (assetId) => {
@@ -217,10 +220,19 @@ const TeamUser = () => {
     if (!selectedUser) return
     setModalLoading(true)
     try {
-      // Process assignments
-      for (const assetId of assetsToAssign) {
-        await api.post("/users/assign-asset", { user_id: selectedUser.id, asset_id: assetId })
+      const locationId = selectedUser.loc_id || newLocationId
+      const assignEntries = Object.entries(assignQuantities).filter(([, qty]) => Number(qty) > 0)
+
+      // Process quantity-based assignments
+      for (const [assetName, qty] of assignEntries) {
+        await api.post("/users/assign-asset", {
+          user_id: selectedUser.id,
+          asset_name: assetName,
+          location_id: locationId,
+          quantity: qty
+        })
       }
+
       // Process unassignments
       for (const assetId of assetsToUnassign) {
         await api.post("/users/unassign-asset", { user_id: selectedUser.id, asset_id: assetId })
@@ -242,6 +254,7 @@ const TeamUser = () => {
     )
   }
 
+  const totalToAssign = Object.values(assignQuantities).reduce((sum, qty) => sum + (Number(qty) || 0), 0)
   const title = user?.role === "Supervisor" ? "My Employee Team" : (roomid ? "Team (Supervisor & Employees) in " + locationName : "Team (Employees & Maintenance) at " + locationName)
 
   return (
@@ -406,25 +419,25 @@ const TeamUser = () => {
                       <p className="text-sm text-secondary italic px-2 py-4 text-center bg-light/30 rounded">No available assets for this location.</p>
                     ) : (
                       <div className="available-checkbox-list space-y-1">
-                        {availableAssets
-                          ?.filter(asset => !selectedUser.assigned_assets?.some(assigned => assigned.name === asset.name))
-                          .map(asset => (
-                            <label key={asset.available_min_id} className="flex items-center gap-3 p-3 rounded hover:bg-light cursor-pointer border border-transparent hover:border-border transition-all group">
-                              <input 
-                                type="checkbox" 
-                                checked={assetsToAssign.includes(asset.available_min_id)}
-                                onChange={() => toggleAssignAsset(asset.available_min_id)}
-                                className="w-4 h-4 rounded text-primary focus:ring-primary"
-                              />
-                                <div className="text-sm font-semibold group-hover:text-primary transition-colors">
-                                {asset.name}
-                                </div>
-                                <div className="text-[11px] text-secondary flex gap-2">
-                                  <span>(Qty: {asset.total_assets || 0} | Available: {asset.available_assets || 0} | Assigned: {asset.assigned_assets || 0})</span>
-                                </div>
-                            </label>
-                          ))
-                        }
+                        {availableAssets.map(asset => (
+                          <div key={asset.name} className="flex items-center gap-3 p-3 rounded border border-border/60">
+                            <div className="flex-1">
+                              <div className="text-sm font-semibold">{asset.name}</div>
+                              <div className="text-[11px] text-secondary flex gap-2">
+                                <span>(Qty: {asset.total_assets || 0} | Available: {asset.available_assets || 0} | Assigned: {asset.assigned_assets || 0})</span>
+                              </div>
+                            </div>
+                            <input
+                              type="number"
+                              min="0"
+                              max={asset.available_assets || 0}
+                              value={assignQuantities[asset.name] || 0}
+                              onChange={(e) => handleAssignQuantityChange(asset.name, e.target.value, asset.available_assets || 0)}
+                              className="form-input"
+                              style={{ width: "92px" }}
+                            />
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
@@ -453,9 +466,9 @@ const TeamUser = () => {
                 <button 
                   className="btn btn-primary flex-1" 
                   onClick={handleSaveAssets}
-                  disabled={modalLoading || (assetsToAssign.length === 0 && assetsToUnassign.length === 0)}
+                  disabled={modalLoading || (totalToAssign === 0 && assetsToUnassign.length === 0)}
                 >
-                  {modalLoading ? "Saving..." : `Save Changes (${assetsToAssign.length + assetsToUnassign.length})`}
+                  {modalLoading ? "Saving..." : `Save Changes (${totalToAssign + assetsToUnassign.length})`}
                 </button>
               )}
             </div>

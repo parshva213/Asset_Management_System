@@ -60,12 +60,21 @@ const Assets = () => {
   const fetchAssets = useCallback(async () => {
     try {
       let path = "/assets";
-      if (user?.role === "Employee") {
+      // Supervisor: show location summary for their assigned location
+      if (user?.role === "Supervisor") {
+          path = `/assets?location_id=${user?.loc_id}&room_id=${user?.room_id}`;
+        try {
+          const locRes = await api.get(`/locations/${user.loc_id}`);
+          setLocationName(locRes.data.name || "");
+        } catch (err) {
+          console.warn("Unable to fetch supervisor location name", err);
+        }
+      } else if (user?.role === "Employee") {
         path = `/assets/current-asset/${user?.id}`;
-      } else if (user?.role === "Supervisor") {
-        path = `/assets?location_id=${user?.loc_id}&room_id=${user?.room_id}`;
-      }
+      } 
+
       const res = await api.get(`${path}`);
+<<<<<<< HEAD
       let assetList = res.data;
       // for admins, if they have a room defined sort assets so any duplicates
       // prefer the ones in their current room first before others
@@ -81,6 +90,9 @@ const Assets = () => {
         });
       }
       setAssets(assetList) ? console.log("asset success") : console.log("asset Error");
+=======
+      setAssets(res.data || []);
+>>>>>>> 529cfb45fb3c89c89998467680e5f1168f45741c
 
     } catch (err) {
       console.error("Error fetching assets:", err);
@@ -697,6 +709,190 @@ const Assets = () => {
               </div>
             </div>
           </div>
+        </div>
+      )}
+    </div>
+  );
+
+  if (loading) return <div className="loading">Loading assets...</div>;
+
+  if ((user?.role === "Supervisor" || user?.role === "Employee") && !user?.room_id) {
+    return (
+      <div className="content">
+        <div className="flex-center h-full">
+          <div className="empty-state">
+            <h3>Set your location first</h3>
+            <p className="text-secondary">You need to be assigned to a room to view the assets.</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Supervisor-specific summary view
+  if (user?.role === "Supervisor") {
+    return (
+      <div>
+        <div className="flex-between mb-4">
+          <div>
+            <h2>Manage Assets for {locationName || "your Location"}</h2>
+          </div>
+          {(user?.role === "Super Admin" || user?.role === "Supervisor") && (
+            <button onClick={() => dataFetch()} className="btn btn-primary">
+              Add Asset
+            </button>
+          )}
+        </div>
+
+        {assets.length === 0 ? (
+          <div className="empty-state">
+            <p>No assets found</p>
+          </div>
+        ) : (
+          <div className="table-container">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Quantity</th>
+                  <th>Assigned</th>
+                  <th>Active</th>
+                  <th>Not Active</th>
+                  <th>Category</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {assets.map((asset) => (
+                  <tr key={asset.id} id={`asset-${asset.id}`}>
+                    <td>{asset.aname}</td>
+                    <td>{asset.quantity}</td>
+                    <td>{asset.assigned_total || 0}</td>
+                    <td>{asset.active}</td>
+                    <td>{asset.not_active}</td>
+                    <td>{asset.cat_name || "N/A"}</td>
+                    <td>
+                      <div className="flex gap-2">
+                        <button
+                          className="btn btn-secondary"
+                          onClick={() => navigate(`/lr-assets?locid=${user.loc_id}&roomid=${user.room_id}`)}
+                        >
+                          View Items
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        {modal}
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="flex-between mb-4">
+        <h2> {(user?.role === "Super Admin") ? "List of Assets Not Working" : "Assets Management"}</h2>
+        {(user?.role === "Super Admin" || user?.role === "Supervisor") && (
+          <button onClick={() => dataFetch()} className="btn btn-primary">
+            Add Asset
+          </button>
+        )}
+      </div>
+
+      {assets.length === 0 ? (
+        <div className="empty-state">
+          <p>No assets found</p>
+        </div>
+      ) : (
+        <div className="table-container">
+          <table className="table">
+            <thead>
+              <tr>
+                {user?.role === "Super Admin" ? (
+                  <>
+                    <th>Serial Number</th>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Category</th>
+                    <th>Location</th>
+                    <th>Room</th>
+                    <th>Warranty</th>
+                    <th>Purchase Cost</th>
+                  </>
+                ) : (
+                  <>
+                    <th>Serial Number</th>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Location</th>
+                    <th>Status</th>
+                    <th>Purchased</th>
+                    <th>Warranty</th>
+                    <th>{user?.role === "Employee" ? "Assigned On" : "Actions"}</th>
+                  </>
+                )}
+              </tr>
+            </thead>
+            <tbody>
+              {assets.map((asset) => (
+                <tr key={asset.id} id={`asset-${asset.id}`}>
+                  {user?.role === "Super Admin" ? (
+                    <>
+                      <td>{asset.sn}</td>
+                      <td>{asset.aname}</td>
+                      <td>{asset.status}</td>
+                      <td>{asset.cat_name}</td>
+                      <td>{asset.loc_name}</td>
+                      <td>{asset.room_name}</td>
+                      <td>{asset.warranty_expiry}</td>
+                      <td>{asset.purchase_cost}</td>
+                    </>
+                  ) : (
+                    <>
+                      <td>{asset.serial_number || "N/A"}</td>
+                      <td>
+                        <div className="fw-bold">{asset.name}</div>
+                      </td>
+                      <td>{asset.category_name || "N/A"}</td>
+                      <td>{asset.location_name || "Unassigned"}</td>
+                      <td>
+                        <span
+                          className={`badge ${asset.status === "Available"
+                            ? "badge-success"
+                            : asset.status === "Assigned"
+                              ? "badge-primary"
+                              : "badge-warning"
+                            }`}
+                        >
+                          {asset.status}
+                        </span>
+                        {asset.status === "Assigned" && asset.assign && (
+                          <div className="text-muted small mt-1">To: {asset.assign}</div>
+                        )}
+                      </td>
+                      <td>{formatDate(asset.purchase_date)}</td>
+                      <td>{formatDate(asset.warranty_expiry)}</td>
+                      <td>
+                        {user?.role === "Employee" ? (
+                          formatDate(asset.assigned_at)
+                        ) : (
+                          <div className="flex gap-2">
+                            <button onClick={() => handleEdit(asset)} className="btn btn-secondary">
+                              Edit
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
       {showItemsModal && (

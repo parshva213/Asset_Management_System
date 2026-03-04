@@ -10,6 +10,8 @@ router.get("/", verifyToken, async (req, res) => {
     try {
         let query = `
       SELECT po.*, u.name as supervisor_name, v.name as vendor_name, a.name as admin_name,
+             o.id AS organization_id, COALESCE(o.name, 'Unknown Company') AS organization_name,
+             sl.name AS supervisor_location_name, sr.name AS supervisor_room_name,
              COALESCE(sp.supplied_quantity, 0) AS supplied_quantity,
              sp.supply_date,
              sp.warranty_expiry,
@@ -18,6 +20,9 @@ router.get("/", verifyToken, async (req, res) => {
       LEFT JOIN users u ON po.supervisor_id = u.id
       LEFT JOIN users v ON po.vendor_id = v.id
       LEFT JOIN users a ON po.admin_id = a.id
+      LEFT JOIN organizations o ON u.org_id = o.id
+      LEFT JOIN locations sl ON u.loc_id = sl.id
+      LEFT JOIN rooms sr ON u.room_id = sr.id
       LEFT JOIN (
         SELECT
           CAST(SUBSTRING_INDEX(description, '#', -1) AS UNSIGNED) AS po_id,
@@ -59,7 +64,8 @@ router.get("/vendor/requirements", verifyToken, async (req, res) => {
     try {
         const [rows] = await pool.query(
             `SELECT po.*, u.name as supervisor_name, v.name as vendor_name, a.name as admin_name,
-                    o.id as organization_id, o.name as organization_name,
+                    o.id as organization_id, COALESCE(o.name, 'Unknown Company') as organization_name,
+                    sl.name AS supervisor_location_name, sr.name AS supervisor_room_name,
                     COALESCE(sp.supplied_quantity, 0) AS supplied_quantity,
                     sp.supply_date,
                     sp.warranty_expiry,
@@ -69,6 +75,8 @@ router.get("/vendor/requirements", verifyToken, async (req, res) => {
              LEFT JOIN users v ON po.vendor_id = v.id
              LEFT JOIN users a ON po.admin_id = a.id
              LEFT JOIN organizations o ON u.org_id = o.id
+             LEFT JOIN locations sl ON u.loc_id = sl.id
+             LEFT JOIN rooms sr ON u.room_id = sr.id
              LEFT JOIN (
                 SELECT
                     CAST(SUBSTRING_INDEX(description, '#', -1) AS UNSIGNED) AS po_id,
@@ -145,7 +153,7 @@ router.put("/:id/status", verifyToken, async (req, res) => {
 
     try {
         const [poRows] = await pool.query(
-            `SELECT po.*, u.org_id, o.v_opk
+            `SELECT po.*, u.org_id, u.loc_id AS supervisor_loc_id, u.room_id AS supervisor_room_id, o.v_opk
              FROM purchase_orders po
              LEFT JOIN users u ON po.supervisor_id = u.id
              LEFT JOIN organizations o ON o.id = u.org_id
@@ -323,8 +331,9 @@ router.put("/:id/status", verifyToken, async (req, res) => {
                     }
 
                     const categoryId = template.category_id || null;
-                    const locationId = template.location_id || null;
-                    const roomId = template.room_id || null;
+                    // Prefer supervisor's configured location/room when available
+                    const locationId = po.supervisor_loc_id || template.location_id || null;
+                    const roomId = po.supervisor_room_id || template.room_id || null;
 
                     // Serial format aligned with existing assets route.
                     const firstWord = po.asset_name.split(" ")[0].toUpperCase();
@@ -377,6 +386,25 @@ router.put("/:id/status", verifyToken, async (req, res) => {
                         VALUES ?`,
                         [assetRows]
                     );
+
+                    // Fetch the inserted asset IDs by serials so we can assign them to the supervisor
+                    const serialPlaceholders = serials.map(() => '?').join(',');
+                    const [insertedRows] = await conn.query(
+                        `SELECT id FROM assets WHERE serial_number IN (${serialPlaceholders}) AND org_id = ? ORDER BY id ASC`,
+                        [...serials, po.org_id]
+                    );
+
+                    const insertedIds = insertedRows.map(r => r.id);
+                    if (insertedIds.length > 0) {
+                        // Do NOT create user assignment rows. Assets supplied by vendor
+                        // should be placed at the supervisor's location/room but remain
+                        // available (not assigned to a user).
+                        const idPlaceholders = insertedIds.map(() => '?').join(',');
+                        await conn.query(
+                            `UPDATE assets SET location_id = ?, room_id = ? WHERE id IN (${idPlaceholders})`,
+                            [locationId, roomId, ...insertedIds]
+                        );
+                    }
 
                     const remainingQty = currentPo.quantity - supplyQty;
                     if (remainingQty > 0) {
