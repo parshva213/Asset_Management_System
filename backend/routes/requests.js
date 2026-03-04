@@ -3,6 +3,25 @@ import db from "../config/database.js";
 import { verifyToken } from "../middleware/auth.js";
 const router = express.Router();
 
+// Validation helper for request fields
+const validateRequestFields = (data) => {
+  const errors = [];
+  
+  if (data.reason && data.reason.length > 500) {
+    errors.push("Reason must be 500 characters or less");
+  }
+  
+  if (data.description && data.description.length > 1000) {
+    errors.push("Description must be 1000 characters or less");
+  }
+  
+  if (data.response && data.response.length > 1000) {
+    errors.push("Response must be 1000 characters or less");
+  }
+  
+  return errors;
+};
+
 router.get("/", verifyToken, async (req, res) => {
   try {
     let query = `
@@ -35,6 +54,15 @@ router.post("/", verifyToken, async (req, res) => {
   try {
     const { asset_id, request_type, reason, description, priority, assigned_to, response } = req.body
 
+    // Validate field lengths
+    const validationErrors = validateRequestFields({ reason, description, response });
+    if (validationErrors.length > 0) {
+      return res.status(400).json({ 
+        message: "Validation error",
+        errors: validationErrors
+      });
+    }
+
     const [result] = await db.execute(
       `INSERT INTO asset_requests (asset_id, request_type, reason, description, priority, status, requested_by, assigned_to, response)
        VALUES (?, ?, ?, ?, ?, 'Pending', ?, ?, ?)`,
@@ -54,6 +82,15 @@ router.put("/:id", verifyToken, async (req, res) => {
   try {
     const { id } = req.params
     const { asset_id, request_type, reason, description, priority } = req.body
+
+    // Validate field lengths
+    const validationErrors = validateRequestFields({ reason, description });
+    if (validationErrors.length > 0) {
+      return res.status(400).json({ 
+        message: "Validation error",
+        errors: validationErrors
+      });
+    }
 
     const [requests] = await db.execute("SELECT requested_by FROM asset_requests WHERE id = ?", [id])
     if (requests.length === 0) {
@@ -88,12 +125,55 @@ router.put("/:id/status", verifyToken, async (req, res) => {
     const { id } = req.params
     const { status, response } = req.body
 
+    // Validate field lengths
+    const validationErrors = validateRequestFields({ response });
+    if (validationErrors.length > 0) {
+      return res.status(400).json({ 
+        message: "Validation error",
+        errors: validationErrors
+      });
+    }
+
+    // Get the asset request details
+    const [requestDetails] = await db.execute("SELECT * FROM asset_requests WHERE id = ?", [id])
+    
+    if (!requestDetails || requestDetails.length === 0) {
+      return res.status(404).json({ message: "Request not found" })
+    }
+
+    const request = requestDetails[0]
+
     await db.execute("UPDATE asset_requests SET status = ?, response = ?, assigned_to = ? WHERE id = ?", [
       status,
       response || null,
       req.user.id,
       id,
     ])
+
+    // When request is accepted (status = "In Progress"), create a maintenance record
+    if (status === "In Progress" && request.asset_id) {
+      let maintenanceType = "Repair"
+      
+      // Map request_type to maintenance_type
+      if (request.request_type === "Repair") {
+        maintenanceType = "Repair"
+      } else if (request.request_type === "Replacement") {
+        maintenanceType = "Upgrade"
+      } else if (request.request_type === "New Asset") {
+        maintenanceType = "Configuration"
+      }
+
+      await db.execute(
+        "INSERT INTO maintenance_records (asset_id, maintenance_by, maintenance_type, description, status) VALUES (?, ?, ?, ?, ?)",
+        [
+          request.asset_id,
+          req.user.id,
+          maintenanceType,
+          request.description || request.reason || "",
+          "In Progress"
+        ]
+      )
+    }
 
     // Activity logging removed
 

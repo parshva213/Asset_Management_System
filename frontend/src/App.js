@@ -32,6 +32,7 @@ import LocationAssets from "./pages/LocationAssets"
 // ---------- SUPERVISOR PAGES ----------
 import PurchaseOrders from "./pages/purchase-orders"
 import Requests from "./pages/Requests"
+import UserRequests from "./pages/UserRequests"
 import SupervisorDashboard from "./pages/SupervisorDashboard"
 
 // ---------- EMPLOYEE PAGES ----------
@@ -110,6 +111,7 @@ function App() {
               {/* Supervisor */}
               <Route path="purchase-orders" element={<ProtectedRoute roles={['Super Admin', 'Supervisor']}><PurchaseOrders /></ProtectedRoute>} />
               <Route path="requests" element={<ProtectedRoute roles={['Super Admin', 'Supervisor', 'Employee', 'Software Developer']}><Requests /></ProtectedRoute>} />
+              <Route path="requests/user/:userId" element={<ProtectedRoute roles={['Super Admin', 'Supervisor']}><UserRequests /></ProtectedRoute>} />
 
               {/* Vendor */}
               <Route path="dashboard/vendor" element={<ProtectedRoute roles={['Vendor']}><VendorDashboard /></ProtectedRoute>} />

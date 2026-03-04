@@ -126,18 +126,20 @@ const Profile = () => {
                   placeholder="Enter your email"
                 />
               </div>
-              <div className="form-group">
-                <label className="form-label">Department</label>
-                <input
-                  type="text"
-                  name="department"
-                  className="form-input"
-                  value={profileData.department}
-                  onChange={handleProfileChange}
-                  disabled={isReadOnly}
-                  placeholder="Enter your department"
-                />
-              </div>
+              {user.role !== "Super Admin" && (
+                <div className="form-group">
+                  <label className="form-label">Department</label>
+                  <input
+                    type="text"
+                    name="department"
+                    className="form-input"
+                    value={profileData.department}
+                    onChange={handleProfileChange}
+                    disabled={isReadOnly}
+                    placeholder="Enter your department"
+                  />
+                </div>
+              )}
               <div className="form-group">
                 <label className="form-label">Phone Number</label>
                 <input

@@ -9,6 +9,7 @@ const Requests = () => {
   const { user } = useAuth()
   const { showSuccess, showError } = useToast()
   const [requests, setRequests] = useState([])
+  // eslint-disable-next-line no-unused-vars
   const [assets, setAssets] = useState([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -18,7 +19,9 @@ const Requests = () => {
     priority: "",
     type: "",
   })
+  const [view, setView] = useState("team"); // "my" or "team"
   const [categories, setCategories] = useState([])
+  // eslint-disable-next-line no-unused-vars
   const [uniqueAssets, setUniqueAssets] = useState([])
   const [newAssetSelection, setNewAssetSelection] = useState({
     category_id: "",
@@ -203,6 +206,24 @@ Description: ${formData.description}`;
     }
   }
 
+  const getAssetDisplay = (request) => {
+    // For existing assets, show the asset name
+    if (request.asset_name) {
+      return request.asset_name
+    }
+
+    // For new asset requests, extract model name from description
+    if (request.request_type === "New Asset" && request.description) {
+      const modelMatch = request.description.match(/Model:\s*(.+?)(?:\n|$)/)
+      if (modelMatch && modelMatch[1]) {
+        return modelMatch[1].trim()
+      }
+      return "New Asset Request"
+    }
+
+    return "N/A"
+  }
+
   if (loading) {
     return <div className="loading">Loading requests...</div>
   }
@@ -245,6 +266,22 @@ Description: ${formData.description}`;
             >
               + New Request
             </button>
+          )}
+          {user?.role === "Supervisor" && (
+            <div className="flex gap-2">
+              <button
+                className={`btn ${view === "my" ? "btn-primary" : "btn-secondary"}`}
+                onClick={() => setView("my")}
+              >
+                My Requests
+              </button>
+              <button
+                className={`btn ${view === "team" ? "btn-primary" : "btn-secondary"}`}
+                onClick={() => setView("team")}
+              >
+                My Team's Requests
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -313,7 +350,7 @@ Description: ${formData.description}`;
                     </span>
                   </td>
                   <td>{request.request_type}</td>
-                  <td>{request.asset_name || "N/A"}</td>
+                  <td>{getAssetDisplay(request)}</td>
                   <td>{request.requester_name || "N/A"}</td>
                   <td>
                     <span
@@ -407,7 +444,7 @@ Description: ${formData.description}`;
                   </select>
                 </div>
 
-                {formData.request_type !== "New Asset" ? (
+                {/* {formData.request_type !== "New Asset" ? (
                   <div className="form-group">
                     <label className="form-label">Your Asset (Optional)</label>
                     <select name="asset_id" className="form-select" value={formData.asset_id} onChange={handleChange}>
@@ -471,7 +508,7 @@ Description: ${formData.description}`;
                       </div>
                     )}
                   </>
-                )}
+                )} */}
                 <div className="form-group">
                   <label className="form-label">Reason</label>
                   <input
@@ -504,6 +541,9 @@ Description: ${formData.description}`;
                     <option value="Critical">Critical</option>
                   </select>
                 </div>
+              </form>
+            </div>
+            <div className="modal-footer">
                 <div className="flex gap-2">
                   <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
                     {editingRequest ? "Update Request" : "Submit Request"}
@@ -521,7 +561,6 @@ Description: ${formData.description}`;
                     Cancel
                   </button>
                 </div>
-              </form>
             </div>
           </div>
         </div>

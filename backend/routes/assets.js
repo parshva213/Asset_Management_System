@@ -20,10 +20,11 @@ router.get("/current-asset/:id", authenticateToken, async (req,res)=>{
   try {
     const {id} = req.params;
     let query = `
-      SELECT a.*
+      SELECT a.*, c.name as category_name
       FROM assets a
       LEFT JOIN asset_assignments aa ON a.id =  aa.asset_id 
       LEFT JOIN users u ON  aa.assigned_to = u.id
+      LEFT JOIN categories c ON a.category_id = c.id
       WHERE a.org_id = ? AND aa.unassigned_by IS NULL AND u.id = ?
     `;
     const result = await pool.query(query, [req.user.org_id, id]);
@@ -42,8 +43,8 @@ router.get("/available-assets-to-assign/:id", authenticateToken, async (req, res
         MIN(CASE WHEN a.status = 'Available' THEN a.id END) AS available_min_id,
         a.name,
         COUNT(*) AS total_assets,
-        SUM(a.status = 'Available') AS available_count,
-        SUM(a.status = 'Assigned') AS assigned_count
+        SUM(a.status = 'Available') AS available_assets,
+        SUM(a.status = 'Assigned') AS assigned_assets
       FROM assets a
       WHERE 
         a.location_id = ?

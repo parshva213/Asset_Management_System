@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+// import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
 import api from "../api";
@@ -6,6 +7,7 @@ import { formatDate } from "../utils/dateUtils";
 
 const Assets = () => {
   const { user } = useAuth();
+  // const navigate = useNavigate();
   const { showSuccess, showError } = useToast();
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,8 +28,20 @@ const Assets = () => {
   const [itemToAssign, setItemToAssign] = useState(null);
   const [assigningLoading, setAssigningLoading] = useState(false);
   const [selectedAssignee, setSelectedAssignee] = useState("");
-
-
+  const [viewType, setViewType] = useState("assets");
+  const [requests, setRequests] = useState([]);
+  const [requestFilter, setRequestFilter] = useState("my");
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [requestFormData, setRequestFormData] = useState({
+    asset_id: "",
+    request_type: "Repair",
+    reason: "",
+    description: "",
+    priority: "Medium",
+    location_id: "",
+    room_id: "",
+    asset_name: "",
+  });
 
   const [formData, setFormData] = useState({
     company_name: "",
@@ -52,7 +66,21 @@ const Assets = () => {
         path = `/assets?location_id=${user?.loc_id}&room_id=${user?.room_id}`;
       }
       const res = await api.get(`${path}`);
-      setAssets(res.data) ? console.log("asset success") : console.log("asset Error");
+      let assetList = res.data;
+      // for admins, if they have a room defined sort assets so any duplicates
+      // prefer the ones in their current room first before others
+      if ((user?.role === "Super Admin" || user?.role === "Admin") && user?.loc_id && user?.room_id) {
+        assetList = assetList.slice().sort((a, b) => {
+          if (a.name === b.name || a.aname === b.aname) {
+            const aRoomMatch = a.room_id === user.room_id;
+            const bRoomMatch = b.room_id === user.room_id;
+            if (aRoomMatch && !bRoomMatch) return -1;
+            if (bRoomMatch && !aRoomMatch) return 1;
+          }
+          return 0;
+        });
+      }
+      setAssets(assetList) ? console.log("asset success") : console.log("asset Error");
 
     } catch (err) {
       console.error("Error fetching assets:", err);
@@ -128,18 +156,29 @@ const Assets = () => {
     }
   }, [user]);
 
+  const fetchRequests = useCallback(async () => {
+    try {
+      if (user?.role !== "Supervisor") return;
+      const res = await api.get("/requests");
+      setRequests(res.data);
+    } catch (err) {
+      console.error("Error fetching requests:", err);
+    }
+  }, [user]);
+
   const fetchInitial = useCallback(async () => {
     try {
       setLoading(true);
       const promises = [fetchAssets(), fetchCategories(), fetchLocations(), fetchLocationName(), fetchRoomName(), fetchRooms()];
       if (user?.role === "Supervisor") {
         promises.push(fetchTeamMembers());
+        promises.push(fetchRequests());
       }
       await Promise.all(promises);
     } finally {
       setLoading(false);
     }
-  }, [fetchAssets, fetchCategories, fetchLocations, fetchLocationName, fetchRoomName, fetchRooms, fetchTeamMembers, user?.role]);
+  }, [fetchAssets, fetchCategories, fetchLocations, fetchLocationName, fetchRoomName, fetchRooms, fetchTeamMembers, fetchRequests, user?.role]);
 
   useEffect(() => {
     fetchInitial();
@@ -319,8 +358,12 @@ const Assets = () => {
             {user?.role === "Super Admin"
               ? "List of Assets Not Working"
               : user?.role === "Supervisor"
-                ? `Manage Assets for ${locationName} - ${roomName}`
-                : "Assets Management"}
+                ? viewType === "requests"
+                  ? `Requested Assets for ${locationName} - ${roomName}`
+                  : `Manage Assets for ${locationName} - ${roomName}`
+                : user?.role === "Employee"
+                  ? "My Assigned Assets"
+                  : "Assets Management"}
           </h2>
         </div>
         <div className="action-bar-right">
@@ -329,10 +372,109 @@ const Assets = () => {
               Add Asset
             </button>
           )}
+          {user?.role === "Supervisor" && (
+            <button
+              onClick={() => setViewType(viewType === "assets" ? "requests" : "assets")}
+              className="btn btn-primary"
+            >
+              {viewType === "assets" ? "Requested Assets" : "Assets"}
+            </button>
+          )}
         </div>
       </div>
-      {(user?.role === "Super Admin" || user?.role === "Supervisor") && (
+      {user?.role === "Supervisor" && viewType === "requests" && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button
+              onClick={() => setRequestFilter("my")}
+              className={`btn ${requestFilter === "my" ? "btn-primary" : "btn-secondary"}`}
+            >
+              My Request
+            </button>
+            <button
+              onClick={() => setRequestFilter("other")}
+              className={`btn ${requestFilter === "other" ? "btn-primary" : "btn-secondary"}`}
+            >
+              Another Request
+            </button>
+          </div>
+          {requestFilter === "my" && (
+            <button
+              onClick={() => setShowRequestModal(true)}
+              className="btn btn-primary"
+            >
+              Add Request
+            </button>
+          )}
+        </div>
+      )}
+      {(user?.role === "Super Admin" || user?.role === "Supervisor" || user?.role === "Employee") && (
       <>
+      {user?.role === "Supervisor" && viewType === "requests" ? (
+        // Requested Assets View for Supervisors
+        <>
+        {(() => {
+          const filteredRequests = requestFilter === "my" 
+            ? requests.filter(req => req.requested_by === user?.id)
+            : requests.filter(req => req.requested_by !== user?.id);
+          
+          return filteredRequests.length === 0 ? (
+            <div className="empty-state">
+              <p>No {requestFilter === "my" ? "personal" : "other"} requested assets found</p>
+            </div>
+          ) : (
+            <div className="table-container">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>ASSET NAME</th>
+                    <th>REQUEST TYPE</th>
+                    <th>PRIORITY</th>
+                    <th>STATUS</th>
+                    <th>REQUESTED BY</th>
+                    <th>REASON</th>
+                    <th>DESCRIPTION</th>
+                    <th>DATE REQUESTED</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredRequests.map((request) => (
+                    <tr key={request.id}>
+                      <td>{request.asset_name || "N/A"}</td>
+                    <td>{request.request_type}</td>
+                    <td>
+                      <span className={`badge ${
+                        request.priority === "High" ? "badge-danger" :
+                        request.priority === "Medium" ? "badge-warning" :
+                        "badge-success"
+                      }`}>
+                        {request.priority}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`badge ${
+                        request.status === "Approved" ? "badge-success" :
+                        request.status === "Rejected" ? "badge-danger" :
+                        "badge-primary"
+                      }`}>
+                        {request.status}
+                      </span>
+                    </td>
+                    <td>{request.requester_name || "N/A"}</td>
+                    <td>{request.reason || "N/A"}</td>
+                    <td>{request.description || "N/A"}</td>
+                    <td>{formatDate(request.created_at)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          );
+        })()}
+        </>
+      ) : (
+        // Assets View
+        <>
       {assets.length === 0 ? (
         <div className="empty-state">
           <p>No assets found</p>
@@ -365,14 +507,10 @@ const Assets = () => {
                   </>
                 ) : (
                   <>
-                    <th>Serial Number</th>
-                    <th>Name</th>
-                    <th>Category</th>
-                    <th>Location</th>
-                    <th>Status</th>
-                    <th>Purchased</th>
-                    <th>Warranty</th>
-                    <th>Actions</th>
+                    <th>SERIAL NUMBER</th>
+                    <th>ASSET NAME</th>
+                    <th>CATEGORY</th>
+                    <th>ACTIONS</th>
                   </>
                 )}
               </tr>
@@ -383,7 +521,7 @@ const Assets = () => {
                   {user?.role === "Super Admin" ? (
                     <>
                       <td>{asset.sn}</td>
-                      <td>{asset.aname}</td>
+                        <td>{asset.aname}</td>
                       <td>{asset.status}</td>
                       <td>{asset.cat_name}</td>
                       <td>{asset.loc_name}</td>
@@ -411,35 +549,31 @@ const Assets = () => {
                     </>
                   ) : (
                     <>
-                      <td>{asset.serial_number || "N/A"}</td>
+                      <td>{asset.serial_number || asset.sn || "N/A"}</td>
                       <td>
-                        <div className="fw-bold">{asset.name}</div>
+                        <div className="fw-bold">{asset.name || asset.aname}</div>
                       </td>
-                      <td>{asset.category_name || "N/A"}</td>
-                      <td>{asset.location_name || "Unassigned"}</td>
+                      <td>{asset.category_name || asset.cat_name || "N/A"}</td>
                       <td>
-                        <span
-                          className={`badge ${asset.status === "Available"
-                            ? "badge-success"
-                            : asset.status === "Assigned"
-                              ? "badge-primary"
-                              : "badge-warning"
-                            }`}
+                        <button
+                          className="btn btn-primary"
+                          style={{ padding: '0.4rem 0.8rem', fontSize: '13px' }}
+                          onClick={() => {
+                            setRequestFormData({
+                              asset_id: asset.id,
+                              request_type: "Repair",
+                              reason: "",
+                              description: "",
+                              priority: "Medium",
+                              location_id: user?.loc_id,
+                              room_id: user?.room_id,
+                              asset_name: `${asset.name || asset.aname}${asset.serial_number || asset.sn ? ` - ${asset.serial_number || asset.sn}` : ""}`
+                            });
+                            setShowRequestModal(true);
+                          }}
                         >
-                          {asset.status}
-                        </span>
-                        {asset.status === "Assigned" && asset.assign && (
-                          <div className="text-muted small mt-1">To: {asset.assign}</div>
-                        )}
-                      </td>
-                      <td>{formatDate(asset.purchase_date)}</td>
-                      <td>{formatDate(asset.warranty_expiry)}</td>
-                      <td>
-                        <div className="flex gap-2">
-                          <button onClick={() => handleEdit(asset)} className="btn btn-secondary">
-                            Edit
-                          </button>
-                        </div>
+                          Request
+                        </button>
                       </td>
                     </>
                   )}
@@ -448,6 +582,8 @@ const Assets = () => {
             </tbody>
           </table>
         </div>
+      )}
+      </>
       )}
       </>
       )}
@@ -721,6 +857,138 @@ const Assets = () => {
                 disabled={assigningLoading || !selectedAssignee}
               >
                 {assigningLoading ? "Assigning..." : "Confirm Assign"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Request Modal */}
+      {showRequestModal && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: "500px" }}>
+            <div className="modal-header">
+              <h2>Add Request</h2>
+              <button 
+                className="close-modal" 
+                onClick={() => {
+                  setShowRequestModal(false);
+                  setRequestFormData({
+                    asset_id: "",
+                    request_type: "Repair",
+                    reason: "",
+                    description: "",
+                    priority: "Medium",
+                    location_id: "",
+                    room_id: "",
+                    asset_name: "",
+                  });
+                }}
+              >
+                ×
+              </button>
+            </div>
+            <div className="modal-body">
+              <form style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                <div className="form-group">
+                  <label className="form-label">Asset</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={requestFormData.asset_name}
+                    readOnly
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Request Type</label>
+                  <select 
+                    className="form-input"
+                    value={requestFormData.request_type}
+                    onChange={(e) => setRequestFormData(prev => ({ ...prev, request_type: e.target.value }))}
+                  >
+                    <option value="Repair">Repair</option>
+                    <option value="Replacement">Replacement</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Priority</label>
+                  <select 
+                    className="form-input"
+                    value={requestFormData.priority}
+                    onChange={(e) => setRequestFormData(prev => ({ ...prev, priority: e.target.value }))}
+                  >
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Reason</label>
+                  <input 
+                    type="text" 
+                    className="form-input" 
+                    placeholder="Enter reason"
+                    value={requestFormData.reason}
+                    onChange={(e) => setRequestFormData(prev => ({ ...prev, reason: e.target.value }))}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Description</label>
+                  <textarea 
+                    className="form-input" 
+                    rows="4"
+                    placeholder="Enter description"
+                    value={requestFormData.description}
+                    onChange={(e) => setRequestFormData(prev => ({ ...prev, description: e.target.value }))}
+                  />
+                </div>
+              </form>
+            </div>
+            <div className="modal-footer">
+              <button 
+                className="btn btn-secondary" 
+                onClick={() => {
+                  setShowRequestModal(false);
+                  setRequestFormData({
+                    asset_id: "",
+                    request_type: "Repair",
+                    reason: "",
+                    description: "",
+                    priority: "Medium",
+                    location_id: "",
+                    room_id: "",
+                    asset_name: "",
+                  });
+                }}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn btn-primary"
+                onClick={async () => {
+                  try {
+                    await api.post("/requests", requestFormData);
+                    showSuccess("Request created successfully");
+                    setShowRequestModal(false);
+                    setRequestFormData({
+                      asset_id: "",
+                      request_type: "Repair",
+                      reason: "",
+                      description: "",
+                      priority: "Medium",
+                    });
+                    fetchRequests();
+                  } catch (err) {
+                    console.error("Error creating request:", err);
+                    showError(err.response?.data?.message || "Error creating request");
+                  }
+                }}
+              >
+                Submit Request
               </button>
             </div>
           </div>

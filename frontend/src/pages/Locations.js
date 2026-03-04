@@ -41,7 +41,7 @@ const Locations = () => {
       setEditingLocation(null)
       resetLocationForm()
       // Refresh locations list instead of reload if possible, but the original used reload
-      listLocations()
+      listLocations() 
     } catch (error) {
       console.error("Error saving location:", error)
       showError("Error saving location")
@@ -76,99 +76,92 @@ const Locations = () => {
 
   return (
     <div>
-      <h2 className="page-title">Locations Management</h2>
-      <div className="action-bar mb-4">
-        <div className="action-bar-left">
-          {/* No back button for top level locations */}
-        </div>
-        <div className="action-bar-right">
-          <button
-            className="btn btn-primary"
-            onClick={() => setShowLocationModal(true)}
-          >
-            Add New Location
-          </button>
-        </div>
+      <div className="flex-between mb-4">
+        <h2>Locations Management</h2>
+            <button
+              className="btn btn-primary"
+              onClick={() => setShowLocationModal(true)}
+            >
+              Add New Location
+            </button>
       </div>
 
-      {locations.length === 0 ? (
-        <div className="empty-state">
-          <p>No locations found</p>
-        </div>
-      ) : (
-        <div className="table-container">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Address</th>
-                <th>Rooms</th>
-                <th> Assets</th>
-                <th>Description</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {locations.map((location) => (
-                <tr key={location.id} id={`loc-${location.id}`}>
-                  <td>{location.name}</td>
-                  <td>{location.address || "N/A"}</td>
-                  <td>{location.room_count} </td><td> {location.asset_count}</td>
-                  <td>{location.description || "N/A"}</td>
-                  <td>
-                    <div className="flex gap-2">
-                      <button onClick={() => handleEditLocation(location)} className="btn btn-secondary">
-                        Edit
-                      </button>
-                       <div
-                        className="dropdown-container"
-                      >
-                        <button
-                          onClick={() => setOpenDropdownId(openDropdownId === location.id ? null : location.id)} 
-                          className="btn btn-secondary"
-                        >
-                          View ►
-                        </button>
-                        {openDropdownId === location.id && (
-                          <div className="dropdown-menu">
-                            <button
-                              onClick={() => {
-                                navigate(`/rooms?location_id=${location.id}`)
-                                setOpenDropdownId(null)
-                              }}
-                              className="dropdown-item"
-                            >
-                              Rooms
+          {locations.length === 0 ? (
+            <div className="empty-state">
+              <p>No locations found</p>
+            </div>
+          ) : (
+            <div className="table-container">
+                <table className="table">
+                <thead>
+                    <tr>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th>Rooms</th>
+                    <th> Assets</th>
+                    <th>Description</th>
+                    <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {locations.map((location) => (
+                    <tr key={location.id} id={`loc-${location.id}`}>
+                        <td>{location.name}</td>
+                        <td>{location.address || "N/A"}</td>
+                        <td>{location.room_count} </td><td> {location.asset_count}</td>
+                        <td>{location.description || "N/A"}</td>
+                        <td>
+                        <div className="flex gap-2">
+                            <button onClick={() => handleEditLocation(location)} className="btn btn-secondary">
+                            Edit
                             </button>
-                            <button
-                              onClick={() => {
-                                navigate(`/mainusers?locid=${location.id}`)
-                                setOpenDropdownId(null)
-                              }}
-                              className="dropdown-item"
+                            <div className="dropdown-container">
+                            <button 
+                                onClick={() => setOpenDropdownId(openDropdownId === location.id ? null : location.id)} 
+                                className="btn btn-secondary"
                             >
-                              Maintenance Team
+                                View ►
                             </button>
-                            <button
-                              onClick={() => {
-                                navigate(`/l-assets?lid=${location.id}`)
-                                setOpenDropdownId(null)
-                              }}
-                              className="dropdown-item"
-                            >
-                              Assets
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+                            {openDropdownId === location.id && (
+                                <div className="dropdown-menu">
+                                <button
+                                    onClick={() => {
+                                    navigate(`/rooms?location_id=${location.id}`)
+                                    setOpenDropdownId(null)
+                                    }}
+                                    className="dropdown-item"
+                                >
+                                    Rooms
+                                </button>
+                                <button
+                                    onClick={() => {
+                                    navigate(`/mainusers?locid=${location.id}`)
+                                    setOpenDropdownId(null)
+                                    }}
+                                    className="dropdown-item"
+                                >
+                                    Maintenance Team
+                                </button>
+                                <button
+                                    onClick={() => {
+                                    navigate(`/l-assets?lid=${location.id}`)
+                                    setOpenDropdownId(null)
+                                    }}
+                                    className="dropdown-item"
+                                >
+                                    Assets
+                                </button>
+                                </div>
+                            )}
+                            </div>
+                        </div>
+                        </td>
+                    </tr>
+                    ))}
+                </tbody>
+                </table>
+            </div>
+          )}
 
       {showLocationModal && (
         <div className="modal-overlay">
@@ -186,61 +179,57 @@ const Locations = () => {
                 ×
               </button>
             </div>
-            <div className="modal-body">
-              <form onSubmit={handleLocationSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+             <div className="modal-body">
+              <form onSubmit={handleLocationSubmit} style={{display: 'flex', flexDirection: 'column', gap: '1.5rem'}}>
                 <div className="form-group">
-                  <label className="form-label">Location Name</label>
-                  <input
+                    <label className="form-label">Location Name</label>
+                    <input
                     type="text"
                     name="name"
                     className="form-input"
                     value={locationFormData.name}
                     onChange={handleLocationChange}
                     required
-                  />
+                    />
                 </div>
-                {locationFormData.name && ( <>
                 <div className="form-group">
-                  <label className="form-label">Address</label>
-                  <textarea
+                    <label className="form-label">Address</label>
+                    <textarea
                     name="address"
                     className="form-input"
                     value={locationFormData.address}
                     onChange={handleLocationChange}
                     rows="2"
-                  />
+                    />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Description</label>
-                  <textarea
+                    <label className="form-label">Description</label>
+                    <textarea
                     name="description"
                     className="form-input"
                     value={locationFormData.description}
                     onChange={handleLocationChange}
                     rows="1"
-                  />
-                </div></>)}
-
-              </form>
-            </div>
-            <div className="modal-footer">
-              <div className="flex gap-2">
-                {locationFormData.name && <button type="submit" onClick={handleLocationSubmit} className="btn btn-primary" style={{ flex: 1 }}>
-                    {editingLocation ? "Update Location" : "Add Location"}
-                  </button>}
+                    />
+                </div>
+                <div className="flex gap-2 modal-footer">
+                  <button type="submit" className="btn btn-primary" style={{flex: 1}}>
+                  {editingLocation ? "Update Location" : "Add Location"}
+                  </button>
                   <button
-                    type="button"
-                    className="btn btn-secondary"
-                    style={{ flex: 1 }}
-                    onClick={() => {
-                      setShowLocationModal(false)
-                      setEditingLocation(null)
-                      resetLocationForm()
-                    }}
+                  type="button"
+                  className="btn btn-secondary"
+                  style={{flex: 1}}
+                  onClick={() => {
+                    setShowLocationModal(false)
+                    setEditingLocation(null)
+                    resetLocationForm()
+                  }}
                   >
-                    Cancel
+                  Cancel
                   </button>
                 </div>
+              </form>
             </div>
           </div>
         </div>
