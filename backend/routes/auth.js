@@ -92,7 +92,7 @@ router.post("/login", async (req, res) => {
   try {
     const [userResult] = await db.query(
       `SELECT u.id, u.name, u.email, u.password, u.role, u.department, u.phone, u.ownpk, u.org_id, 
-              o.name as organization_name, o.status as organization_status, u.status, u.loc_id, l.name as location_name, u.room_id, r.name as room_name
+              o.name as organization_name, o.status as organization_status, o.v_opk as vendor_key, u.status, u.loc_id, l.name as location_name, u.room_id, r.name as room_name
        FROM users u
        LEFT JOIN organizations o ON u.org_id = o.id
        LEFT JOIN locations l ON u.loc_id = l.id

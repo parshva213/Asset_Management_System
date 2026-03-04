@@ -184,6 +184,7 @@ const SupervisorDashboard = () => {
                 </div>
 
                 {/* Stats Grid */}
+                <div className="stats-container">
                 <div className="stats-grid-3">
                     {/* Assets Card */}
                     <div className="stat-widget">
@@ -250,6 +251,74 @@ const SupervisorDashboard = () => {
                         </div>
                     </div>
 
+                    {/* Orders Card
+                    <div className="stat-widget">
+                        <div className="widget-header">
+                            <div className="stat-icon bg-green">🛒</div>
+                            <span className="widget-title">Orders</span>
+                        </div>
+                        <div className="split-container" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }}>
+                            <div className="split-item left">
+                                <span className="stat-label">Remaining</span>
+                                <h3 className="stat-value" style={{ fontSize: '1.2rem' }}>{user?.loc_id ? stats.remainingOrders : 0}</h3>
+                            </div>
+                            <div className="split-item center" style={{ borderLeft: '1px solid #eee', borderRight: '1px solid #eee', textAlign: 'center' }}>
+                                <span className="stat-label">Rejected</span>
+                                <h3 className="stat-value" style={{ fontSize: '1.2rem' }}>{user?.loc_id ? stats.rejectedOrders : 0}</h3>
+                            </div>
+                            <div className="split-item right">
+                                <span className="stat-label">Delivered</span>
+                                <h3 className="stat-value" style={{ fontSize: '1.2rem' }}>{user?.loc_id ? stats.deliveredOrders : 0}</h3>
+                            </div>
+                        </div>
+                        <div className="stat-footer">
+                            {user?.loc_id ? <Link to="/purchase-orders">View full details →</Link> : ""}
+                        </div>
+                    </div>
+
+                    Maintenance Requests Card
+                    <div className="stat-widget">
+                        <div className="widget-header">
+                            <div className="stat-icon bg-amber">📝</div>
+                            <span className="widget-title">Maintenance Requests</span>
+                        </div>
+                        <div className="split-container">
+                            <div className="split-item left">
+                                <span className="stat-label">Pending</span>
+                                <h3 className="stat-value">{user?.loc_id ? stats.pendingMaintenance : 0}</h3>
+                            </div>
+                            <div className="split-item right">
+                                <span className="stat-label">Completed</span>
+                                <h3 className="stat-value">{user?.loc_id ? stats.completedMaintenance : 0}</h3>
+                            </div>
+                        </div>
+                        <div className="stat-footer">
+                            {user?.loc_id ? <Link to="/requests">View full details →</Link> : ""}
+                        </div>
+                    </div>
+
+                    Location Asset Request Card
+                    <div className="stat-widget">
+                        <div className="widget-header">
+                            <div className="stat-icon bg-violet">📋</div>
+                            <span className="widget-title">Location Asset Request</span>
+                        </div>
+                        <div className="split-container">
+                            <div className="split-item left">
+                                <span className="stat-label">Requested</span>
+                                <h3 className="stat-value">{user?.loc_id ? stats.requestedAssetRequests : 0}</h3>
+                            </div>
+                            <div className="split-item right">
+                                <span className="stat-label">Rejected</span>
+                                <h3 className="stat-value">{user?.loc_id ? stats.rejectedAssetRequests : 0}</h3>
+                            </div>
+                        </div>
+                        <div className="stat-footer">
+                            {user?.loc_id ? <Link to="/requests">View full details →</Link> : ""}
+                        </div>
+                    </div> */}
+                </div>
+                <div className="stats-grid-2">
                     {/* Orders Card */}
                     <div className="stat-widget">
                         <div className="widget-header">
@@ -295,28 +364,9 @@ const SupervisorDashboard = () => {
                             {user?.loc_id ? <Link to="/requests">View full details →</Link> : ""}
                         </div>
                     </div>
-
-                    {/* Location Asset Request Card */}
-                    {/* <div className="stat-widget">
-                        <div className="widget-header">
-                            <div className="stat-icon bg-violet">📋</div>
-                            <span className="widget-title">Location Asset Request</span>
-                        </div>
-                        <div className="split-container">
-                            <div className="split-item left">
-                                <span className="stat-label">Requested</span>
-                                <h3 className="stat-value">{user?.loc_id ? stats.requestedAssetRequests : 0}</h3>
-                            </div>
-                            <div className="split-item right">
-                                <span className="stat-label">Rejected</span>
-                                <h3 className="stat-value">{user?.loc_id ? stats.rejectedAssetRequests : 0}</h3>
-                            </div>
-                        </div>
-                        <div className="stat-footer">
-                            {user?.loc_id ? <Link to="/requests">View full details →</Link> : ""}
-                        </div>
-                    </div> */}
                 </div>
+            </div>
+
             </div>
 
             {showRoomModal && (

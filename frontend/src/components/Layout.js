@@ -78,7 +78,7 @@ const MENU_ITEMS = {
   ],
   "Vendor": [
     { name: "Dashboard", path: ["/dashboard/vendor"], icon: "dashboard" },
-    { name: "Organizations", path: ["/organizations"], icon: "organizations" },
+    { name: "Org", path: ["/organizations"], icon: "organizations" },
     { name: "Supply", path: ["/supply-assets"], icon: "assets" },
     { name: "Products", path: ["/vendor-assets"], icon: "assets" },
     { name: "Requests", path: ["/vendor-requests"], icon: "requests" },
