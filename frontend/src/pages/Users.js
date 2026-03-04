@@ -19,7 +19,7 @@ const Users = () => {
   const [selectedUser, setSelectedUser] = useState(null)
   const [availableAssets, setAvailableAssets] = useState([])
   const [locations, setLocations] = useState([])
-  const [assignForm, setAssignForm] = useState({ asset_quantities: {}, location_id: "" })
+  const [assignForm, setAssignForm] = useState({ asset_quantities: {}, location_id: "", asset_ids: [] })
   const [modalLoading, setModalLoading] = useState(false)
   const [locationError, setLocationError] = useState(false)
   const [role, setRole] = useState("Maintenance")
@@ -65,9 +65,26 @@ const Users = () => {
     fetchLocations()
   }, [fetchUsers, fetchAvailableAssets, fetchLocations])
 
+  const toggleAssetSelection = (assetId) => {
+    setAssignForm(prev => {
+      const asset_ids = prev.asset_ids || []
+      if (asset_ids.includes(assetId)) {
+        return {
+          ...prev,
+          asset_ids: asset_ids.filter(id => id !== assetId)
+        }
+      } else {
+        return {
+          ...prev,
+          asset_ids: [...asset_ids, assetId]
+        }
+      }
+    })
+  }
+
   const handleOpenModal = (user) => {
     setSelectedUser(user)
-    setAssignForm({ asset_quantities: {}, location_id: user.loc_id || "" })
+    setAssignForm({ asset_quantities: {}, location_id: user.loc_id || "", asset_ids: [] })
     setModalStep(1)
     setLocationError(false)
     setShowModal(true)
@@ -114,43 +131,43 @@ const Users = () => {
     }
   }
 
-  const handleQuantityChange = (assetName, rawValue, maxAvailable) => {
-    const parsed = Number.parseInt(rawValue, 10)
-    const safeValue = Number.isNaN(parsed) ? 0 : Math.max(0, Math.min(parsed, maxAvailable || 0))
-    setAssignForm(prev => ({
-      ...prev,
-      asset_quantities: {
-        ...prev.asset_quantities,
-        [assetName]: safeValue
-      }
-    }))
-  }
+  // const handleQuantityChange = (assetName, rawValue, maxAvailable) => {
+  //   const parsed = Number.parseInt(rawValue, 10)
+  //   const safeValue = Number.isNaN(parsed) ? 0 : Math.max(0, Math.min(parsed, maxAvailable || 0))
+  //   setAssignForm(prev => ({
+  //     ...prev,
+  //     asset_quantities: {
+  //       ...prev.asset_quantities,
+  //       [assetName]: safeValue
+  //     }
+  //   }))
+  // }
 
-  const handleUnassignAsset = async (assetId) => {
-    if (!window.confirm("Are you sure you want to unassign this asset?")) return
-    setModalLoading(true)
-    try {
-      await api.post("/users/unassign-asset", { user_id: selectedUser.id, asset_id: assetId })
-      // Update local state
-      const updatedUser = {
-        ...selectedUser,
-        assigned_assets: selectedUser.assigned_assets.filter(a => a.id !== assetId)
-      }
-      setSelectedUser(updatedUser)
-      setUsers(users.map(u => u.id === selectedUser.id ? updatedUser : u))
-      showSuccess("Asset unassigned successfully")
-      if (modalStep === 2) {
-        fetchAvailableAssets(assignForm.location_id);
-      } else {
-        fetchAvailableAssets();
-      }
-    } catch (error) {
-      console.error("Error unassigning asset:", error)
-      showError("Error unassigning asset")
-    } finally {
-      setModalLoading(false)
-    }
-  }
+  // const handleUnassignAsset = async (assetId) => {
+  //   if (!window.confirm("Are you sure you want to unassign this asset?")) return
+  //   setModalLoading(true)
+  //   try {
+  //     await api.post("/users/unassign-asset", { user_id: selectedUser.id, asset_id: assetId })
+  //     // Update local state
+  //     const updatedUser = {
+  //       ...selectedUser,
+  //       assigned_assets: selectedUser.assigned_assets.filter(a => a.id !== assetId)
+  //     }
+  //     setSelectedUser(updatedUser)
+  //     setUsers(users.map(u => u.id === selectedUser.id ? updatedUser : u))
+  //     showSuccess("Asset unassigned successfully")
+  //     if (modalStep === 2) {
+  //       fetchAvailableAssets(assignForm.location_id);
+  //     } else {
+  //       fetchAvailableAssets();
+  //     }
+  //   } catch (error) {
+  //     console.error("Error unassigning asset:", error)
+  //     showError("Error unassigning asset")
+  //   } finally {
+  //     setModalLoading(false)
+  //   }
+  // }
 
   const handleSaveAssignment = async () => {
     setModalLoading(true)
@@ -247,7 +264,7 @@ const Users = () => {
       {}
     <div className="content">
       <div className="flex-between mb-4">
-        <h2>Users</h2>
+          <h2>{role==="Vendor" ? `Vendor-Key For Organizations registration is ${user?.vendor_key}`:"Maintaince Team Without having Work Location"}</h2>
         {user?.role === "Super Admin" && (
           <button className="btn btn-primary" onClick={() => setRole(role === "Maintenance" ? "Vendor" : "Maintenance")}>
             {role === "Maintenance" ? "View Vendors" : "View Maintenance"}
@@ -279,7 +296,7 @@ const Users = () => {
                   className="btn btn-primary w-full"
                   onClick={() => handleOpenModal(user)}
                 >
-                  Set Users Assets and Location
+                  Set Users Location
                 </button>
               </div>}
             </div>

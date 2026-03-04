@@ -128,7 +128,7 @@ const Profile = () => {
               </div>
               {user.role !== "Super Admin" && (
                 <div className="form-group">
-                  <label className="form-label">Department</label>
+                  <label className="form-label">{user.role === 'Vendor' ? 'Company' : 'Department'}</label>
                   <input
                     type="text"
                     name="department"
@@ -136,7 +136,8 @@ const Profile = () => {
                     value={profileData.department}
                     onChange={handleProfileChange}
                     disabled={isReadOnly}
-                    placeholder="Enter your department"
+                    placeholder={`Enter your ${user.role === 'Vendor' ? 'Company' : 'Department'}`}
+                    required={user.role === 'Vendor'}
                   />
                 </div>
               )}

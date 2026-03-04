@@ -60,21 +60,19 @@ router.post("/", verifyToken, async (req, res) => {
   try {
     const { asset_id, request_type, reason, description, priority, assigned_to, response } = req.body
 
-<<<<<<< HEAD
     // Validate field lengths
     const validationErrors = validateRequestFields({ reason, description, response });
     if (validationErrors.length > 0) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: "Validation error",
         errors: validationErrors
       });
-=======
+    }
     if (asset_id) {
       const [assetRows] = await db.execute("SELECT id FROM assets WHERE id = ? AND org_id = ?", [asset_id, req.user.org_id])
       if (assetRows.length === 0) {
         return res.status(403).json({ message: "Access denied" })
       }
->>>>>>> 529cfb45fb3c89c89998467680e5f1168f45741c
     }
 
     const [result] = await db.execute(
@@ -97,18 +95,6 @@ router.put("/:id", verifyToken, async (req, res) => {
     const { id } = req.params
     const { asset_id, request_type, reason, description, priority } = req.body
 
-<<<<<<< HEAD
-    // Validate field lengths
-    const validationErrors = validateRequestFields({ reason, description });
-    if (validationErrors.length > 0) {
-      return res.status(400).json({ 
-        message: "Validation error",
-        errors: validationErrors
-      });
-    }
-
-    const [requests] = await db.execute("SELECT requested_by FROM asset_requests WHERE id = ?", [id])
-=======
     const [requests] = await db.execute(
       `SELECT ar.requested_by, u.org_id
        FROM asset_requests ar
@@ -116,7 +102,6 @@ router.put("/:id", verifyToken, async (req, res) => {
        WHERE ar.id = ?`,
       [id]
     )
->>>>>>> 529cfb45fb3c89c89998467680e5f1168f45741c
     if (requests.length === 0) {
       return res.status(404).json({ message: "Request not found" })
     }
@@ -157,7 +142,6 @@ router.put("/:id/status", verifyToken, async (req, res) => {
     const { id } = req.params
     const { status, response } = req.body
 
-<<<<<<< HEAD
     // Validate field lengths
     const validationErrors = validateRequestFields({ response });
     if (validationErrors.length > 0) {
@@ -176,7 +160,6 @@ router.put("/:id/status", verifyToken, async (req, res) => {
 
     const request = requestDetails[0]
 
-=======
     const [requestRows] = await db.execute(
       `SELECT ar.id
        FROM asset_requests ar
@@ -188,7 +171,6 @@ router.put("/:id/status", verifyToken, async (req, res) => {
       return res.status(404).json({ message: "Request not found" })
     }
 
->>>>>>> 529cfb45fb3c89c89998467680e5f1168f45741c
     await db.execute("UPDATE asset_requests SET status = ?, response = ?, assigned_to = ? WHERE id = ?", [
       status,
       response || null,
