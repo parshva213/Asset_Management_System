@@ -121,7 +121,7 @@ const EmployeeDashboard = () => {
                         <div className="profile-greeting">
                             <h3>Hi, {user?.name || "Employee"}</h3>
                             <span className="waving-hand">👋</span>
-                            <span className="role-badge">Employee</span>
+                            <span className="role-badge role-badge-employee">Employee</span>
                         </div>
                     </div>
                     <div className="profile-details">

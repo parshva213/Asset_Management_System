@@ -52,7 +52,7 @@ const MaintenanceDashboard = () => {
                         <div className="profile-greeting">
                             <h3>Hi, {user?.name || "Maintenance"}</h3>
                             <span className="waving-hand">👋</span>
-                            <span className="role-badge">Maintenance</span>
+                            <span className="role-badge role-badge-maintenance">Maintenance</span>
                         </div>
                     </div>
                     <div className="profile-details">

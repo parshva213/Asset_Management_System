@@ -12,8 +12,7 @@ const SupervisorDashboard = () => {
         teamAssets: 0,
         availableAssets: 0,
         pendingRequests: 0,
-        pendingMaintenance: 0,
-        completedMaintenance: 0,
+        completedRequests: 0,
         totalRooms: 0,
         totalOrders: 0,
         activeTeam: 0,
@@ -29,6 +28,7 @@ const SupervisorDashboard = () => {
         currentRoomName: ""
     })
     const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(null)
     
     // Room Registration Modal State
     const [showRoomModal, setShowRoomModal] = useState(false)
@@ -40,6 +40,7 @@ const SupervisorDashboard = () => {
 
     const fetchDashboardData = useCallback(async () => {
         try {
+            setError(null)
             const [dashboardRes] = await Promise.allSettled([
                 api.get("/supervisor/dashboard")
             ])
@@ -52,8 +53,7 @@ const SupervisorDashboard = () => {
                     teamAssets: data.teamAssets || 0,
                     availableAssets: data.availableAssets || 0,
                     pendingRequests: data.pendingRequests || 0,
-                    pendingMaintenance: data.pendingMaintenance || 0,
-                    completedMaintenance: data.completedMaintenance || 0,
+                    completedRequests : data.completedRequests || 0,    
                     activeTeam: data.activeTeam || 0,
                     onLeaveTeam: data.onLeaveTeam || 0,
                     totalRooms: data.totalRooms || 0,
@@ -67,9 +67,12 @@ const SupervisorDashboard = () => {
                     currentLocationName: data.currentLocationName || "",
                     currentRoomName: data.currentRoomName || ""
                 })
+            } else {
+                setError("Unable to fetch data")
             }
         } catch (error) {
             console.error("Error fetching dashboard data:", error)
+            setError("Unable to fetch data")
             if (error.response?.status === 403) logout()
         } finally {
             setLoading(false)
@@ -143,6 +146,10 @@ const SupervisorDashboard = () => {
         return <div className="loading">Loading dashboard...</div>
     }
 
+    if (error) {
+        return <div className="error-message">{error}</div>
+    }
+
     return (
         <div className="dashboard-layout supervisor-dashboard">
             <div className="dashboard-top-row">
@@ -155,7 +162,7 @@ const SupervisorDashboard = () => {
                         <div className="profile-greeting">
                             <h3>Hi, {user?.name || "Supervisor"}</h3>
                             <span className="waving-hand">👋</span>
-                            <span className="role-badge-new">Supervisor</span>
+                            <span className="role-badge role-badge-supervisor">Supervisor</span>
                         </div>
                     </div>
                     <div className="profile-details-new">
@@ -330,7 +337,7 @@ const SupervisorDashboard = () => {
                                 <span className="stat-label">Remaining</span>
                                 <h3 className="stat-value" style={{ fontSize: '1.2rem' }}>{user?.loc_id ? stats.remainingOrders : 0}</h3>
                             </div>
-                            <div className="split-item center" style={{ borderLeft: '1px solid #eee', borderRight: '1px solid #eee', textAlign: 'center' }}>
+                            <div className="split-item center" style={{ textAlign: 'center' }}>
                                 <span className="stat-label">Rejected</span>
                                 <h3 className="stat-value" style={{ fontSize: '1.2rem' }}>{user?.loc_id ? stats.rejectedOrders : 0}</h3>
                             </div>
@@ -344,20 +351,20 @@ const SupervisorDashboard = () => {
                         </div>
                     </div>
 
-                    {/* Maintenance Requests Card */}
+                    {/* Requests Card */}
                     <div className="stat-widget">
                         <div className="widget-header">
                             <div className="stat-icon bg-amber">📝</div>
-                            <span className="widget-title">Maintenance Requests</span>
+                            <span className="widget-title">Requests</span>
                         </div>
                         <div className="split-container">
                             <div className="split-item left">
                                 <span className="stat-label">Pending</span>
-                                <h3 className="stat-value">{user?.loc_id ? stats.pendingMaintenance : 0}</h3>
+                                <h3 className="stat-value">{user?.loc_id ? stats.pendingRequests : 0}</h3>
                             </div>
                             <div className="split-item right">
                                 <span className="stat-label">Completed</span>
-                                <h3 className="stat-value">{user?.loc_id ? stats.completedMaintenance : 0}</h3>
+                                <h3 className="stat-value">{user?.loc_id ? stats.completedRequests : 0}</h3>
                             </div>
                         </div>
                         <div className="stat-footer">

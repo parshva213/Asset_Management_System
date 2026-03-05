@@ -81,7 +81,7 @@ function App() {
                 <Route path="organizations" element={<ProtectedRoute roles={['Software Developer' ,'Vendor']}><Organizations /></ProtectedRoute>} />
 
                 {/* Super Admin */}
-                <Route path="dashboard/admin" element={<ProtectedRoute roles={['Super Admin', 'Admin']}><AdminDashboard /></ProtectedRoute>} />
+                <Route path="dashboard/admin" element={<ProtectedRoute roles={['Super Admin']}><AdminDashboard /></ProtectedRoute>} />
                 <Route path="locations" element={<ProtectedRoute roles={['Super Admin']}><Locations /></ProtectedRoute>} />
                 <Route path="rooms" element={<ProtectedRoute roles={['Super Admin']}><LocationRooms /></ProtectedRoute>} />
                 <Route path="lr-assets" element={<ProtectedRoute roles={['Super Admin']}><LocationRoomAssets /></ProtectedRoute>} />

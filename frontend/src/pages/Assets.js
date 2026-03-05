@@ -60,19 +60,11 @@ const Assets = () => {
   const fetchAssets = useCallback(async () => {
     try {
       let path = "/assets";
-      // Supervisor: show location summary for their assigned location
-      if (user?.role === "Supervisor") {
-          path = `/assets?location_id=${user?.loc_id}&room_id=${user?.room_id}`;
-        try {
-          const locRes = await api.get(`/locations/${user.loc_id}`);
-          setLocationName(locRes.data.name || "");
-        } catch (err) {
-          console.warn("Unable to fetch supervisor location name", err);
-        }
-      } else if (user?.role === "Employee") {
+      if (user?.role === "Employee") {
         path = `/assets/current-asset/${user?.id}`;
-      } 
-
+      } else if (user?.role === "Supervisor") {
+        path = `/assets?location_id=${user?.loc_id}&room_id=${user?.room_id}`;
+      }
       const res = await api.get(`${path}`);
       let assetList = res.data;
       // for admins, if they have a room defined sort assets so any duplicates
@@ -246,29 +238,6 @@ const Assets = () => {
     } catch (err) {
       console.error("Error saving asset:", err);
       showError(err.response?.data?.message || "Error saving asset");
-    }
-  };
-
-  const handleEdit = (asset) => {
-    setEditingAsset(asset);
-    dataFetch();
-    // For edit, we might want to split the name back into company and asset name if possible, 
-    // but for now let's just populate the asset name field with the full name to avoid complexity.
-    setFormData({
-      company_name: "", // Leave empty for edits or logic to extract it
-      name: asset.name,
-      description: asset.description || "",
-      quantity: asset.quantity || "1",
-      purchase_cost: asset.purchase_cost || "",
-      warranty_expiry: asset.warranty_expiry || "",
-      asset_type: asset.asset_type,
-      category_id: asset.category_id || "",
-      location_id: asset.location_id || "",
-      room_id: asset.room_id || "",
-      purchase_date: asset.purchase_date || "",
-    });
-    if (asset.location_id) {
-      fetchRooms(asset.location_id);
     }
   };
 
@@ -707,486 +676,275 @@ const Assets = () => {
           </div>
         </div>
       )}
+      {showItemsModal && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ width: '90vw', maxWidth: '1000px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div className="modal-header" style={{ padding: '2rem', background: 'linear-gradient(135deg, #1a1d3a 0%, #2a2e5d 100%)', borderBottom: '1px solid #3d447a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px' }}>
+                <h2 style={{ margin: 0, fontSize: '1.8rem', fontWeight: '700', color: '#fff' }}>{selectedItemName}</h2>
+                <span style={{ fontSize: '0.9rem', color: '#a3b1c6', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '1px' }}>{selectedItemType}</span>
+              </div>
+              <button className="close-modal" onClick={() => setShowItemsModal(false)} style={{ fontSize: '32px', color: '#fff', opacity: '0.8', transition: 'opacity 0.2s', background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
+            </div>
+            <div className="modal-body" style={{ overflowY: 'auto', flex: 1, padding: '0 2rem 2rem 2rem', background: '#13152a' }}>
+              {itemsLoading ? (
+                <div className="text-center p-12"><div className="spinner-inline"></div><p style={{ marginTop: '1rem', color: '#a3b1c6' }}>Loading items...</p></div>
+              ) : itemsList.length === 0 ? (
+                <div className="text-center p-12"><p style={{ color: '#a3b1c6', fontSize: '1.1rem' }}>No individual items found.</p></div>
+              ) : (
+                  <table className="table" style={{ borderCollapse: 'separate', borderSpacing: '0 8px', width: '100%' }}>
+                    <thead style={{ position: 'sticky', top: -25, zIndex: 10 }}>
+                      <tr>
+                        <th style={{ backgroundColor: '#13152a', color: '#7e8db4', padding: '20px 15px 10px 15px', textAlign: 'left', textTransform: 'uppercase', fontSize: '12px', fontWeight: '600', letterSpacing: '1px', borderBottom: '1px solid #3d447a' }}>Serial Number</th>
+                        <th style={{ backgroundColor: '#13152a', color: '#7e8db4', padding: '20px 15px 10px 15px', textAlign: 'left', textTransform: 'uppercase', fontSize: '12px', fontWeight: '600', letterSpacing: '1px', borderBottom: '1px solid #3d447a' }}>Status</th>
+                        <th style={{ backgroundColor: '#13152a', color: '#7e8db4', padding: '20px 15px 10px 15px', textAlign: 'left', textTransform: 'uppercase', fontSize: '12px', fontWeight: '600', letterSpacing: '1px', borderBottom: '1px solid #3d447a' }}>Assigned To</th>
+                        <th style={{ backgroundColor: '#13152a', color: '#7e8db4', padding: '20px 15px 10px 15px', textAlign: 'left', textTransform: 'uppercase', fontSize: '12px', fontWeight: '600', letterSpacing: '1px', borderBottom: '1px solid #3d447a' }}>Warranty</th>
+                        <th style={{ backgroundColor: '#13152a', color: '#7e8db4', padding: '20px 15px 10px 15px', textAlign: 'left', textTransform: 'uppercase', fontSize: '12px', fontWeight: '600', letterSpacing: '1px', borderBottom: '1px solid #3d447a' }}>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {itemsList.map((item) => (
+                        <tr key={item.id} className="premium-row" style={{ backgroundColor: '#1a1d3a', transition: 'transform 0.2s, background-color 0.2s' }}>
+                          <td style={{ padding: '15px', fontSize: '14px', fontWeight: '500', color: '#fff', borderTopLeftRadius: '8px', borderBottomLeftRadius: '8px' }}>{item.sn}</td>
+                          <td style={{ padding: '15px' }}>
+                            <span className={`badge ${
+                              item.status === 'Available' ? 'badge-success' : 
+                              item.status === 'Assigned' ? 'badge-primary' : 'badge-warning'
+                            }`} style={{ padding: '0.4rem 0.8rem', borderRadius: '6px', fontSize: '11px', fontWeight: '700', letterSpacing: '0.5px', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
+                              {item.status.toUpperCase()}
+                            </span>
+                          </td>
+                          <td style={{ padding: '15px', fontSize: '14px', color: '#e2e8f0', fontWeight: '500' }}>{item.assign_to || "-"}</td>
+                          <td style={{ padding: '15px', fontSize: '14px', color: '#a3b1c6' }}>{formatDate(item.warranty_expiry)}</td>
+                          <td style={{ padding: '15px', borderTopRightRadius: '8px', borderBottomRightRadius: '8px' }}>
+                            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                              {item.status === 'Available' ? (
+                                <button 
+                                  onClick={() => handleAssignClick(item)}
+                                  className="btn-polish-primary"
+                                  style={{ 
+                                    padding: '0.5rem 0', 
+                                    fontSize: '12px', 
+                                    fontWeight: '600',
+                                    borderRadius: '6px',
+                                    border: 'none',
+                                    backgroundColor: '#4e54c8',
+                                    color: '#fff',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s',
+                                    boxShadow: '0 4px 6px rgba(78, 84, 200, 0.3)',
+                                    width: '85px',
+                                    textAlign: 'center'
+                                  }}
+                                >
+                                  Assign
+                                </button>
+                              ) : (
+                                item.status === 'Assigned' && item.assignee_ownpk === null && item.assignee_unpk === user?.ownpk && (
+                                  <button 
+                                    onClick={() => handleUnassign(item.id)}
+                                    className="btn-polish-danger"
+                                    style={{ 
+                                      padding: '0.5rem 0', 
+                                      fontSize: '12px', 
+                                      fontWeight: '600',
+                                      borderRadius: '6px',
+                                      border: 'none',
+                                      backgroundColor: '#ff4b2b',
+                                      color: '#fff',
+                                      cursor: 'pointer',
+                                      transition: 'all 0.2s',
+                                      boxShadow: '0 4px 6px rgba(255, 75, 43, 0.3)',
+                                      width: '85px',
+                                      textAlign: 'center'
+                                    }}
+                                  >
+                                    Unassign
+                                  </button>
+                                )
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Assign User Modal */}
+      {showAssignModal && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '400px' }}>
+            <div className="modal-header">
+              <h2>Assign {itemToAssign?.sn}</h2>
+              <button className="close-modal" onClick={() => setShowAssignModal(false)}>&times;</button>
+            </div>
+            <div className="modal-body">
+              <div className="form-group mb-4">
+                <label className="form-label">Select Team Member</label>
+                <select 
+                  className="form-input"
+                  value={selectedAssignee}
+                  onChange={(e) => setSelectedAssignee(e.target.value)}
+                >
+                  <option value="">Select User</option>
+                  {teamMembers.map(member => (
+                    <option key={member.id} value={member.id}>{member.name} ({member.email})</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={() => setShowAssignModal(false)}>Cancel</button>
+              <button 
+                className="btn btn-primary" 
+                onClick={confirmAssign}
+                disabled={assigningLoading || !selectedAssignee}
+              >
+                {assigningLoading ? "Assigning..." : "Confirm Assign"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Request Modal */}
+      {showRequestModal && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: "500px" }}>
+            <div className="modal-header">
+              <h2>Add Request</h2>
+              <button 
+                className="close-modal" 
+                onClick={() => {
+                  setShowRequestModal(false);
+                  setRequestFormData({
+                    asset_id: "",
+                    request_type: "Repair",
+                    reason: "",
+                    description: "",
+                    priority: "Medium",
+                    location_id: "",
+                    room_id: "",
+                    asset_name: "",
+                  });
+                }}
+              >
+                ×
+              </button>
+            </div>
+            <div className="modal-body">
+              <form style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                <div className="form-group">
+                  <label className="form-label">Asset</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={requestFormData.asset_name}
+                    readOnly
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Request Type</label>
+                  <select 
+                    className="form-input"
+                    value={requestFormData.request_type}
+                    onChange={(e) => setRequestFormData(prev => ({ ...prev, request_type: e.target.value }))}
+                  >
+                    <option value="Repair">Repair</option>
+                    <option value="Replacement">Replacement</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Priority</label>
+                  <select 
+                    className="form-input"
+                    value={requestFormData.priority}
+                    onChange={(e) => setRequestFormData(prev => ({ ...prev, priority: e.target.value }))}
+                  >
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Reason</label>
+                  <input 
+                    type="text" 
+                    className="form-input" 
+                    placeholder="Enter reason"
+                    value={requestFormData.reason}
+                    onChange={(e) => setRequestFormData(prev => ({ ...prev, reason: e.target.value }))}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Description</label>
+                  <textarea 
+                    className="form-input" 
+                    rows="4"
+                    placeholder="Enter description"
+                    value={requestFormData.description}
+                    onChange={(e) => setRequestFormData(prev => ({ ...prev, description: e.target.value }))}
+                  />
+                </div>
+              </form>
+            </div>
+            <div className="modal-footer">
+              <button 
+                className="btn btn-secondary" 
+                onClick={() => {
+                  setShowRequestModal(false);
+                  setRequestFormData({
+                    asset_id: "",
+                    request_type: "Repair",
+                    reason: "",
+                    description: "",
+                    priority: "Medium",
+                    location_id: "",
+                    room_id: "",
+                    asset_name: "",
+                  });
+                }}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn btn-primary"
+                onClick={async () => {
+                  try {
+                    await api.post("/requests", requestFormData);
+                    showSuccess("Request created successfully");
+                    setShowRequestModal(false);
+                    setRequestFormData({
+                      asset_id: "",
+                      request_type: "Repair",
+                      reason: "",
+                      description: "",
+                      priority: "Medium",
+                    });
+                    fetchRequests();
+                  } catch (err) {
+                    console.error("Error creating request:", err);
+                    showError(err.response?.data?.message || "Error creating request");
+                  }
+                }}
+              >
+                Submit Request
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
-
-  // if (loading) return <div className="loading">Loading assets...</div>;
-
-  // if ((user?.role === "Supervisor" || user?.role === "Employee") && !user?.room_id) {
-  //   return (
-  //     <div className="content">
-  //       <div className="flex-center h-full">
-  //         <div className="empty-state">
-  //           <h3>Set your location first</h3>
-  //           <p className="text-secondary">You need to be assigned to a room to view the assets.</p>
-  //         </div>
-  //       </div>
-  //     </div>
-  //   )
-  // }
-
-  // Supervisor-specific summary view
-  // if (user?.role === "Supervisor") {
-  //   return (
-  //     <div>
-  //       <div className="flex-between mb-4">
-  //         <div>
-  //           <h2>Manage Assets for {locationName || "your Location"}</h2>
-  //         </div>
-  //         {(user?.role === "Super Admin" || user?.role === "Supervisor") && (
-  //           <button onClick={() => dataFetch()} className="btn btn-primary">
-  //             Add Asset
-  //           </button>
-  //         )}
-  //       </div>
-
-  //       {assets.length === 0 ? (
-  //         <div className="empty-state">
-  //           <p>No assets found</p>
-  //         </div>
-  //       ) : (
-  //         <div className="table-container">
-  //           <table className="table">
-  //             <thead>
-  //               <tr>
-  //                 <th>Name</th>
-  //                 <th>Quantity</th>
-  //                 <th>Assigned</th>
-  //                 <th>Active</th>
-  //                 <th>Not Active</th>
-  //                 <th>Category</th>
-  //                 <th>Actions</th>
-  //               </tr>
-  //             </thead>
-  //             <tbody>
-  //               {assets.map((asset) => (
-  //                 <tr key={asset.id} id={`asset-${asset.id}`}>
-  //                   <td>{asset.aname}</td>
-  //                   <td>{asset.quantity}</td>
-  //                   <td>{asset.assigned_total || 0}</td>
-  //                   <td>{asset.active}</td>
-  //                   <td>{asset.not_active}</td>
-  //                   <td>{asset.cat_name || "N/A"}</td>
-  //                   <td>
-  //                     <div className="flex gap-2">
-  //                       <button
-  //                         className="btn btn-secondary"
-  //                         onClick={() => navigate(`/lr-assets?locid=${user.loc_id}&roomid=${user.room_id}`)}
-  //                       >
-  //                         View Items
-  //                       </button>
-  //                     </div>
-  //                   </td>
-  //                 </tr>
-  //               ))}
-  //             </tbody>
-  //           </table>
-  //         </div>
-  //       )}
-  //     </div>
-  //   );
-  // }
-
-  // return (
-  //   <div>
-  //     <div className="flex-between mb-4">
-  //       <h2> {(user?.role === "Super Admin") ? "List of Assets Not Working" : "Assets Management"}</h2>
-  //       {(user?.role === "Super Admin" || user?.role === "Supervisor") && (
-  //         <button onClick={() => dataFetch()} className="btn btn-primary">
-  //           Add Asset
-  //         </button>
-  //       )}
-  //     </div>
-
-  //     {assets.length === 0 ? (
-  //       <div className="empty-state">
-  //         <p>No assets found</p>
-  //       </div>
-  //     ) : (
-  //       <div className="table-container">
-  //         <table className="table">
-  //           <thead>
-  //             <tr>
-  //               {user?.role === "Super Admin" ? (
-  //                 <>
-  //                   <th>Serial Number</th>
-  //                   <th>Name</th>
-  //                   <th>Status</th>
-  //                   <th>Category</th>
-  //                   <th>Location</th>
-  //                   <th>Room</th>
-  //                   <th>Warranty</th>
-  //                   <th>Purchase Cost</th>
-  //                 </>
-  //               ) : (
-  //                 <>
-  //                   <th>Serial Number</th>
-  //                   <th>Name</th>
-  //                   <th>Category</th>
-  //                   <th>Location</th>
-  //                   <th>Status</th>
-  //                   <th>Purchased</th>
-  //                   <th>Warranty</th>
-  //                   <th>{user?.role === "Employee" ? "Assigned On" : "Actions"}</th>
-  //                 </>
-  //               )}
-  //             </tr>
-  //           </thead>
-  //           <tbody>
-  //             {assets.map((asset) => (
-  //               <tr key={asset.id} id={`asset-${asset.id}`}>
-  //                 {user?.role === "Super Admin" ? (
-  //                   <>
-  //                     <td>{asset.sn}</td>
-  //                     <td>{asset.aname}</td>
-  //                     <td>{asset.status}</td>
-  //                     <td>{asset.cat_name}</td>
-  //                     <td>{asset.loc_name}</td>
-  //                     <td>{asset.room_name}</td>
-  //                     <td>{asset.warranty_expiry}</td>
-  //                     <td>{asset.purchase_cost}</td>
-  //                   </>
-  //                 ) : (
-  //                   <>
-  //                     <td>{asset.serial_number || "N/A"}</td>
-  //                     <td>
-  //                       <div className="fw-bold">{asset.name}</div>
-  //                     </td>
-  //                     <td>{asset.category_name || "N/A"}</td>
-  //                     <td>{asset.location_name || "Unassigned"}</td>
-  //                     <td>
-  //                       <span
-  //                         className={`badge ${asset.status === "Available"
-  //                           ? "badge-success"
-  //                           : asset.status === "Assigned"
-  //                             ? "badge-primary"
-  //                             : "badge-warning"
-  //                           }`}
-  //                       >
-  //                         {asset.status}
-  //                       </span>
-  //                       {asset.status === "Assigned" && asset.assign && (
-  //                         <div className="text-muted small mt-1">To: {asset.assign}</div>
-  //                       )}
-  //                     </td>
-  //                     <td>{formatDate(asset.purchase_date)}</td>
-  //                     <td>{formatDate(asset.warranty_expiry)}</td>
-  //                     <td>
-  //                       {user?.role === "Employee" ? (
-  //                         formatDate(asset.assigned_at)
-  //                       ) : (
-  //                         <div className="flex gap-2">
-  //                           <button onClick={() => handleEdit(asset)} className="btn btn-secondary">
-  //                             Edit
-  //                           </button>
-  //                         </div>
-  //                       )}
-  //                     </td>
-  //                   </>
-  //                 )}
-  //               </tr>
-  //             ))}
-  //           </tbody>
-  //         </table>
-  //       </div>
-  //     )}
-  //     {showItemsModal && (
-  //       <div className="modal-overlay">
-  //         <div className="modal-content" style={{ width: '90vw', maxWidth: '1000px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-  //           <div className="modal-header" style={{ padding: '2rem', background: 'linear-gradient(135deg, #1a1d3a 0%, #2a2e5d 100%)', borderBottom: '1px solid #3d447a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-  //             <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px' }}>
-  //               <h2 style={{ margin: 0, fontSize: '1.8rem', fontWeight: '700', color: '#fff' }}>{selectedItemName}</h2>
-  //               <span style={{ fontSize: '0.9rem', color: '#a3b1c6', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '1px' }}>{selectedItemType}</span>
-  //             </div>
-  //             <button className="close-modal" onClick={() => setShowItemsModal(false)} style={{ fontSize: '32px', color: '#fff', opacity: '0.8', transition: 'opacity 0.2s', background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
-  //           </div>
-  //           <div className="modal-body" style={{ overflowY: 'auto', flex: 1, padding: '0 2rem 2rem 2rem', background: '#13152a' }}>
-  //             {itemsLoading ? (
-  //               <div className="text-center p-12"><div className="spinner-inline"></div><p style={{ marginTop: '1rem', color: '#a3b1c6' }}>Loading items...</p></div>
-  //             ) : itemsList.length === 0 ? (
-  //               <div className="text-center p-12"><p style={{ color: '#a3b1c6', fontSize: '1.1rem' }}>No individual items found.</p></div>
-  //             ) : (
-  //                 <table className="table" style={{ borderCollapse: 'separate', borderSpacing: '0 8px', width: '100%' }}>
-  //                   <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
-  //                     <tr>
-  //                       <th style={{ backgroundColor: '#13152a', color: '#7e8db4', padding: '20px 15px 10px 15px', textAlign: 'left', textTransform: 'uppercase', fontSize: '12px', fontWeight: '600', letterSpacing: '1px', borderBottom: '1px solid #3d447a' }}>Serial Number</th>
-  //                       <th style={{ backgroundColor: '#13152a', color: '#7e8db4', padding: '20px 15px 10px 15px', textAlign: 'left', textTransform: 'uppercase', fontSize: '12px', fontWeight: '600', letterSpacing: '1px', borderBottom: '1px solid #3d447a' }}>Status</th>
-  //                       <th style={{ backgroundColor: '#13152a', color: '#7e8db4', padding: '20px 15px 10px 15px', textAlign: 'left', textTransform: 'uppercase', fontSize: '12px', fontWeight: '600', letterSpacing: '1px', borderBottom: '1px solid #3d447a' }}>Assigned To</th>
-  //                       <th style={{ backgroundColor: '#13152a', color: '#7e8db4', padding: '20px 15px 10px 15px', textAlign: 'left', textTransform: 'uppercase', fontSize: '12px', fontWeight: '600', letterSpacing: '1px', borderBottom: '1px solid #3d447a' }}>Warranty</th>
-  //                       <th style={{ backgroundColor: '#13152a', color: '#7e8db4', padding: '20px 15px 10px 15px', textAlign: 'left', textTransform: 'uppercase', fontSize: '12px', fontWeight: '600', letterSpacing: '1px', borderBottom: '1px solid #3d447a' }}>Action</th>
-  //                     </tr>
-  //                   </thead>
-  //                   <tbody>
-  //                     {itemsList.map((item) => (
-  //                       <tr key={item.id} className="premium-row" style={{ backgroundColor: '#1a1d3a', transition: 'transform 0.2s, background-color 0.2s' }}>
-  //                         <td style={{ padding: '15px', fontSize: '14px', fontWeight: '500', color: '#fff', borderTopLeftRadius: '8px', borderBottomLeftRadius: '8px' }}>{item.sn}</td>
-  //                         <td style={{ padding: '15px' }}>
-  //                           <span className={`badge ${
-  //                             item.status === 'Available' ? 'badge-success' : 
-  //                             item.status === 'Assigned' ? 'badge-primary' : 'badge-warning'
-  //                           }`} style={{ padding: '0.4rem 0.8rem', borderRadius: '6px', fontSize: '11px', fontWeight: '700', letterSpacing: '0.5px', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
-  //                             {item.status.toUpperCase()}
-  //                           </span>
-  //                         </td>
-  //                         <td style={{ padding: '15px', fontSize: '14px', color: '#e2e8f0', fontWeight: '500' }}>{item.assign_to || "-"}</td>
-  //                         <td style={{ padding: '15px', fontSize: '14px', color: '#a3b1c6' }}>{formatDate(item.warranty_expiry)}</td>
-  //                         <td style={{ padding: '15px', borderTopRightRadius: '8px', borderBottomRightRadius: '8px' }}>
-  //                           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-  //                             <button 
-  //                               onClick={() => {
-  //                                 setShowItemsModal(false);
-  //                                 handleEdit({
-  //                                   ...item,
-  //                                   name: item.aname || item.name,
-  //                                   category_id: item.category_id,
-  //                                   location_id: item.location_id,
-  //                                   room_id: item.room_id
-  //                                 });
-  //                               }} 
-  //                               className="btn-polish-secondary"
-  //                               style={{ 
-  //                                 padding: '0.5rem 1rem', 
-  //                                 fontSize: '12px', 
-  //                                 fontWeight: '600',
-  //                                 borderRadius: '6px',
-  //                                 border: '1px solid #3d447a',
-  //                                 backgroundColor: 'transparent',
-  //                                 color: '#fff',
-  //                                 cursor: 'pointer',
-  //                                 transition: 'all 0.2s',
-  //                                 width: '70px',
-  //                                 textAlign: 'center'
-  //                               }}
-  //                             >
-  //                               Edit
-  //                             </button>
-  //                             {item.status === 'Available' ? (
-  //                               <button 
-  //                                 onClick={() => handleAssignClick(item)}
-  //                                 className="btn-polish-primary"
-  //                                 style={{ 
-  //                                   padding: '0.5rem 0', 
-  //                                   fontSize: '12px', 
-  //                                   fontWeight: '600',
-  //                                   borderRadius: '6px',
-  //                                   border: 'none',
-  //                                   backgroundColor: '#4e54c8',
-  //                                   color: '#fff',
-  //                                   cursor: 'pointer',
-  //                                   transition: 'all 0.2s',
-  //                                   boxShadow: '0 4px 6px rgba(78, 84, 200, 0.3)',
-  //                                   width: '85px',
-  //                                   textAlign: 'center'
-  //                                 }}
-  //                               >
-  //                                 Assign
-  //                               </button>
-  //                             ) : (
-  //                               item.status === 'Assigned' && item.assignee_ownpk === null && item.assignee_unpk === user?.ownpk && (
-  //                                 <button 
-  //                                   onClick={() => handleUnassign(item.id)}
-  //                                   className="btn-polish-danger"
-  //                                   style={{ 
-  //                                     padding: '0.5rem 0', 
-  //                                     fontSize: '12px', 
-  //                                     fontWeight: '600',
-  //                                     borderRadius: '6px',
-  //                                     border: 'none',
-  //                                     backgroundColor: '#ff4b2b',
-  //                                     color: '#fff',
-  //                                     cursor: 'pointer',
-  //                                     transition: 'all 0.2s',
-  //                                     boxShadow: '0 4px 6px rgba(255, 75, 43, 0.3)',
-  //                                     width: '85px',
-  //                                     textAlign: 'center'
-  //                                   }}
-  //                                 >
-  //                                   Unassign
-  //                                 </button>
-  //                               )
-  //                             )}
-  //                           </div>
-  //                         </td>
-  //                       </tr>
-  //                     ))}
-  //                   </tbody>
-  //                 </table>
-  //             )}
-  //           </div>
-  //         </div>
-  //       </div>
-  //     )}
-
-  //     {/* Assign User Modal */}
-  //     {showAssignModal && (
-  //       <div className="modal-overlay">
-  //         <div className="modal-content" style={{ maxWidth: '400px' }}>
-  //           <div className="modal-header">
-  //             <h2>Assign {itemToAssign?.sn}</h2>
-  //             <button className="close-modal" onClick={() => setShowAssignModal(false)}>&times;</button>
-  //           </div>
-  //           <div className="modal-body">
-  //             <div className="form-group mb-4">
-  //               <label className="form-label">Select Team Member</label>
-  //               <select 
-  //                 className="form-input"
-  //                 value={selectedAssignee}
-  //                 onChange={(e) => setSelectedAssignee(e.target.value)}
-  //               >
-  //                 <option value="">Select User</option>
-  //                 {teamMembers.map(member => (
-  //                   <option key={member.id} value={member.id}>{member.name} ({member.email})</option>
-  //                 ))}
-  //               </select>
-  //             </div>
-  //           </div>
-  //           <div className="modal-footer">
-  //             <button className="btn btn-secondary" onClick={() => setShowAssignModal(false)}>Cancel</button>
-  //             <button 
-  //               className="btn btn-primary" 
-  //               onClick={confirmAssign}
-  //               disabled={assigningLoading || !selectedAssignee}
-  //             >
-  //               {assigningLoading ? "Assigning..." : "Confirm Assign"}
-  //             </button>
-  //           </div>
-  //         </div>
-  //       </div>
-  //     )}
-
-  //     {/* Request Modal */}
-  //     {showRequestModal && (
-  //       <div className="modal-overlay">
-  //         <div className="modal-content" style={{ maxWidth: "500px" }}>
-  //           <div className="modal-header">
-  //             <h2>Add Request</h2>
-  //             <button 
-  //               className="close-modal" 
-  //               onClick={() => {
-  //                 setShowRequestModal(false);
-  //                 setRequestFormData({
-  //                   asset_id: "",
-  //                   request_type: "Repair",
-  //                   reason: "",
-  //                   description: "",
-  //                   priority: "Medium",
-  //                   location_id: "",
-  //                   room_id: "",
-  //                   asset_name: "",
-  //                 });
-  //               }}
-  //             >
-  //               ×
-  //             </button>
-  //           </div>
-  //           <div className="modal-body">
-  //             <form style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-  //               <div className="form-group">
-  //                 <label className="form-label">Asset</label>
-  //                 <input
-  //                   type="text"
-  //                   className="form-input"
-  //                   value={requestFormData.asset_name}
-  //                   readOnly
-  //                 />
-  //               </div>
-
-  //               <div className="form-group">
-  //                 <label className="form-label">Request Type</label>
-  //                 <select 
-  //                   className="form-input"
-  //                   value={requestFormData.request_type}
-  //                   onChange={(e) => setRequestFormData(prev => ({ ...prev, request_type: e.target.value }))}
-  //                 >
-  //                   <option value="Repair">Repair</option>
-  //                   <option value="Replacement">Replacement</option>
-  //                 </select>
-  //               </div>
-
-  //               <div className="form-group">
-  //                 <label className="form-label">Priority</label>
-  //                 <select 
-  //                   className="form-input"
-  //                   value={requestFormData.priority}
-  //                   onChange={(e) => setRequestFormData(prev => ({ ...prev, priority: e.target.value }))}
-  //                 >
-  //                   <option value="Low">Low</option>
-  //                   <option value="Medium">Medium</option>
-  //                   <option value="High">High</option>
-  //                 </select>
-  //               </div>
-
-  //               <div className="form-group">
-  //                 <label className="form-label">Reason</label>
-  //                 <input 
-  //                   type="text" 
-  //                   className="form-input" 
-  //                   placeholder="Enter reason"
-  //                   value={requestFormData.reason}
-  //                   onChange={(e) => setRequestFormData(prev => ({ ...prev, reason: e.target.value }))}
-  //                 />
-  //               </div>
-
-  //               <div className="form-group">
-  //                 <label className="form-label">Description</label>
-  //                 <textarea 
-  //                   className="form-input" 
-  //                   rows="4"
-  //                   placeholder="Enter description"
-  //                   value={requestFormData.description}
-  //                   onChange={(e) => setRequestFormData(prev => ({ ...prev, description: e.target.value }))}
-  //                 />
-  //               </div>
-  //             </form>
-  //           </div>
-  //           <div className="modal-footer">
-  //             <button 
-  //               className="btn btn-secondary" 
-  //               onClick={() => {
-  //                 setShowRequestModal(false);
-  //                 setRequestFormData({
-  //                   asset_id: "",
-  //                   request_type: "Repair",
-  //                   reason: "",
-  //                   description: "",
-  //                   priority: "Medium",
-  //                   location_id: "",
-  //                   room_id: "",
-  //                   asset_name: "",
-  //                 });
-  //               }}
-  //             >
-  //               Cancel
-  //             </button>
-  //             <button 
-  //               className="btn btn-primary"
-  //               onClick={async () => {
-  //                 try {
-  //                   await api.post("/requests", requestFormData);
-  //                   showSuccess("Request created successfully");
-  //                   setShowRequestModal(false);
-  //                   setRequestFormData({
-  //                     asset_id: "",
-  //                     request_type: "Repair",
-  //                     reason: "",
-  //                     description: "",
-  //                     priority: "Medium",
-  //                   });
-  //                   fetchRequests();
-  //                 } catch (err) {
-  //                   console.error("Error creating request:", err);
-  //                   showError(err.response?.data?.message || "Error creating request");
-  //                 }
-  //               }}
-  //             >
-  //               Submit Request
-  //             </button>
-  //           </div>
-  //         </div>
-  //       </div>
-  //     )}
-  //   </div>
-  // );
 };
 
 export default Assets;

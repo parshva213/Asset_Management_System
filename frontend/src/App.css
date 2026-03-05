@@ -58,27 +58,36 @@ body.light {
 }
 
 body.dark {
-    --bg-primary: #0f172a;
-    /* Deep Navy */
-    --bg-secondary: #1e1b4b;
-    --text-primary: #f8fafc;
-    --text-secondary: #94a3b8;
-    --border-color: #1f2937;
-    --background: #0f172a;
-    --panel: #1e1b4b;
-    --text: #f8fafc;
+    /* Black & Grey Accents */
+    --primary: #94A3B8; /* Slate gray */
+    --primary-hover: #cbd5e1; /* Lighter slate gray */
+    --secondary: #64748b; /* Medium slate gray */
+    --success: #34d399; /* Keep semantic green for success */
+    --danger: #fb7185; /* Keep semantic red for danger */
+    --warning: #fbbf24; /* Keep semantic yellow for warning */
+
+    /* Black & Grey Backgrounds */
+    --bg-primary: #0F0F11; /* Almost black */
+    --bg-secondary: #1C1C1F; /* Dark gray */
+    --background: #0F0F11;
+    --panel: #1C1C1F;
+    --card-bg: #1C1C1F;
+    
+    /* Text and Border Colors */
+    --text-primary: #E2E8F0; /* Soft white/light gray */
+    --text-secondary: #94A3B8; /* Slate gray */
+    --text: #E2E8F0;
+    --border-color: #334155; /* Medium dark slate gray */
     --border: #334155;
-    --hover-bg: #1e293b;
-    --card-bg: #1e1b4b;
+    --hover-bg: #334155; 
 
     /* Sidebar Dark Mode */
-    --sidebar-bg: #1e1b4b;
-    /* Restore Deep Indigo */
-    --sidebar-text: #94a3b8;
-    --sidebar-hover-bg: #1e293b;
-    --sidebar-active-bg: #1e293b;
-    --sidebar-active-text: #ffffff;
-    --sidebar-border: #1e293b;
+    --sidebar-bg: #0F0F11; /* Match almost black */
+    --sidebar-text: #94A3B8;
+    --sidebar-hover-bg: #1C1C1F;
+    --sidebar-active-bg: #334155;
+    --sidebar-active-text: #F8FAFC; /* White */
+    --sidebar-border: #334155; 
 }
 
 /* ... existing code ... */
@@ -614,7 +623,7 @@ body.dark .role-option:hover {
 
 .organization-name {
     font-weight: 600;
-    color: var(--primary);
+    color: #f59e0b; /* Hashtechy orange color */
     font-size: 0.95rem;
     margin-right: 0.5rem;
     display: block;
@@ -622,7 +631,7 @@ body.dark .role-option:hover {
 }
 
 .dark .organization-name {
-    color: orange;
+    color: #f59e0b;
 }
 
 
@@ -901,7 +910,7 @@ a.quick-action-btn:hover {
     border-radius: 0.5rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     z-index: 1000;
-    min-width: 150px;
+    min-width: 125px;
     overflow: hidden;
     animation: fadeIn 0.2s ease;
 }
@@ -1767,6 +1776,77 @@ body.dark .transform-input {
     /* Don't shrink footer */
 }
 
+/* Dark Mode Modal UI Perfect Overrides */
+body.dark .modal,
+body.dark .modal-content,
+body.dark .modal-new {
+    background: #0F0F11 !important;
+    border: 1px solid #334155 !important;
+    overflow: hidden;
+    padding: 0;
+}
+
+body.dark .modal-header {
+    background: #1C1C1F !important; /* Dark grey header */
+    border-bottom: 1px solid #334155 !important;
+    padding: 1.5rem 2rem !important;
+}
+
+body.dark .modal-header h2,
+body.dark .modal-header .modal-title {
+    color: #E2E8F0 !important;
+}
+
+body.dark .modal-body {
+    background: #0F0F11 !important; /* Almost black body */
+    padding: 1.5rem 2rem !important;
+    color: #E2E8F0;
+}
+
+body.dark .modal-body .form-input,
+body.dark .modal-body .form-select,
+body.dark .form-select-new {
+    background: #1C1C1F !important;
+    border: 1px solid #334155 !important;
+    color: #E2E8F0 !important;
+}
+
+body.dark .modal-footer,
+body.dark .modal-actions {
+    background: #0F0F11 !important;
+    border-top: 1px solid #334155 !important;
+    padding: 1.5rem 2rem !important;
+}
+
+/* Button overrides for dark mode modals */
+body.dark .modal-footer .btn-secondary,
+body.dark .btn-cancel {
+    background: #1C1C1F !important;
+    border: 1px solid #334155 !important;
+    color: #E2E8F0 !important;
+}
+
+body.dark .modal-footer .btn-primary,
+body.dark .btn-save {
+    background: #94A3B8 !important; /* Slate gray */
+    color: #111827 !important; /* Dark text for contrast */
+    border: none !important;
+}
+
+body.dark .close-btn,
+body.dark .close-modal,
+body.dark .close-btn-new {
+    color: #ffffff !important;
+    opacity: 0.8;
+}
+
+body.dark .close-btn:hover,
+body.dark .close-modal:hover,
+body.dark .close-btn-new:hover {
+    color: #ffffff !important;
+    opacity: 1;
+}
+
 .profile-card:hover,
 .password-card:hover {
     box-shadow: var(--shadow-lg);
@@ -2548,13 +2628,55 @@ body.dark .transform-input {
     display: inline-block;
     margin-top: 0.5rem;
     padding: 0.25rem 0.75rem;
-    background: #dcfce7;
-    color: #10b981;
     border-radius: 9999px;
     font-size: 0.75rem;
     font-weight: 700;
     width: fit-content;
 }
+
+.role-badge-admin{
+    background: #dcfce7;
+    color: #10b981;
+}
+.role-badge-supervisor{
+    background: #e0e7ff; /* Indigo tint for Supervisor */
+    color: #4f46e5;
+}
+.role-badge-employee{
+    background: #fefce8; /* Yellow tint for employee */
+    color: #ca8a04;
+}
+.role-badge-maintenance{
+    background: #ffedd5; /* Orange tint for maintenance */
+    color: #ea580c;
+}
+.role-badge-vendor{
+    background: #f3e8ff; /* Purple tint for vendor */
+    color: #9333ea;
+}
+
+/* Dark Mode Role Badges */
+body.dark .role-badge-admin{
+    background: #ffffff;
+    color: #10b981;
+}
+body.dark .role-badge-supervisor{
+    background: #ffffff;
+    color: #4f46e5;
+}
+body.dark .role-badge-employee{
+    background: #ffffff;
+    color: #ca8a04;
+}
+body.dark .role-badge-maintenance{
+    background: #ffffff;
+    color: #ea580c;
+}
+body.dark .role-badge-vendor{
+    background: #ffffff;
+    color: #9333ea;
+}
+
 
 .profile-details {
     display: flex;
@@ -2759,6 +2881,35 @@ body.dark .transform-input {
     background: #3b82f6;
 }
 
+/* Dark Mode Color Helpers */
+body.dark .bg-indigo {
+    background: #7A5AF8; /* Assets box */
+}
+
+body.dark .bg-green {
+    background: #2BC770; /* Orders box */
+}
+
+body.dark .bg-amber {
+    background: #FFA043; /* Maintenance box */
+}
+
+body.dark .bg-rose {
+    background: #F85A7E; /* Team box */
+}
+
+body.dark .bg-purple {
+    background: #C084FC; 
+}
+
+body.dark .bg-cyan {
+    background: #34D399; 
+}
+
+body.dark .bg-blue {
+    background: #56B5F5; /* Assigned Assets box */
+}
+
 .layout-body.dashboard-mode {
     overflow: visible;
 }
@@ -2766,4 +2917,8 @@ body.dark .transform-input {
 .stats-container{
     display: grid;
     gap: 1.5rem;
+}
+
+a:hover{
+    text-decoration: underline;
 }
