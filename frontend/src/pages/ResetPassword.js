@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import ThemeToggle from '../components/ThemeToggle';
 import Footer from '../components/Footer';
 import api from '../api';
-import logo from "../img/logo.png";
 
 const ResetPassword = () => {
     const [email, setEmail] = useState('');
@@ -54,8 +53,8 @@ const ResetPassword = () => {
             </div>
             
             <div className="auth-card">
-                {/* AMS Logo */}
-                <img src={logo} alt="AMS Logo" className="auth-logo" />
+                {/* AMS Text Logo */}
+                <div className="logo-text">AMS</div>
                 
                 <h2 className="auth-title">Reset Your Password</h2>
 

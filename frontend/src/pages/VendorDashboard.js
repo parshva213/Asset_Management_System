@@ -49,7 +49,7 @@ const VendorDashboard = () => {
                     <div className="profile-greeting">
                         <h3>Hi, {user?.name}</h3>
                         <span className="waving-hand">👋</span>
-                        <span className="role-badge">Vendor</span>
+                        <span className="role-badge role-badge-vendor">Vendor</span>
                     </div>
                 </div>
                 <div className="profile-details">

@@ -2,83 +2,103 @@
 
 :root {
     /* ... existing vars ... */
-    --primary: #6366f1;
-    --primary-hover: #4f46e5;
-    --secondary: #64748b;
-    --success: #10b981;
-    --danger: #ef4444;
-    --warning: #f59e0b;
-    --background: #f8fafc;
-    /* Softer light slate */
-    --panel: #ffffff;
-    --text: #1e293b;
-    --text-secondary: #64748b;
-    --border: #e2e8f0;
+    --primary: #2563EB;
+    --primary-hover: #1D4ED8;
+    --secondary: #64748B;
+    --success: #10B981;
+    --danger: #EF4444;
+    --warning: #F59E0B;
+    --background: #F8FAFC;
+    /* Soft slate background */
+    --panel: #FFFFFF;
+    --text: #1E293B;
+    --text-secondary: #64748B;
+    --border: #E2E8F0;
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
     --radius: 0.75rem;
 
-    /* Light Theme Defaults */
-    --bg-primary: #f8fafc;
-    --bg-secondary: #ffffff;
-    --text-primary: #0f172a;
-    --text-secondary: #64748b;
-    --border-color: #e2e8f0;
-    --hover-bg: #f1f5f9;
-    --card-bg: #ffffff;
+    /* Light Theme Defaults (Modern Slate) */
+    --bg-primary: #F8FAFC;
+    --bg-secondary: #FFFFFF;
+    --text-primary: #1E293B;
+    --text-secondary: #64748B;
+    --border-color: #E2E8F0;
+    --hover-bg: #F1F5F9;
+    --card-bg: #FFFFFF;
 
     /* Sidebar Defaults (Light Mode) */
-    --sidebar-bg: #ffffff;
-    --sidebar-text: #64748b;
-    --sidebar-hover-bg: #f1f5f9;
-    --sidebar-active-bg: #e2e8f0;
-    --sidebar-active-text: #0f172a;
-    --sidebar-border: #e2e8f0;
+    --sidebar-bg: #FFFFFF;
+    --sidebar-text: #64748B;
+    --sidebar-hover-bg: #F1F5F9;
+    --sidebar-active-bg: #EFF6FF;
+    --sidebar-active-text: #2563EB;
+    --sidebar-border: #E2E8F0;
 }
 
 body.light {
-    --bg-primary: #f8fafc;
-    --bg-secondary: #ffffff;
-    --text-primary: #0f172a;
-    --text-secondary: #64748b;
-    --border-color: #e2e8f0;
-    --hover-bg: #f1f5f9;
-    --card-bg: #ffffff;
+    --bg-primary: #F8FAFC;
+    --bg-secondary: #FFFFFF;
+    --text-primary: #1E293B;
+    --text-secondary: #64748B;
+    --border-color: #E2E8F0;
+    --hover-bg: #F1F5F9;
+    --card-bg: #FFFFFF;
 
-    /* Light Sidebar for Light Mode */
-    --sidebar-bg: #ffffff;
-    --sidebar-text: #334155;
-    --sidebar-hover-bg: #f1f5f9;
-    --sidebar-active-bg: #e0e7ff;
-    /* Indigo 100 for active item bg */
-    --sidebar-active-text: #4f46e5;
-    /* Indigo 600 for active item text */
-    --sidebar-border: #e2e8f0;
+    /* Modern Blue Sidebar for Light Mode */
+    --sidebar-bg: #FFFFFF;
+    --sidebar-text: #64748B;
+    --sidebar-hover-bg: #F1F5F9;
+    --sidebar-active-bg: #EFF6FF;
+    --sidebar-active-text: #1D4ED8;
+    --sidebar-border: #E2E8F0;
 }
 
 body.dark {
-    --bg-primary: #0f172a;
-    /* Deep Navy */
-    --bg-secondary: #1e1b4b;
-    --text-primary: #f8fafc;
-    --text-secondary: #94a3b8;
-    --border-color: #1f2937;
-    --background: #0f172a;
-    --panel: #1e1b4b;
-    --text: #f8fafc;
+    /* Blue Accents for Dark Mode */
+    --primary: #60A5FA; /* Soft desaturated blue */
+    --primary-hover: #93C5FD; /* Lighter/Brighter blue */
+    --secondary: #1E293B; /* Slate surface */
+    --success: #34D399; /* Semantic green */
+    --danger: #FB7185; /* Semantic red */
+    --warning: #FBBF24; /* Semantic yellow */
+
+    /* Slate Backgrounds */
+    --bg-primary: #0F172A; /* Deep Slate 900 */
+    --bg-secondary: #1E293B; /* Surface Slate 800 */
+    --background: #0F172A;
+    --panel: #1E293B;
+    --card-bg: #1E293B;
+    
+    /* Text and Border Colors */
+    --text-primary: #F1F5F9; /* Very Light Slate */
+    --text-secondary: #94A3B8; /* Soft Slate */
+    --text: #F1F5F9;
+    --border-color: #334155; /* Blending borders */
     --border: #334155;
-    --hover-bg: #1e293b;
-    --card-bg: #1e1b4b;
+    --hover-bg: #2563EB; 
 
     /* Sidebar Dark Mode */
-    --sidebar-bg: #1e1b4b;
-    /* Restore Deep Indigo */
-    --sidebar-text: #94a3b8;
-    --sidebar-hover-bg: #1e293b;
-    --sidebar-active-bg: #1e293b;
-    --sidebar-active-text: #ffffff;
-    --sidebar-border: #1e293b;
+    --sidebar-bg: #0F172A; 
+    --sidebar-text: #94A3B8;
+    --sidebar-hover-bg: #1E293B;
+    --sidebar-active-bg: #2563EB;
+    --sidebar-active-text: #F1F5F9; 
+    --sidebar-border: #334155; 
+}
+
+/* Unified Dark Mode Text Color (matching AMS logo) */
+body.dark .auth-title,
+body.dark .auth-link,
+body.dark .auth-link a,
+body.dark .remember-me-label,
+body.dark .forgot-password-link,
+body.dark .site-footer,
+body.dark .form-label {
+    color: var(--text-primary) !important;
+    background: none !important;
+    -webkit-text-fill-color: var(--text-primary) !important;
 }
 
 /* ... existing code ... */
@@ -345,11 +365,11 @@ body.dark .role-selection-card {
 .auth-title {
     text-align: center;
     margin-bottom: 2rem;
-    color: var(--text);
+    color: var(--text-primary);
     font-size: 2rem;
     font-weight: 800;
     letter-spacing: -0.025em;
-    background: linear-gradient(to right, var(--primary), #818cf8);
+    background: linear-gradient(to right, var(--text-primary), var(--primary));
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -403,36 +423,35 @@ body.dark .role-selection-card {
 
 .role-option {
     padding: 1.5rem;
-    border: 2px solid transparent;
+    border: 2px solid var(--border-color);
     border-radius: var(--radius);
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     text-align: center;
-    background: #1e293b;
-    /* Dark card by default as in image */
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+    background: var(--panel);
+    box-shadow: var(--shadow);
 }
 
 .role-option h3 {
     margin-bottom: 0.5rem;
-    color: #ffffff;
+    color: var(--text-primary);
     font-weight: 600;
 }
 
 .role-option p {
-    color: #94a3b8;
+    color: var(--text-secondary);
     font-size: 0.875rem;
 }
 
 .role-option:hover {
     border-color: var(--primary);
-    background: #334155;
+    background: var(--hover-bg);
     transform: translateY(-4px) scale(1.02);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-lg);
 }
 
 body.dark .role-option:hover {
-    background: #1e293b;
+    background: var(--hover-bg);
     border-color: var(--primary);
 }
 
@@ -567,23 +586,26 @@ body.dark .role-option:hover {
     overflow: visible;
 }
 
-.header-logo {
-    height: 40px;
-    width: auto;
-    object-fit: contain;
+.logo-text {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.05em;
+    margin-bottom: 1rem;
+    text-align: center;
 }
 
-.logo-circle {
-    width: 32px;
-    height: 32px;
-    background: linear-gradient(135deg, #6366f1, #818cf8);
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 1rem;
+body.light .logo-text,
+body.light .loading-logo-text {
+    filter: brightness(0.85); /* Subtle dimming instead of 50% for "proper" balance */
+}
+
+.loading-logo-text {
+    font-size: 3rem;
+    font-weight: 900;
+    color: var(--text-primary);
+    animation: pulse 2s infinite ease-in-out;
+    margin-bottom: 1rem;
 }
 
 /* Brand Container in Left Header */
@@ -614,7 +636,7 @@ body.dark .role-option:hover {
 
 .organization-name {
     font-weight: 600;
-    color: var(--primary);
+    color: #f59e0b; /* Hashtechy orange color */
     font-size: 0.95rem;
     margin-right: 0.5rem;
     display: block;
@@ -622,7 +644,7 @@ body.dark .role-option:hover {
 }
 
 .dark .organization-name {
-    color: orange;
+    color: #f59e0b;
 }
 
 
@@ -901,7 +923,7 @@ a.quick-action-btn:hover {
     border-radius: 0.5rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     z-index: 1000;
-    min-width: 150px;
+    min-width: 125px;
     overflow: hidden;
     animation: fadeIn 0.2s ease;
 }
@@ -1163,7 +1185,7 @@ body.dark input:-webkit-autofill:active {
 .form-label {
     display: block;
     margin-bottom: 0.5rem;
-    color: var(--text);
+    color: var(--text-primary);
     font-weight: 500;
     font-size: 0.875rem;
 }
@@ -1377,7 +1399,7 @@ body.dark input:-webkit-autofill:active {
 .form-label {
     display: block;
     margin-bottom: 0.5rem;
-    color: var(--text);
+    color: var(--text-primary);
     font-weight: 500;
     font-size: 0.875rem;
 }
@@ -1767,6 +1789,77 @@ body.dark .transform-input {
     /* Don't shrink footer */
 }
 
+/* Dark Mode Modal UI Perfect Overrides */
+body.dark .modal,
+body.dark .modal-content,
+body.dark .modal-new {
+    background: #0F0F11 !important;
+    border: 1px solid #334155 !important;
+    overflow: hidden;
+    padding: 0;
+}
+
+body.dark .modal-header {
+    background: #1C1C1F !important; /* Dark grey header */
+    border-bottom: 1px solid #334155 !important;
+    padding: 1.5rem 2rem !important;
+}
+
+body.dark .modal-header h2,
+body.dark .modal-header .modal-title {
+    color: #E2E8F0 !important;
+}
+
+body.dark .modal-body {
+    background: #0F0F11 !important; /* Almost black body */
+    padding: 1.5rem 2rem !important;
+    color: #E2E8F0;
+}
+
+body.dark .modal-body .form-input,
+body.dark .modal-body .form-select,
+body.dark .form-select-new {
+    background: #1C1C1F !important;
+    border: 1px solid #334155 !important;
+    color: #E2E8F0 !important;
+}
+
+body.dark .modal-footer,
+body.dark .modal-actions {
+    background: #0F0F11 !important;
+    border-top: 1px solid #334155 !important;
+    padding: 1.5rem 2rem !important;
+}
+
+/* Button overrides for dark mode modals */
+body.dark .modal-footer .btn-secondary,
+body.dark .btn-cancel {
+    background: #1C1C1F !important;
+    border: 1px solid #334155 !important;
+    color: #E2E8F0 !important;
+}
+
+body.dark .modal-footer .btn-primary,
+body.dark .btn-save {
+    background: #94A3B8 !important; /* Slate gray */
+    color: #111827 !important; /* Dark text for contrast */
+    border: none !important;
+}
+
+body.dark .close-btn,
+body.dark .close-modal,
+body.dark .close-btn-new {
+    color: #ffffff !important;
+    opacity: 0.8;
+}
+
+body.dark .close-btn:hover,
+body.dark .close-modal:hover,
+body.dark .close-btn-new:hover {
+    color: #ffffff !important;
+    opacity: 1;
+}
+
 .profile-card:hover,
 .password-card:hover {
     box-shadow: var(--shadow-lg);
@@ -1802,7 +1895,7 @@ body.dark .transform-input {
 .password-card .form-label {
     display: block;
     margin-bottom: 0.5rem;
-    color: var(--text);
+    color: var(--text-primary);
     font-weight: 500;
     font-size: 0.875rem;
 }
@@ -1950,7 +2043,7 @@ body.dark .transform-input {
 .password-card .form-label {
     display: block;
     margin-bottom: 0.5rem;
-    color: var(--text);
+    color: var(--text-primary);
     font-weight: 500;
     font-size: 0.875rem;
 }
@@ -2098,7 +2191,7 @@ body.dark .transform-input {
 .password-card .form-label {
     display: block;
     margin-bottom: 0.5rem;
-    color: var(--text);
+    color: var(--text-primary);
     font-weight: 500;
     font-size: 0.875rem;
 }
@@ -2548,13 +2641,55 @@ body.dark .transform-input {
     display: inline-block;
     margin-top: 0.5rem;
     padding: 0.25rem 0.75rem;
-    background: #dcfce7;
-    color: #10b981;
     border-radius: 9999px;
     font-size: 0.75rem;
     font-weight: 700;
     width: fit-content;
 }
+
+.role-badge-admin{
+    background: #dcfce7;
+    color: #10b981;
+}
+.role-badge-supervisor{
+    background: #e0e7ff; /* Indigo tint for Supervisor */
+    color: #4f46e5;
+}
+.role-badge-employee{
+    background: #fefce8; /* Yellow tint for employee */
+    color: #ca8a04;
+}
+.role-badge-maintenance{
+    background: #ffedd5; /* Orange tint for maintenance */
+    color: #ea580c;
+}
+.role-badge-vendor{
+    background: #f3e8ff; /* Purple tint for vendor */
+    color: #9333ea;
+}
+
+/* Dark Mode Role Badges */
+body.dark .role-badge-admin{
+    background: #ffffff;
+    color: #10b981;
+}
+body.dark .role-badge-supervisor{
+    background: #ffffff;
+    color: #4f46e5;
+}
+body.dark .role-badge-employee{
+    background: #ffffff;
+    color: #ca8a04;
+}
+body.dark .role-badge-maintenance{
+    background: #ffffff;
+    color: #ea580c;
+}
+body.dark .role-badge-vendor{
+    background: #ffffff;
+    color: #9333ea;
+}
+
 
 .profile-details {
     display: flex;
@@ -2732,7 +2867,7 @@ body.dark .transform-input {
 
 /* Color Helpers */
 .bg-indigo {
-    background: #6366f1;
+    background: var(--primary);
 }
 
 .bg-green {
@@ -2759,6 +2894,35 @@ body.dark .transform-input {
     background: #3b82f6;
 }
 
+/* Dark Mode Color Helpers */
+body.dark .bg-indigo {
+    background: #7A5AF8; /* Assets box */
+}
+
+body.dark .bg-green {
+    background: #2BC770; /* Orders box */
+}
+
+body.dark .bg-amber {
+    background: #FFA043; /* Maintenance box */
+}
+
+body.dark .bg-rose {
+    background: #F85A7E; /* Team box */
+}
+
+body.dark .bg-purple {
+    background: #C084FC; 
+}
+
+body.dark .bg-cyan {
+    background: #34D399; 
+}
+
+body.dark .bg-blue {
+    background: #56B5F5; /* Assigned Assets box */
+}
+
 .layout-body.dashboard-mode {
     overflow: visible;
 }
@@ -2766,4 +2930,8 @@ body.dark .transform-input {
 .stats-container{
     display: grid;
     gap: 1.5rem;
+}
+
+a:hover{
+    text-decoration: underline;
 }

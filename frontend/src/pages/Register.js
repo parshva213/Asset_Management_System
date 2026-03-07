@@ -5,7 +5,6 @@ import { Link, useNavigate, useLocation } from "react-router-dom"
 import api from "../api"
 import ThemeToggle from "../components/ThemeToggle"
 import Footer from "../components/Footer"
-import logo from "../img/logo.png"
 
 const Register = () => {
   const navigate = useNavigate()
@@ -171,8 +170,8 @@ const Register = () => {
           <ThemeToggle />
       </div>
       <div className="auth-card">
-        {/* AMS Logo */}
-        <img src={logo} alt="AMS Logo" className="auth-logo" />
+        {/* AMS Text Logo */}
+        <div className="logo-text">AMS</div>
 
         <h2 className="auth-title">Register as {role}</h2>
         {location.state?.orgName && (

@@ -1,5 +1,4 @@
 import React from "react"
-import logo from "../img/logo.png"
 import ThemeToggle from "./ThemeToggle"
 
 const Header = ({ user, logout, toggleSidebar }) => {
@@ -12,7 +11,6 @@ const Header = ({ user, logout, toggleSidebar }) => {
           </svg>
         </button>
         <div className="brand-container">
-          <img src={logo} alt="Logo" className="header-logo" />
           <span className="brand-name">IT Asset Management System</span>
         </div>
       </div>

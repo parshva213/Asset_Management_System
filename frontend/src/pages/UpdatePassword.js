@@ -3,7 +3,6 @@ import { useLocation, useNavigate, Link } from "react-router-dom"
 import api from "../api"
 import ThemeToggle from "../components/ThemeToggle"
 import Footer from "../components/Footer"
-import logo from "../img/logo.png"
 
 const UpdatePassword = () => {
     const location = useLocation()
@@ -87,8 +86,8 @@ const UpdatePassword = () => {
                 <ThemeToggle />
             </div>
             <div className="auth-card">
-                 {/* AMS Logo */}
-                 <img src={logo} alt="AMS Logo" className="auth-logo" />
+                 {/* AMS Text Logo */}
+                 <div className="logo-text">AMS</div>
 
                 <h2 className="auth-title">Set New Password</h2>
                 {/* Email display removed per user request */}

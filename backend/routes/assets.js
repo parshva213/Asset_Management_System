@@ -20,14 +20,6 @@ router.get("/current-asset/:id", authenticateToken, async (req,res)=>{
   try {
     const {id} = req.params;
     let query = `
-<<<<<<< HEAD
-      SELECT a.*, c.name as category_name
-      FROM assets a
-      LEFT JOIN asset_assignments aa ON a.id =  aa.asset_id 
-      LEFT JOIN users u ON  aa.assigned_to = u.id
-      LEFT JOIN categories c ON a.category_id = c.id
-      WHERE a.org_id = ? AND aa.unassigned_by IS NULL AND u.id = ?
-=======
       SELECT
         a.*,
         c.name AS category_name,
@@ -52,7 +44,6 @@ router.get("/current-asset/:id", authenticateToken, async (req,res)=>{
       LEFT JOIN users uab ON aa.assigned_by = uab.id
       WHERE a.org_id = ? AND aa.assigned_to = ?
       ORDER BY aa.assigned_at DESC, a.id ASC
->>>>>>> 529cfb45fb3c89c89998467680e5f1168f45741c
     `;
     const result = await pool.query(query, [req.user.org_id, id]);
     res.json(result[0]);
