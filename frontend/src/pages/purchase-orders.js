@@ -227,7 +227,7 @@ export default function PurchaseOrders() {
                 <th>Warranty Expiry</th>
                 <th>Warranty Period</th>
                 <th>Status</th>
-                <th>Actions</th>
+                {user.role !== "Supervisor" && <th>Actions</th>}
               </tr>
             </thead>
             <tbody>
@@ -261,7 +261,7 @@ export default function PurchaseOrders() {
                       {order.status}
                     </span>
                   </td>
-                  <td>
+                  {user?.role !== "Supervisor" && <td>
                     <div className="flex gap-2">
                       {/* Vendor can submit quote */}
                       {user?.role === "Vendor" && order.status === "Requested" && (
@@ -285,7 +285,7 @@ export default function PurchaseOrders() {
                         </button>
                       )}
                     </div>
-                  </td>
+                  </td>}
                 </tr>
               ))}
             </tbody>

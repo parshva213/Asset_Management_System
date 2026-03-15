@@ -26,11 +26,16 @@ router.get("/", verifyToken, async (req, res) => {
   try {
     let query = `
       SELECT ar.*, a.name as asset_name, a.serial_number as asset_serial,
-             u1.name as requester_name, u2.name as assigned_to_name
+             u1.name as requester_name, u2.name as assigned_to_name,
+             l.name as location_name, r.name as room_name, s.name as supervisor_name,
+             u1.loc_id as location_id, u1.room_id as room_id
       FROM asset_requests ar
       LEFT JOIN assets a ON ar.asset_id = a.id
       LEFT JOIN users u1 ON ar.requested_by = u1.id
       LEFT JOIN users u2 ON ar.assigned_to = u2.id
+      LEFT JOIN locations l ON u1.loc_id = l.id
+      LEFT JOIN rooms r ON u1.room_id = r.id
+      LEFT JOIN users s ON u1.unpk = s.ownpk AND s.role = 'Supervisor'
       WHERE 1=1
     `
     const params = []
@@ -142,6 +147,10 @@ router.put("/:id/status", verifyToken, async (req, res) => {
     const { id } = req.params
     const { status, response } = req.body
 
+    if (status === "Completed") {
+      return res.status(400).json({ message: "Completing requests is no longer directly supported" })
+    }
+
     // Validate field lengths
     const validationErrors = validateRequestFields({ response });
     if (validationErrors.length > 0) {
@@ -179,28 +188,99 @@ router.put("/:id/status", verifyToken, async (req, res) => {
     ])
 
     // When request is accepted (status = "In Progress"), create a maintenance record
-    if (status === "In Progress" && request.asset_id) {
+    if (status === "In Progress" && (request.asset_id || request.request_type === "New Asset")) {
       let maintenanceType = "Repair"
+      let maintenanceStatus = "Pending" // Forced to always be Pending
+      let finalAssetId = request.asset_id
       
-      // Map request_type to maintenance_type
+      // Query for the requester's location to use as a fallback and to find the target asset location
+      const [requesterRows] = await db.execute("SELECT loc_id FROM users WHERE id = ?", [request.requested_by]);
+      const requesterLocationId = requesterRows[0]?.loc_id;
+
+      let assetLocationId = null;
+
+      // Determine maintenanceType, status, and target Asset ID based on request_type
       if (request.request_type === "Repair") {
         maintenanceType = "Repair"
+        maintenanceStatus = "Pending" 
+        
+        const [assetRows] = await db.execute("SELECT location_id FROM assets WHERE id = ?", [finalAssetId]);
+        assetLocationId = assetRows[0]?.location_id;
+        
       } else if (request.request_type === "Replacement") {
         maintenanceType = "Upgrade"
+        maintenanceStatus = "Pending" 
+        
+        const [assetRows] = await db.execute("SELECT location_id FROM assets WHERE id = ?", [finalAssetId]);
+        assetLocationId = assetRows[0]?.location_id;
+        
       } else if (request.request_type === "New Asset") {
         maintenanceType = "Configuration"
+        maintenanceStatus = "Pending" // Using exact casing expected in DB
+        
+        // For New Asset, we need to find an available asset matching the requested model
+        // The model name is stored in the description as "Model: [Model Name]"
+        if (request.description) {
+          const modelMatch = request.description.match(/Model:\s*(.+?)(?:\n|$)/);
+          if (modelMatch && modelMatch[1]) {
+            const modelName = modelMatch[1].trim();
+            
+            // Try to find an available asset
+            // We prioritize the requester's location, but if they have no loc_id, we just check within org
+            let query = `
+              SELECT a.id, a.location_id 
+              FROM assets a
+              LEFT JOIN asset_assignments aa 
+                ON aa.asset_id = a.id 
+                AND aa.unassigned_at IS NULL 
+                AND aa.unassigned_by IS NULL
+              WHERE a.org_id = ? AND a.name = ? AND a.status = 'Available' AND aa.id IS NULL
+            `;
+            const params = [req.user.org_id, modelName];
+            
+            if (requesterLocationId) {
+              query += ` AND a.location_id = ?`;
+              params.push(requesterLocationId);
+            }
+            
+            query += ` LIMIT 1`;
+            
+            const [availableAssets] = await db.execute(query, params);
+            
+            if (availableAssets.length > 0) {
+              finalAssetId = availableAssets[0].id;
+              assetLocationId = availableAssets[0].location_id;
+            }
+          }
+        }
       }
 
-      await db.execute(
-        "INSERT INTO maintenance_records (asset_id, maintenance_by, maintenance_type, description, status) VALUES (?, ?, ?, ?, ?)",
-        [
-          request.asset_id,
-          req.user.id,
-          maintenanceType,
-          request.description || request.reason || "",
-          "In Progress"
-        ]
-      )
+      // If we couldn't resolve an finalAssetId (even for New Asset), skip maintenance record creation
+      if (finalAssetId) {
+        let maintenanceByUserId = null;
+
+        // Find a random user with 'Maintenance' role from the same location
+        if (assetLocationId) {
+          const [maintenanceUserRows] = await db.execute(
+            "SELECT id FROM users WHERE role = 'Maintenance' AND loc_id = ? AND org_id = ? ORDER BY RAND() LIMIT 1",
+            [assetLocationId, req.user.org_id]
+          );
+          if (maintenanceUserRows.length > 0) {
+            maintenanceByUserId = maintenanceUserRows[0].id;
+          }
+        }
+
+        await db.execute(
+          "INSERT INTO maintenance_records (asset_id, maintenance_by, maintenance_type, description, status) VALUES (?, ?, ?, ?, ?)",
+          [
+            finalAssetId,
+            maintenanceByUserId,
+            maintenanceType,
+            request.description || request.reason || "",
+            maintenanceStatus
+          ]
+        )
+      }
     }
 
     // Activity logging removed

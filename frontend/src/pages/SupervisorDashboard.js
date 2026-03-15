@@ -192,6 +192,12 @@ const SupervisorDashboard = () => {
 
                 {/* Stats Grid */}
                 <div className="stats-container">
+                    {!user?.loc_id && (
+                        <div className="alert alert-warning mb-4">
+                            You are not yet registered to a Location. Some stats may be limited. 
+                            <button onClick={() => setShowRoomModal(true)} className="btn btn-link">Register Now</button>
+                        </div>
+                    )}
                 <div className="stats-grid-3">
                     {/* Assets Card */}
                     <div className="stat-widget">
@@ -202,15 +208,15 @@ const SupervisorDashboard = () => {
                         <div className="split-container">
                             <div className="split-item left">
                                 <span className="stat-label">Total</span>
-                                <h3 className="stat-value">{user?.loc_id ? stats.totalAssets : 0}</h3>
+                                <h3 className="stat-value">{stats.totalAssets}</h3>
                             </div>
                             <div className="split-item right">
                                 <span className="stat-label">Available</span>
-                                <h3 className="stat-value">{user?.loc_id ? stats.availableAssets : 0}</h3>
+                                <h3 className="stat-value">{stats.availableAssets}</h3>
                             </div>
                         </div>
                         <div className="stat-footer">
-                            {user?.loc_id ? <Link to="/assets">View full details →</Link> : ""}
+                            <Link to="/assets">View full details →</Link>
                         </div>
                     </div>
 
@@ -223,15 +229,15 @@ const SupervisorDashboard = () => {
                         <div className="split-container">
                             <div className="split-item left">
                                 <span className="stat-label">My Asset</span>
-                                <h3 className="stat-value">{user?.loc_id ? stats.myAssets : 0}</h3>
+                                <h3 className="stat-value">{stats.myAssets}</h3>
                             </div>
                             <div className="split-item right">
                                 <span className="stat-label">Team Asset</span>
-                                <h3 className="stat-value">{user?.loc_id ? stats.teamAssets : 0}</h3>
+                                <h3 className="stat-value">{stats.teamAssets}</h3>
                             </div>
                         </div>
                         <div className="stat-footer">
-                            {user?.loc_id ? <Link to="/assets">View full details →</Link> : ""}
+                            <Link to="/assets">View full details →</Link>
                         </div>
                     </div>
 
@@ -244,110 +250,42 @@ const SupervisorDashboard = () => {
                         <div className="split-container">
                             <div className="split-item left">
                                 <span className="stat-label">Active</span>
-                                <h3 className="stat-value">{user?.loc_id ? stats.activeTeam : 0}</h3>
+                                <h3 className="stat-value">{stats.activeTeam}</h3>
                             </div>
                             <div className="split-item right">
                                 <span className="stat-label">On Leave</span>
-                                <h3 className="stat-value">{user?.loc_id ? stats.onLeaveTeam : 0}</h3>
+                                <h3 className="stat-value">{stats.onLeaveTeam}</h3>
                             </div>
                         </div>
                         <div className="stat-footer">
-                            {user?.loc_id ? (
-                                <Link to="/team-user">View Team →</Link>
-                            ) : ""}
+                            <Link to="/team-user">View Team →</Link>
                         </div>
                     </div>
 
-                    {/* Orders Card
-                    <div className="stat-widget">
-                        <div className="widget-header">
-                            <div className="stat-icon bg-green">🛒</div>
-                            <span className="widget-title">Orders</span>
-                        </div>
-                        <div className="split-container" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }}>
-                            <div className="split-item left">
-                                <span className="stat-label">Remaining</span>
-                                <h3 className="stat-value" style={{ fontSize: '1.2rem' }}>{user?.loc_id ? stats.remainingOrders : 0}</h3>
-                            </div>
-                            <div className="split-item center" style={{ borderLeft: '1px solid #eee', borderRight: '1px solid #eee', textAlign: 'center' }}>
-                                <span className="stat-label">Rejected</span>
-                                <h3 className="stat-value" style={{ fontSize: '1.2rem' }}>{user?.loc_id ? stats.rejectedOrders : 0}</h3>
-                            </div>
-                            <div className="split-item right">
-                                <span className="stat-label">Delivered</span>
-                                <h3 className="stat-value" style={{ fontSize: '1.2rem' }}>{user?.loc_id ? stats.deliveredOrders : 0}</h3>
-                            </div>
-                        </div>
-                        <div className="stat-footer">
-                            {user?.loc_id ? <Link to="/purchase-orders">View full details →</Link> : ""}
-                        </div>
-                    </div>
-
-                    Maintenance Requests Card
-                    <div className="stat-widget">
-                        <div className="widget-header">
-                            <div className="stat-icon bg-amber">📝</div>
-                            <span className="widget-title">Maintenance Requests</span>
-                        </div>
-                        <div className="split-container">
-                            <div className="split-item left">
-                                <span className="stat-label">Pending</span>
-                                <h3 className="stat-value">{user?.loc_id ? stats.pendingMaintenance : 0}</h3>
-                            </div>
-                            <div className="split-item right">
-                                <span className="stat-label">Completed</span>
-                                <h3 className="stat-value">{user?.loc_id ? stats.completedMaintenance : 0}</h3>
-                            </div>
-                        </div>
-                        <div className="stat-footer">
-                            {user?.loc_id ? <Link to="/requests">View full details →</Link> : ""}
-                        </div>
-                    </div>
-
-                    Location Asset Request Card
-                    <div className="stat-widget">
-                        <div className="widget-header">
-                            <div className="stat-icon bg-violet">📋</div>
-                            <span className="widget-title">Location Asset Request</span>
-                        </div>
-                        <div className="split-container">
-                            <div className="split-item left">
-                                <span className="stat-label">Requested</span>
-                                <h3 className="stat-value">{user?.loc_id ? stats.requestedAssetRequests : 0}</h3>
-                            </div>
-                            <div className="split-item right">
-                                <span className="stat-label">Rejected</span>
-                                <h3 className="stat-value">{user?.loc_id ? stats.rejectedAssetRequests : 0}</h3>
-                            </div>
-                        </div>
-                        <div className="stat-footer">
-                            {user?.loc_id ? <Link to="/requests">View full details →</Link> : ""}
-                        </div>
-                    </div> */}
                 </div>
-                <div className="stats-grid-2">
+                <div className="stats-grid-3">
                     {/* Orders Card */}
                     <div className="stat-widget">
                         <div className="widget-header">
                             <div className="stat-icon bg-green">🛒</div>
                             <span className="widget-title">Orders</span>
                         </div>
-                        <div className="split-container" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }}>
+                        <div className="split-container">
                             <div className="split-item left">
-                                <span className="stat-label">Remaining</span>
-                                <h3 className="stat-value" style={{ fontSize: '1.2rem' }}>{user?.loc_id ? stats.remainingOrders : 0}</h3>
+                                <span className="stat-label">Pending</span>
+                                <h3 className="stat-value">{stats.remainingOrders}</h3>
                             </div>
-                            <div className="split-item center" style={{ textAlign: 'center' }}>
+                            <div className="split-item center">
                                 <span className="stat-label">Rejected</span>
-                                <h3 className="stat-value" style={{ fontSize: '1.2rem' }}>{user?.loc_id ? stats.rejectedOrders : 0}</h3>
+                                <h3 className="stat-value">{stats.rejectedOrders}</h3>
                             </div>
                             <div className="split-item right">
                                 <span className="stat-label">Delivered</span>
-                                <h3 className="stat-value" style={{ fontSize: '1.2rem' }}>{user?.loc_id ? stats.deliveredOrders : 0}</h3>
+                                <h3 className="stat-value">{stats.deliveredOrders}</h3>
                             </div>
                         </div>
                         <div className="stat-footer">
-                            {user?.loc_id ? <Link to="/purchase-orders">View full details →</Link> : ""}
+                            <Link to="/purchase-orders">View Orders →</Link>
                         </div>
                     </div>
 
@@ -355,23 +293,45 @@ const SupervisorDashboard = () => {
                     <div className="stat-widget">
                         <div className="widget-header">
                             <div className="stat-icon bg-amber">📝</div>
-                            <span className="widget-title">Requests</span>
+                            <span className="widget-title">Maintenance</span>
                         </div>
                         <div className="split-container">
                             <div className="split-item left">
                                 <span className="stat-label">Pending</span>
-                                <h3 className="stat-value">{user?.loc_id ? stats.pendingRequests : 0}</h3>
+                                <h3 className="stat-value">{stats.pendingRequests}</h3>
                             </div>
                             <div className="split-item right">
                                 <span className="stat-label">Completed</span>
-                                <h3 className="stat-value">{user?.loc_id ? stats.completedRequests : 0}</h3>
+                                <h3 className="stat-value">{stats.completedRequests}</h3>
                             </div>
                         </div>
                         <div className="stat-footer">
-                            {user?.loc_id ? <Link to="/requests">View full details →</Link> : ""}
+                            <Link to="/requests">View Requests →</Link>
+                        </div>
+                    </div>
+
+                    {/* Asset Request Card */}
+                    <div className="stat-widget">
+                        <div className="widget-header">
+                            <div className="stat-icon bg-violet">📋</div>
+                            <span className="widget-title">Asset Requests</span>
+                        </div>
+                        <div className="split-container">
+                            <div className="split-item left">
+                                <span className="stat-label">Requested</span>
+                                <h3 className="stat-value">{stats.pendingRequests}</h3>
+                            </div>
+                            <div className="split-item right">
+                                <span className="stat-label">Completed</span>
+                                <h3 className="stat-value">{stats.completedRequests}</h3>
+                            </div>
+                        </div>
+                        <div className="stat-footer">
+                            <Link to="/requests">View Requests →</Link>
                         </div>
                     </div>
                 </div>
+
             </div>
 
             </div>

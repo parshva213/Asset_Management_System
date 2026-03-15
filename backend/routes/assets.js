@@ -87,8 +87,10 @@ router.get("/", authenticateToken, async (req, res) => {
     let query = "";
     let params = [org_id];
 
+    const normalizedRole = userRole?.toLowerCase() || "";
+
     // 1. Individual Asset View: Super Admin (Maintenance) or Specific Request
-    if ((userRole === "Super Admin" && !location_id) || (detailed)) {
+    if ((normalizedRole === "super admin" && !location_id) || (detailed)) {
       query = `SELECT a.id, a.serial_number AS sn, a.name AS aname, a.status, a.warranty_expiry, a.purchase_cost, a.asset_type,
                c.name AS cat_name, l.name AS loc_name, r.name AS room_name, u.name AS assign_to,
                u.ownpk AS assignee_ownpk, u.unpk AS assignee_unpk
@@ -103,7 +105,7 @@ router.get("/", authenticateToken, async (req, res) => {
         LEFT JOIN users u ON aa.assigned_to = u.id
         WHERE a.org_id = ?`;
 
-      if (userRole === "Super Admin" && !location_id) {
+      if (normalizedRole === "super admin" && !location_id) {
         query += " AND a.status NOT IN ('Available', 'Assigned')";
       }
       if (room_id) {
@@ -136,8 +138,8 @@ router.get("/", authenticateToken, async (req, res) => {
       params = [location_id, org_id];
 
       // Enforce room filtering for Supervisor or when room_id is requested
-      if (userRole === "Supervisor" || room_id) {
-        const targetRoomId = userRole === "Supervisor" ? (userRoomId || room_id) : room_id;
+      if (normalizedRole === "supervisor" || room_id) {
+        const targetRoomId = normalizedRole === "supervisor" ? (userRoomId || room_id) : room_id;
         if (targetRoomId) {
           query += " AND a.room_id = ?";
           params.push(targetRoomId);
@@ -165,11 +167,14 @@ router.get("/", authenticateToken, async (req, res) => {
         ) asum ON a.name = asum.name AND a.location_id = asum.location_id AND a.org_id = asum.org_id`;
 
       let whereClauses = ["a.org_id = ?"];
-      if (userRole === "Employee") { whereClauses.push("aa.assigned_to = ?"); params.push(userId); }
-      if (userRole === "Supervisor") { whereClauses.push("a.room_id = ?"); params.push(userRoomId); }
+      if (normalizedRole === "employee") { whereClauses.push("aa.assigned_to = ?"); params.push(userId); }
+      if (normalizedRole === "supervisor") { 
+        whereClauses.push("(a.room_id = ? OR aa.assigned_to = ? OR u.unpk = ? OR a.created_by = ?)"); 
+        params.push(userRoomId, userId, req.user.ownpk, userId); 
+      }
       if (status) { whereClauses.push("a.status = ?"); params.push(status); }
       if (location_id) { whereClauses.push("a.location_id = ?"); params.push(location_id); }
-      if (room_id && userRole !== "Supervisor") { whereClauses.push("a.room_id = ?"); params.push(room_id); }
+      if (room_id && normalizedRole !== "supervisor") { whereClauses.push("a.room_id = ?"); params.push(room_id); }
       if (role) { whereClauses.push("u.role = ?"); params.push(role); }
 
       query += " WHERE " + whereClauses.join(" AND ") + " ORDER BY a.id ASC";

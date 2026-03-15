@@ -101,10 +101,9 @@ const Categories = () => {
 
     return (
         <div>
-            <h2 className="page-title">Categories Management</h2>
             <div className="action-bar mb-4">
                 <div className="action-bar-left">
-                    {/* Back button if needed */}
+                    <h2 className="page-title">Categories Management</h2>
                 </div>
                 <div className="action-bar-right">
                     {['Super Admin', 'Supervisor'].includes(user?.role) && (
@@ -119,11 +118,10 @@ const Categories = () => {
                 </div>
             </div>
             
-            <div className="mb-4" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <label className="fw-bold" style={{ margin: 0 }}>Filter by Type:</label>
+            <div className="categories-filter-section">
+                <label className="categories-filter-label">Filter by Type:</label>
                 <select 
-                    className="form-select" 
-                    style={{maxWidth: '200px'}}
+                    className="categories-filter-select" 
                     value={filterType} 
                     onChange={(e) => setFilterType(e.target.value)}
                 >
@@ -139,13 +137,13 @@ const Categories = () => {
                 </div>
             ) : (
                 <div className="table-container">
-                    <table className="table">
+                    <table className="categories-table">
                         <thead>
                             <tr>
                                 <th>Name</th>
                                 <th>Description</th>
                                 <th>Type</th>
-                                {user?.role === "Super Admin" && <th>Actions</th>}
+                                <th style={{ textAlign: 'center' }}>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -156,13 +154,11 @@ const Categories = () => {
                                     <td>{category.name}</td>
                                     <td>{category.description || "N/A"}</td>
                                     <td>{category.type || "N/A"}</td>
-                                    {user?.role === "Super Admin" && (
-                                        <td>
-                                            <Button variant="secondary" onClick={() => handleEdit(category)}>
-                                                Edit
-                                            </Button>
-                                        </td>
-                                    )}
+                                    <td style={{ textAlign: 'center' }}>
+                                        <button className="btn-edit-category" onClick={() => handleEdit(category)}>
+                                            Edit
+                                        </button>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>

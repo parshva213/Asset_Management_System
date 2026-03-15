@@ -25,6 +25,7 @@ const TeamUser = () => {
   const [availableAssets, setAvailableAssets] = useState([])
   const [assignQuantities, setAssignQuantities] = useState({})
   const [assetsToUnassign, setAssetsToUnassign] = useState([])
+  const [assetTab, setAssetTab] = useState('current') // 'current', 'available'
   
   // Track previous location to detect actual changes
   const prevLocationIdRef = useRef(null)
@@ -158,6 +159,7 @@ const TeamUser = () => {
       fetchAvailableAssets(user.loc_id)
       setAssignQuantities({})
       setAssetsToUnassign([])
+      setAssetTab('current')
     }
   }
 
@@ -290,7 +292,7 @@ const TeamUser = () => {
                   <h3 className="text-lg font-bold">{u.name}</h3>
                 </div>
                 {user?.role !== "Supervisor" && (
-                  <span className="badge badge-primary">{u.role}</span>
+                  <span className={`role-badge role-badge-${u.role.toLowerCase().replace(/\s+/g, '-')}`}>{u.role}</span>
                 )}
               </div>
               <div className="card-body">
@@ -299,7 +301,7 @@ const TeamUser = () => {
                   <p><strong>Phone:</strong> {u.phone || "N/A"}</p>
                 )}
                 <p><strong>Department:</strong> {u.department || "N/A"}</p>
-                <p><strong>Assigned Assets:</strong> {u.assigned_assets?.length || 0}</p>
+                <p><strong>Assigned Assets:</strong> {u.assigned_count || 0}</p>
               </div>
               <div className="card-footer">
                 {user?.role !== "Supervisor" && (
@@ -326,15 +328,12 @@ const TeamUser = () => {
       {activeModal && selectedUser && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <div className="modal-header flex-col items-start gap-4">
-              <div className="flex justify-between items-center w-full">
-                <h2 className="text-xl font-bold">
-                  {activeModal === 'location' && `Change Location - ${selectedUser.name}`}
-                  {activeModal === 'assets' && `Manage Assets - ${selectedUser.name}`}
-                </h2>
-                <button className="close-modal" onClick={handleCloseModal}>&times;</button>
-              </div>
-              
+            <div className="modal-header flex justify-between items-center w-full">
+              <h2 className="text-xl font-bold">
+                {activeModal === 'location' && `Change Location - ${selectedUser.name}`}
+                {activeModal === 'assets' && `Manage Assets - ${selectedUser.name}`}
+              </h2>
+              <button className="close-modal" onClick={handleCloseModal}>&times;</button>
             </div>
             
             <div className="modal-body">
@@ -379,97 +378,119 @@ const TeamUser = () => {
               {activeModal === 'assets' && (
                 <div className="assets-modal-content">
                   {/* Assigned Assets Section */}
-                  <div className="mb-6">
-                    <h4 className="mb-3 text-secondary border-b pb-2 flex justify-between items-center">
-                      <span>Currently Assigned</span>
-                      <span className="text-xs font-normal">({currentAsset?.length || 0})</span>
-                    </h4>
-                    {currentAsset?.length === 0 ? (
-                      <p className="text-sm text-secondary italic px-2 py-3 bg-light/30 rounded">No assets currently assigned.</p>
-                    ) : (
-                      <div className="assigned-checkbox-list space-y-1">
-                        {currentAsset?.map(asset => (
-                          <label key={asset.id} className="flex items-center gap-2 p-2 rounded hover:bg-light cursor-pointer border border-transparent hover:border-border transition-all">
-                            <input 
-                              type="checkbox" 
-                              checked={!assetsToUnassign.includes(asset.id)}
-                              onChange={() => toggleUnassignAsset(asset.id)}
-                              className="w-4 h-4 rounded text-primary focus:ring-primary"
-                            />
-                            <div className="flex-1">
-                              <span className="text-sm font-medium">{asset.name}</span>
-                              <br />
-                              <span className="text-xs text-secondary">Serial Number: {asset.serial_number}</span>
-                            </div>
-                          </label>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                  {assetTab === 'current' && (
+                    <div className="mb-6">
+                      <h4 className="mb-3 text-secondary border-b pb-2 flex justify-between items-center">
+                        <span>Currently Assigned</span>
+                        <span className="text-xs font-normal">({currentAsset?.length || 0})</span>
+                      </h4>
+                      {currentAsset?.length === 0 ? (
+                        <p className="text-sm text-secondary italic px-2 py-3 bg-light/30 rounded">No assets currently assigned.</p>
+                      ) : (
+                        <div className="assigned-checkbox-list space-y-1">
+                          {currentAsset?.map(asset => (
+                            <label key={asset.id} className="flex items-center gap-2 p-2 rounded hover:bg-light cursor-pointer border border-transparent hover:border-border transition-all">
+                              <input 
+                                type="checkbox" 
+                                checked={!assetsToUnassign.includes(asset.id)}
+                                onChange={() => toggleUnassignAsset(asset.id)}
+                                className="w-4 h-4 rounded text-primary focus:ring-primary"
+                              />
+                              <div className="flex-1">
+                                <span className="text-sm font-medium">{asset.name}</span>
+                                <br />
+                                <span className="text-xs text-secondary">Serial Number: {asset.serial_number}</span>
+                              </div>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Available Assets Section */}
-                  <div className="available-assets-section border-t pt-6">
-                    <h4 className="mb-4 text-secondary border-b pb-2 flex justify-between items-center">
-                      <span>Available for Assignment</span>
-                      <span className="text-xs font-normal">at {selectedUser.location_name || 'Organization'}</span>
-                    </h4>
+                  {assetTab === 'available' && (
+                    <div className="available-assets-section">
+                      <h4 className="mb-4 text-secondary border-b pb-2 flex justify-between items-center">
+                        <span>Available for Assignment</span>
+                        <span className="text-xs font-normal">at {selectedUser.location_name || 'Organization'}</span>
+                      </h4>
 
 
-                    {availableAssets.length === 0 ? (
-                      <p className="text-sm text-secondary italic px-2 py-4 text-center bg-light/30 rounded">No available assets for this location.</p>
-                    ) : (
-                      <div className="available-checkbox-list space-y-1">
-                        {availableAssets.map(asset => (
-                          <div key={asset.name} className="flex items-center gap-3 p-3 rounded border border-border/60">
-                            <div className="flex-1">
-                              <div className="text-sm font-semibold">{asset.name}</div>
-                              <div className="text-[11px] text-secondary flex gap-2">
-                                <span>(Qty: {asset.total_assets || 0} | Available: {asset.available_assets || 0} | Assigned: {asset.assigned_assets || 0})</span>
+                      {availableAssets.length === 0 ? (
+                        <p className="text-sm text-secondary italic px-2 py-4 text-center bg-light/30 rounded">No available assets for this location.</p>
+                      ) : (
+                        <div className="available-checkbox-list space-y-1">
+                          {availableAssets.map(asset => (
+                            <div key={asset.name} className="flex items-center gap-3 p-3 rounded border border-border/60">
+                              <div className="flex-1">
+                                <div className="text-sm font-semibold">{asset.name}</div>
+                                <div className="text-[11px] text-secondary flex gap-2">
+                                  <span>(Qty: {asset.total_assets || 0} | Available: {asset.available_assets || 0} | Assigned: {asset.assigned_assets || 0})</span>
+                                </div>
                               </div>
+                              <input
+                                type="number"
+                                min="0"
+                                max={asset.available_assets || 0}
+                                value={assignQuantities[asset.name] || 0}
+                                onChange={(e) => handleAssignQuantityChange(asset.name, e.target.value, asset.available_assets || 0)}
+                                className="form-input"
+                                style={{ width: "92px" }}
+                              />
                             </div>
-                            <input
-                              type="number"
-                              min="0"
-                              max={asset.available_assets || 0}
-                              value={assignQuantities[asset.name] || 0}
-                              onChange={(e) => handleAssignQuantityChange(asset.name, e.target.value, asset.available_assets || 0)}
-                              className="form-input"
-                              style={{ width: "92px" }}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
 
             <div className="modal-footer">
-              <button 
-                className="btn btn-secondary flex-1" 
-                onClick={handleCloseModal}
-                disabled={modalLoading}
-              >
-                Cancel
-              </button>
-              {activeModal === 'location' && (
-                <button 
-                  className="btn btn-primary flex-1" 
-                  onClick={handleSaveLocation}
-                  disabled={modalLoading || (String(newLocationId) === String(selectedUser.loc_id) && String(newRoomId) === String(selectedUser.room_id))}
-                >
-                  {modalLoading ? "Saving..." : "Save Location"}
-                </button>
-              )}
               {activeModal === 'assets' && (
-                <button 
-                  className="btn btn-primary flex-1" 
-                  onClick={handleSaveAssets}
-                  disabled={modalLoading || (totalToAssign === 0 && assetsToUnassign.length === 0)}
-                >
-                  {modalLoading ? "Saving..." : `Save Changes (${totalToAssign + assetsToUnassign.length})`}
-                </button>
+                <>
+                  <button 
+                    className="btn btn-secondary flex-1" 
+                    onClick={handleCloseModal}
+                    disabled={modalLoading}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    className="btn btn-primary flex-1 asset-toggle-btn"
+                    onClick={() => setAssetTab(assetTab === 'current' ? 'available' : 'current')}
+                  >
+                    {assetTab === 'current' ? 'Available' : 'Current'}
+                  </button>
+                  <button 
+                    className="btn btn-primary flex-1 btn-save-assets" 
+                    onClick={handleSaveAssets}
+                    disabled={modalLoading || (totalToAssign === 0 && assetsToUnassign.length === 0)}
+                  >
+                    {modalLoading ? "Saving..." : `Save (${totalToAssign + assetsToUnassign.length})`}
+                  </button>
+                </>
+              )}
+
+              {activeModal === 'location' && (
+                <>
+                  <button 
+                    className="btn btn-secondary flex-1" 
+                    onClick={handleCloseModal}
+                    disabled={modalLoading}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    className="btn btn-primary flex-1" 
+                    onClick={handleSaveLocation}
+                    disabled={modalLoading || (String(newLocationId) === String(selectedUser.loc_id) && String(newRoomId) === String(selectedUser.room_id))}
+                  >
+                    {modalLoading ? "Saving..." : "Save Location"}
+                  </button>
+                </>
               )}
             </div>
           </div>

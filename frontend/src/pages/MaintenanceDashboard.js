@@ -84,7 +84,7 @@ const MaintenanceDashboard = () => {
                             </div>
                             <span className="stat-label">Total Workorders</span>
                             <h3 className="stat-value">
-                                {(stats.pending + stats.completed) >= 10 ? `${Math.floor((stats.pending + stats.completed) / 10) * 10}+` : (stats.pending + stats.completed)}
+                                {stats.pending + stats.completed}
                             </h3>
                         </div>
                         <div className="stat-footer">
@@ -101,7 +101,7 @@ const MaintenanceDashboard = () => {
                             </div>
                             <span className="stat-label">High Priority</span>
                             <h3 className="stat-value">
-                                {pendingTasks.filter(t => t.priority === 'High').length >= 10 ? `${Math.floor(pendingTasks.filter(t => t.priority === 'High').length / 10) * 10}+` : pendingTasks.filter(t => t.priority === 'High').length}
+                                {pendingTasks.filter(t => t.priority === 'High').length}
                             </h3>
                         </div>
                         <div className="stat-footer">
@@ -115,7 +115,7 @@ const MaintenanceDashboard = () => {
                                 ⚙️
                             </div>
                             <span className="stat-label">Config Management</span>
-                            <h3 className="stat-value">{stats.configCount >= 10 ? `${Math.floor(stats.configCount / 10) * 10}+` : stats.configCount}</h3>
+                            <h3 className="stat-value">{stats.configCount}</h3>
                         </div>
                         <div className="stat-footer">
                             <Link to="/new-configuration">
@@ -129,7 +129,7 @@ const MaintenanceDashboard = () => {
                                 🔧
                             </div>
                             <span className="stat-label">Update Tasks</span>
-                            <h3 className="stat-value">{stats.pending >= 10 ? `${Math.floor(stats.pending / 10) * 10}+` : stats.pending}</h3>
+                            <h3 className="stat-value">{stats.pending}</h3>
                         </div>
                         <div className="stat-footer">
                             <Link to="/update-maintenance">
@@ -139,7 +139,6 @@ const MaintenanceDashboard = () => {
                     </div>
                 </div>
             </div>
-
         </div>
     )
 }

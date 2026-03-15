@@ -23,11 +23,12 @@ router.get("/", verifyToken, async (req, res) => {
 
     let query = `
       SELECT u.id, u.name, u.email, u.role, u.department, u.phone, u.status, u.loc_id, u.room_id, l.name as location_name, r.name as room_name, u.created_at,
-             GROUP_CONCAT(CONCAT(a.id, ':', a.name, ':', a.serial_number, ':', COALESCE(asum.quantity, 0), ':', COALESCE(asum.assigned_total, 0), ':', COALESCE(asum.available_total, 0)) SEPARATOR '|') AS assigned_assets_raw
+        (select count(*) from asset_assignments where assigned_to = u.id and unassigned_by is null) as assigned_count,
+             GROUP_CONCAT(DISTINCT CONCAT(a.id, ':', a.name, ':', a.serial_number, ':', COALESCE(asum.quantity, 0), ':', COALESCE(asum.assigned_total, 0), ':', COALESCE(asum.available_total, 0)) SEPARATOR '|') AS assigned_assets_raw
       FROM users u
       LEFT JOIN locations l ON u.loc_id = l.id
       LEFT JOIN rooms r ON u.room_id = r.id
-      LEFT JOIN asset_assignments aa ON u.id = aa.assigned_to AND aa.unassigned_at IS NULL
+      LEFT JOIN asset_assignments aa ON u.id = aa.assigned_to AND aa.unassigned_by is null
       LEFT JOIN assets a ON aa.asset_id = a.id
       LEFT JOIN (
         SELECT name, location_id, COUNT(*) as quantity, SUM(status = 'Assigned') as assigned_total, SUM(status = 'Available') as available_total
@@ -101,6 +102,7 @@ router.get("/", verifyToken, async (req, res) => {
       return { ...u, assigned_assets, assigned_assets_raw: undefined };
     });
 
+    console.log(`Fetched ${usersWithAssets.length} users. Sample assigned_assets_raw:`, usersWithAssets[0]?.assigned_assets_raw);
     res.json(usersWithAssets)
   } catch (error) {
     console.error("Error fetching users:", error)
@@ -116,7 +118,7 @@ router.get("/:role", verifyToken, async (req, res) => {
     let { role } = req.params;
     let query = `
       SELECT u.id, u.name, u.email, u.role, u.department, u.phone, u.status, u.loc_id, u.room_id, l.name as location_name, r.name as room_name, u.created_at,
-             GROUP_CONCAT(CONCAT(a.id, ':', a.name, ':', a.serial_number, ':', COALESCE(asum.quantity, 0), ':', COALESCE(asum.assigned_total, 0), ':', COALESCE(asum.available_total, 0)) SEPARATOR '|') AS assigned_assets_raw
+             GROUP_CONCAT(DISTINCT CONCAT(a.id, ':', a.name, ':', a.serial_number, ':', COALESCE(asum.quantity, 0), ':', COALESCE(asum.assigned_total, 0), ':', COALESCE(asum.available_total, 0)) SEPARATOR '|') AS assigned_assets_raw
       FROM users u
       LEFT JOIN locations l ON u.loc_id = l.id
       LEFT JOIN rooms r ON u.room_id = r.id
@@ -383,7 +385,7 @@ router.put("/:id", verifyToken, async (req, res) => {
     if (room_id !== undefined) {
       updates.push("room_id = ?");
       params.push(room_id);
-      await conn.query("Update assets set room_id = ? where id in (select asset_id from asset_assignment where  ")
+      await conn.query("UPDATE assets SET room_id = ? WHERE id IN (SELECT asset_id FROM asset_assignments WHERE assigned_to = ? AND unassigned_at IS NULL)", [room_id, req.params.id]);
     }
 
     if (req.body.role !== undefined) {

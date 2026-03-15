@@ -339,10 +339,10 @@ app.get("/api/supervisor/dashboard", authenticate(["Supervisor"]), async (req, r
         const locId = req.user.loc_id;
         const roomId = req.user.room_id;
 
-        const [totalAssets] = await pool.query("SELECT COUNT(*) as count FROM assets WHERE org_id = ? AND room_id = ?", [orgId, roomId]);
-        const [availableAssets] = await pool.query("SELECT COUNT(*) as count FROM assets WHERE org_id = ? AND room_id = ? AND status = 'Available'", [orgId, roomId]);
+        const [totalAssets] = await pool.query("SELECT COUNT(*) as count FROM assets WHERE org_id = ? AND (room_id = ? OR ? IS NULL)", [orgId, roomId, roomId]);
+        const [availableAssets] = await pool.query("SELECT COUNT(*) as count FROM assets WHERE org_id = ? AND (room_id = ? OR ? IS NULL) AND status = 'Available'", [orgId, roomId, roomId]);
         const [myAssets] = await pool.query("SELECT COUNT(*) as count FROM asset_assignments WHERE assigned_to = ? AND unassigned_at IS NULL", [req.user.id]);
-        const [teamAssets] = await pool.query("SELECT COUNT(*) as count FROM asset_assignments aa JOIN users u ON aa.assigned_to = u.id WHERE u.room_id = ? AND u.role = 'Employee' AND aa.unassigned_at IS NULL", [roomId]);
+        const [teamAssets] = await pool.query("SELECT COUNT(*) as count FROM asset_assignments aa JOIN users u ON aa.assigned_to = u.id WHERE (u.room_id = ? OR ? IS NULL) AND u.role = 'Employee' AND aa.unassigned_at IS NULL", [roomId, roomId]);
         
         const [[supervisorInfo]] = await pool.query("SELECT ownpk FROM users WHERE id = ?", [req.user.id]);
         const ownpk = supervisorInfo?.ownpk;
@@ -350,8 +350,8 @@ app.get("/api/supervisor/dashboard", authenticate(["Supervisor"]), async (req, r
         const [activeTeam] = await pool.query("SELECT COUNT(*) as count FROM users WHERE unpk = ? AND role = 'Employee' AND status = 'Active'", [ownpk]);
         const [onLeaveTeam] = await pool.query("SELECT COUNT(*) as count FROM users WHERE unpk = ? AND role = 'Employee' AND status = 'On Leave'", [ownpk]);
         
-        const [pendingRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE status not in ('Completed', 'Rejected') AND requested_by IN (SELECT id FROM users WHERE org_id = ? AND room_id = ?)", [orgId, roomId]);
-        const [completedRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE status = 'Completed' AND requested_by IN (SELECT id FROM users WHERE org_id = ? AND room_id = ?)", [orgId, roomId]);
+        const [pendingRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE status not in ('Completed', 'Rejected') AND requested_by IN (SELECT id FROM users WHERE org_id = ? AND (room_id = ? OR ? IS NULL))", [orgId, roomId, roomId]);
+        const [completedRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE status = 'Completed' AND requested_by IN (SELECT id FROM users WHERE org_id = ? AND (room_id = ? OR ? IS NULL))", [orgId, roomId, roomId]);
         // Split Orders logic
         const [remainingOrders] = await pool.query("SELECT COUNT(*) as count FROM purchase_orders WHERE supervisor_id = ? AND status IN ('Requested', 'Quoted', 'Approved')", [req.user.id]);
         const [rejectedOrders] = await pool.query("SELECT COUNT(*) as count FROM purchase_orders WHERE supervisor_id = ? AND status = 'Rejected'", [req.user.id]);

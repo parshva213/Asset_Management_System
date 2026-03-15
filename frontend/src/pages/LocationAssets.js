@@ -44,6 +44,7 @@ const LocationAssets = () => {
     <div className="content">
       <div className="flex-between mb-4">
         <div>
+          <h2>{title}</h2>
           <button 
             onClick={() => navigate(`/locations`)} 
             className="btn btn-secondary mb-2"
@@ -51,7 +52,6 @@ const LocationAssets = () => {
           >
             ← Back to location
           </button>
-          <h2>{title}</h2>
         </div>
       </div>
 

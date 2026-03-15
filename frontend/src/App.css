@@ -1548,7 +1548,81 @@ body.dark .transform-input {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Category Management Specific Styles */
+.categories-filter-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.categories-filter-label {
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+
+.categories-filter-select {
+    max-width: 240px;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+.categories-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.categories-table thead th {
+    background-color: #475569 !important; /* Muted blue-gray for headers */
+    color: #f8fafc !important;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 1rem 1.5rem;
+    text-align: left;
+}
+
+body.dark .categories-table thead th {
+    background-color: #334155 !important;
+}
+
+.categories-table tbody td {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    vertical-align: middle;
+}
+
+.categories-table tbody tr:hover {
+    background-color: rgba(148, 163, 184, 0.1);
+}
+
+.btn-edit-category {
+    padding: 0.4rem 1.2rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-radius: 0.4rem;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    transition: all 0.2s;
+}
+
+.btn-edit-category:hover {
+    background-color: var(--primary);
+    border-color: var(--primary);
+    color: #ffffff !important;
 }
 
 .tabs {
@@ -1840,9 +1914,17 @@ body.dark .btn-cancel {
 }
 
 body.dark .modal-footer .btn-primary,
-body.dark .btn-save {
-    background: #94A3B8 !important; /* Slate gray */
+body.dark .btn-save,
+body.dark .asset-toggle-btn {
+    background: #94A3B8 !important; /* Slate gray/blue for toggle/primary */
     color: #111827 !important; /* Dark text for contrast */
+    border: none !important;
+    font-weight: 600 !important;
+}
+
+body.dark .btn-save-assets {
+    background: #334155 !important; /* Darker grey for save */
+    color: #94A3B8 !important;
     border: none !important;
 }
 
@@ -1851,6 +1933,8 @@ body.dark .close-modal,
 body.dark .close-btn-new {
     color: #ffffff !important;
     opacity: 0.8;
+    position: relative;
+    right: -10px;
 }
 
 body.dark .close-btn:hover,
@@ -2639,7 +2723,6 @@ body.dark .close-btn-new:hover {
 
 .role-badge {
     display: inline-block;
-    margin-top: 0.5rem;
     padding: 0.25rem 0.75rem;
     border-radius: 9999px;
     font-size: 0.75rem;
@@ -2647,7 +2730,8 @@ body.dark .close-btn-new:hover {
     width: fit-content;
 }
 
-.role-badge-admin{
+.role-badge-admin,
+.role-badge-super-admin {
     background: #dcfce7;
     color: #10b981;
 }
@@ -2669,7 +2753,8 @@ body.dark .close-btn-new:hover {
 }
 
 /* Dark Mode Role Badges */
-body.dark .role-badge-admin{
+body.dark .role-badge-admin,
+body.dark .role-badge-super-admin {
     background: #ffffff;
     color: #10b981;
 }

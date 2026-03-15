@@ -27,10 +27,10 @@ router.get("/dashboard", verifyToken, async (req, res) => {
         // High Priority based on Asset Requests
         const [pendingRequests] = await pool.query("SELECT * FROM asset_requests WHERE status IN ('Pending', 'In Progress')");
 
-        // Maintenance Record Stats
-        const [maintenancePending] = await pool.query("SELECT COUNT(*) as count FROM maintenance_records WHERE status = 'Pending'");
-        const [maintenanceCompleted] = await pool.query("SELECT COUNT(*) as count FROM maintenance_records WHERE status = 'Completed'");
-        const [configCount] = await pool.query("SELECT COUNT(*) as count FROM maintenance_records WHERE maintenance_type = 'Configuration'");
+        // Maintenance Record Stats for specific user
+        const [maintenancePending] = await pool.query("SELECT COUNT(*) as count FROM maintenance_records WHERE status = 'Pending' AND maintenance_by = ?", [req.user.id]);
+        const [maintenanceCompleted] = await pool.query("SELECT COUNT(*) as count FROM maintenance_records WHERE status = 'Completed' AND maintenance_by = ?", [req.user.id]);
+        const [configCount] = await pool.query("SELECT COUNT(*) as count FROM maintenance_records WHERE maintenance_type = 'Configuration' AND maintenance_by = ?", [req.user.id]);
 
         // Total Assets
         const [assetsCount] = await pool.query("SELECT COUNT(*) as count FROM assets");
@@ -55,9 +55,9 @@ router.get("/tasks", verifyToken, async (req, res) => {
       SELECT m.*, a.name as asset_name
       FROM maintenance_records m
       JOIN assets a ON m.asset_id = a.id
-      WHERE m.status != 'Completed'
+      WHERE m.status != 'Completed' AND m.maintenance_by = ?
       ORDER BY m.id ASC
-    `);
+    `, [req.user.id]);
         res.json(rows);
     } catch (err) {
         console.error(err);

@@ -57,6 +57,7 @@ const LocationRoomAssets = () => {
     <div className="content">
       <div className="flex-between mb-4">
         <div>
+          <h2>{title}</h2>
           <button 
             onClick={() => navigate(`/rooms?location_id=${lid}`)} 
             className="btn btn-secondary mb-2"
@@ -64,7 +65,6 @@ const LocationRoomAssets = () => {
           >
             ← Back to Room
           </button>
-          <h2>{title}</h2>
         </div>
       </div>
 

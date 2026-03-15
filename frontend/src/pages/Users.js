@@ -232,7 +232,7 @@ const Users = () => {
                         <div>
                           <h3 className="text-lg font-bold">{user.name}</h3>
                         </div>
-                        <span className="badge badge-primary">{user.role}</span>
+                        <span className={`role-badge role-badge-${user.role.toLowerCase().replace(/\s+/g, '-')}`}>{user.role}</span>
                       </div>
                       <div className="card-body">
                         <p><strong>Email:</strong> {user.email}</p>
@@ -283,7 +283,7 @@ const Users = () => {
                 <div>
                   <h3 className="text-lg font-bold">{user.name}</h3>
                 </div>
-                <span className="badge badge-primary">{user.role}</span>
+                <span className={`role-badge role-badge-${user.role.toLowerCase().replace(/\s+/g, '-')}`}>{user.role}</span>
               </div>
               <div className="card-body">
                 <p><strong>Email:</strong> {user.email}</p>
