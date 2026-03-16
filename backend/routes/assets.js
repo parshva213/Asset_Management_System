@@ -192,14 +192,21 @@ router.get("/", authenticateToken, async (req, res) => {
 // GET unique asset names (one per group) for "New Asset" requests
 router.get("/unique-names", authenticateToken, async (req, res) => {
   try {
-    const query = `
+    const { location_id } = req.query;
+    let query = `
             SELECT MIN(id) as id, name, category_id, asset_type 
             FROM assets 
             WHERE org_id = ? 
-            GROUP BY name, category_id, asset_type 
-            ORDER BY name ASC
         `;
-    const [result] = await pool.query(query, [req.user.org_id]);
+    const params = [req.user.org_id];
+
+    if (location_id) {
+      query += " AND location_id = ?";
+      params.push(location_id);
+    }
+
+    query += " GROUP BY name, category_id, asset_type ORDER BY name ASC";
+    const [result] = await pool.query(query, params);
     res.json(result);
   } catch (err) {
     console.error(err);

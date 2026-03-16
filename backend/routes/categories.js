@@ -6,7 +6,22 @@ const router = express.Router();
 
 router.get("/", verifyToken, async (req, res) => {
   try {
-    const [rows] = await db.query("SELECT * FROM categories where org_id = ? ORDER BY id ASC", [req.user.org_id])
+    const { location_id } = req.query;
+    let query = "SELECT * FROM categories WHERE org_id = ?";
+    const params = [req.user.org_id];
+
+    if (location_id) {
+      query = `
+        SELECT DISTINCT c.* 
+        FROM categories c
+        JOIN assets a ON c.id = a.category_id
+        WHERE c.org_id = ? AND a.location_id = ?
+      `;
+      params.push(location_id);
+    }
+
+    query += " ORDER BY id ASC";
+    const [rows] = await db.query(query, params)
     res.json(rows)
   } catch (error) {
     console.error("Error fetching categories:", error)

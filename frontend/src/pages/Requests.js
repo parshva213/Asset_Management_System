@@ -48,7 +48,9 @@ const Requests = () => {
   const [newAssetSelection, setNewAssetSelection] = useState({
     category_id: "",
     asset_type: "",
-    model_name: ""
+    model_name: "",
+    otherBrand: "",
+    otherModel: ""
   })
   const [formData, setFormData] = useState({
     asset_id: "",
@@ -87,7 +89,8 @@ const Requests = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await api.get("/categories")
+      const locId = role !== "super admin" ? user?.loc_id : null;
+      const response = await api.get(`/categories${locId ? `?location_id=${locId}` : ""}`)
       setCategories(response.data)
     } catch (error) {
       console.error("Error fetching categories:", error)
@@ -96,7 +99,8 @@ const Requests = () => {
 
   const fetchUniqueAssets = async () => {
     try {
-      const response = await api.get("/assets/unique-names")
+      const locId = role !== "super admin" ? user?.loc_id : null;
+      const response = await api.get(`/assets/unique-names${locId ? `?location_id=${locId}` : ""}`)
       setUniqueAssets(response.data)
     } catch (error) {
       console.error("Error fetching unique assets:", error)
@@ -116,14 +120,22 @@ const Requests = () => {
         if (formData.request_type === "New Asset") {
           // For new assets, we don't have a specific asset_id. 
           // We'll bundle the selection details into the description.
-          const catName = categories.find(c => c.id === Number(newAssetSelection.category_id))?.name || "Unknown Category";
+          const catName = categories.find(c => c.id === Number(newAssetSelection.category_id))?.name || "Cat";
+          
+          const isOther = newAssetSelection.model_name === "Other";
+          let detailedDesc = "";
 
-          const detailedDesc = `[New Asset Request]
+          if (isOther) {
+            // COMPACT FORMAT to fit within VARCHAR(100)
+            detailedDesc = `[Other] ${catName} | ${newAssetSelection.otherBrand} | ${newAssetSelection.otherModel} | ${formData.description || ""}`.substring(0, 100);
+          } else {
+            detailedDesc = `[New Asset Request]
 Category: ${catName}
 Type: ${newAssetSelection.asset_type}
 Model: ${newAssetSelection.model_name}
 
 Description: ${formData.description}`;
+          }
 
           payload.description = detailedDesc;
           payload.asset_id = null; // Explicitly null
@@ -176,7 +188,9 @@ Description: ${formData.description}`;
     setNewAssetSelection({
       category_id: "",
       asset_type: "",
-      model_name: ""
+      model_name: "",
+      otherBrand: "",
+      otherModel: ""
     })
   }
 
@@ -349,12 +363,39 @@ Description: ${formData.description}`;
       return request.asset_name
     }
 
-    // For new asset requests, extract model name from description
+    // For new asset requests, extract structured details from description
     if (request.request_type === "New Asset" && request.description) {
+      // Compact "Other" format: [Other] Cat | Brand | Product | Desc
+      if (request.description.startsWith("[Other]")) {
+        const parts = request.description.split(" | ")
+        if (parts.length >= 3) {
+          return `${parts[1].trim()} - ${parts[2].trim()}`
+        }
+      }
+
+      // New "Other" format (multi-line): Asset : Other + Model-Company + Model-Product
+      if (request.description.includes("Asset : Other")) {
+        const companyMatch = request.description.match(/Model-Company:\s*(.+?)(?:\n|$)/)
+        const productMatch = request.description.match(/Model-Product:\s*(.+?)(?:\n|$)/)
+        if (companyMatch && productMatch) {
+          return `${companyMatch[1].trim()} - ${productMatch[1].trim()}`
+        }
+      }
+
+      // Fallback/Legacy "Other" format: Model: Other (xxx)
       const modelMatch = request.description.match(/Model:\s*(.+?)(?:\n|$)/)
       if (modelMatch && modelMatch[1]) {
-        return modelMatch[1].trim()
+        const model = modelMatch[1].trim()
+        if (model.startsWith("Other (")) {
+          const brandMatch = request.description.match(/Brand:\s*(.+?)(?:\n|$)/)
+          const productName = model.match(/Other \((.+?)\)/)?.[1]
+          if (brandMatch && productName) {
+            return `${brandMatch[1].trim()} - ${productName}`
+          }
+        }
+        return model
       }
+
       return "New Asset Request"
     }
 
@@ -461,7 +502,11 @@ Description: ${formData.description}`;
                       {request.priority}
                     </span>
                   </td>
-                  <td>{request.request_type}</td>
+                  <td>
+                    {request.request_type === "New Asset" && (request.description?.includes("Asset : Other") || request.description?.startsWith("[Other]"))
+                      ? "New Asset - Other" 
+                      : request.request_type}
+                  </td>
                   <td>{getAssetDisplay(request)}</td>
                   {role !== "employee" && <td>{request.location_name || "N/A"}</td>}
                   {role !== "employee" && <td>{request.requester_name || "N/A"}</td>}
@@ -603,21 +648,52 @@ Description: ${formData.description}`;
                             </div>
 
                             {newAssetSelection.category_id && (
-                              <div className="form-group">
-                                <label className="form-label">Model</label>
-                                <select
-                                  className="form-select"
-                                  value={newAssetSelection.model_name}
-                                  onChange={(e) => setNewAssetSelection({ ...newAssetSelection, model_name: e.target.value })}
-                                >
-                                  <option value="">Select Model</option>
-                                  {uniqueAssets
-                                    .filter(a => a.category_id === Number(newAssetSelection.category_id) && a.asset_type === newAssetSelection.asset_type)
-                                    .map(a => (
-                                      <option key={a.id} value={a.name}>{a.name}</option>
-                                    ))}
-                                </select>
-                              </div>
+                              <>
+                                <div className="form-group">
+                                  <label className="form-label">Model</label>
+                                  <select
+                                    className="form-select"
+                                    value={newAssetSelection.model_name}
+                                    onChange={(e) => setNewAssetSelection({ ...newAssetSelection, model_name: e.target.value })}
+                                    required
+                                  >
+                                    <option value="">Select Model</option>
+                                    {uniqueAssets
+                                      .filter(a => a.category_id === Number(newAssetSelection.category_id) && a.asset_type === newAssetSelection.asset_type)
+                                      .map(a => (
+                                        <option key={a.id} value={a.name}>{a.name}</option>
+                                      ))}
+                                    <option value="Other">Other</option>
+                                  </select>
+                                </div>
+
+                                {newAssetSelection.model_name === "Other" && (
+                                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                    <div className="form-group">
+                                      <label className="form-label">Company/Brand Name</label>
+                                      <input
+                                        type="text"
+                                        className="form-input"
+                                        value={newAssetSelection.otherBrand}
+                                        onChange={(e) => setNewAssetSelection({ ...newAssetSelection, otherBrand: e.target.value })}
+                                        placeholder="e.g. Dell, HP, Apple"
+                                        required
+                                      />
+                                    </div>
+                                    <div className="form-group">
+                                      <label className="form-label">Model/Product Name</label>
+                                      <input
+                                        type="text"
+                                        className="form-input"
+                                        value={newAssetSelection.otherModel}
+                                        onChange={(e) => setNewAssetSelection({ ...newAssetSelection, otherModel: e.target.value })}
+                                        placeholder="e.g. Latitude 5420"
+                                        required
+                                      />
+                                    </div>
+                                  </div>
+                                )}
+                              </>
                             )}
                           </>
                         )}
