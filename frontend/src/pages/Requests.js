@@ -55,7 +55,7 @@ const Requests = () => {
   const [formData, setFormData] = useState({
     asset_id: "",
     request_type: "",
-    reason: "",
+    reason: "", 
     description: "",
     priority: "",
   })
