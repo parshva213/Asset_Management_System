@@ -55,7 +55,7 @@ const Requests = () => {
   const [formData, setFormData] = useState({
     asset_id: "",
     request_type: "",
-    reason: "", 
+    reason: "",
     description: "",
     priority: "",
   })
@@ -121,7 +121,7 @@ const Requests = () => {
           // For new assets, we don't have a specific asset_id. 
           // We'll bundle the selection details into the description.
           const catName = categories.find(c => c.id === Number(newAssetSelection.category_id))?.name || "Cat";
-          
+
           const isOther = newAssetSelection.model_name === "Other";
           let detailedDesc = "";
 
@@ -429,10 +429,10 @@ Description: ${formData.description}`;
               : role === "supervisor"
                 ? "Request Management"
                 : "All Requests"}
-      </h2>
+          </h2>
         </div>
         <div className="action-bar-right">
-          <button 
+          <button
             className={`btn ${Object.values(filters).some(arr => arr.length > 0) ? 'btn-primary' : 'btn-secondary'} mr-2`}
             onClick={() => setShowFilterModal(true)}
           >
@@ -504,7 +504,7 @@ Description: ${formData.description}`;
                   </td>
                   <td>
                     {request.request_type === "New Asset" && (request.description?.includes("Asset : Other") || request.description?.startsWith("[Other]"))
-                      ? "New Asset - Other" 
+                      ? "New Asset - Other"
                       : request.request_type}
                   </td>
                   <td>{getAssetDisplay(request)}</td>
@@ -622,10 +622,10 @@ Description: ${formData.description}`;
                               {assets
                                 .filter(asset => asset.asset_type === newAssetSelection.asset_type)
                                 .map((asset) => (
-                                <option key={asset.id} value={asset.id}>
-                                  {asset.name} - {asset.serial_number}
-                                </option>
-                              ))}
+                                  <option key={asset.id} value={asset.id}>
+                                    {asset.name} - {asset.serial_number}
+                                  </option>
+                                ))}
                             </select>
                             <small className="text-secondary" style={{ fontSize: '0.75rem', marginTop: '0.25rem', display: 'block' }}>
                               Showing only {newAssetSelection.asset_type.toLowerCase()} assets assigned to {role === "supervisor" ? "you or your team" : "you"}.
@@ -734,25 +734,25 @@ Description: ${formData.description}`;
                             </div>
 
                             <div className="modal-footer" style={{ marginTop: '1rem', padding: 0, borderTop: 'none' }}>
-                                <div className="flex gap-2">
-                                  {(formData.reason && formData.priority) && (
-                                    <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
-                                      {editingRequest ? "Update Request" : "Submit Request"}
-                                    </button>
-                                  )}
-                                  <button
-                                    type="button"
-                                    className="btn btn-secondary"
-                                    style={{ flex: 1 }}
-                                    onClick={() => {
-                                      setShowModal(false)
-                                      setEditingRequest(null)
-                                      resetForm()
-                                    }}
-                                  >
-                                    Cancel
+                              <div className="flex gap-2">
+                                {(formData.reason && formData.priority) && (
+                                  <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
+                                    {editingRequest ? "Update Request" : "Submit Request"}
                                   </button>
-                                </div>
+                                )}
+                                <button
+                                  type="button"
+                                  className="btn btn-secondary"
+                                  style={{ flex: 1 }}
+                                  onClick={() => {
+                                    setShowModal(false)
+                                    setEditingRequest(null)
+                                    resetForm()
+                                  }}
+                                >
+                                  Cancel
+                                </button>
+                              </div>
                             </div>
                           </>
                         )}
@@ -796,7 +796,7 @@ Description: ${formData.description}`;
                   <div>
                     <FilterSH category="priority" selected={filters.priority} label="Priority" onClear={clearCat} listLength={4} />
                     <div style={col}>
-                      {["Low","Medium","High","Critical"].map(p => (
+                      {["Low", "Medium", "High", "Critical"].map(p => (
                         <label key={p} style={lbl}>
                           <input type="checkbox" checked={filters.priority.includes(p)} onChange={() => toggleFilter('priority', p)} style={chk} />
                           <span style={txt(filters.priority.includes(p))}>{p}</span>
@@ -809,7 +809,7 @@ Description: ${formData.description}`;
                   <div>
                     <FilterSH category="type" selected={filters.type} label="Request Type" onClear={clearCat} listLength={3} />
                     <div style={col}>
-                      {["Repair","Replacement","New Asset"].map(t => (
+                      {["Repair", "Replacement", "New Asset"].map(t => (
                         <label key={t} style={lbl}>
                           <input type="checkbox" checked={filters.type.includes(t)} onChange={() => toggleFilter('type', t)} style={chk} />
                           <span style={txt(filters.type.includes(t))}>{t}</span>
@@ -822,7 +822,7 @@ Description: ${formData.description}`;
                   <div>
                     <FilterSH category="status" selected={filters.status} label="Status" onClear={clearCat} listLength={4} />
                     <div style={col}>
-                      {["Pending","In Progress","Rejected","Completed"].map(s => (
+                      {["Pending", "In Progress", "Rejected", "Completed"].map(s => (
                         <label key={s} style={lbl}>
                           <input type="checkbox" checked={filters.status.includes(s)} onChange={() => toggleFilter('status', s)} style={chk} />
                           <span style={txt(filters.status.includes(s))}>{s}</span>

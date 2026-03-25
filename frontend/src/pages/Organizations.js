@@ -300,9 +300,10 @@ const Organizations = () => {
                                 <th>Name</th>
                                 <th>Description</th>
                                 <th>Org PK</th>
-                                <th>Member</th>
+                                <th>Admin Allowed</th>
                                 <th>V OPK</th>
-                                <th>Created At</th>
+                                <th>Created On</th>
+                                <th>User Count</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -315,6 +316,7 @@ const Organizations = () => {
                                     <td>{organization.member}</td>
                                     <td>{organization.v_opk}</td>
                                     <td>{organization.created_at ? formatDate(organization.created_at) : "-"}</td>
+                                    <td>{organization.usercount}</td>
                                     <td>
                                         <div className="flex gap-2">
                                             <Button variant="secondary" onClick={() => handleEdit(organization)}>

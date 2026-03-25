@@ -147,10 +147,6 @@ router.put("/:id/status", verifyToken, async (req, res) => {
     const { id } = req.params
     const { status, response } = req.body
 
-    if (status === "Completed") {
-      return res.status(400).json({ message: "Completing requests is no longer directly supported" })
-    }
-
     // Validate field lengths
     const validationErrors = validateRequestFields({ response });
     if (validationErrors.length > 0) {

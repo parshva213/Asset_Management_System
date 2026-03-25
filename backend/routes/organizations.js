@@ -11,7 +11,7 @@ router.get("/", verifyToken, async (req, res) => {
   try {
     const userRole = (req.user.role || "").trim().toLowerCase();
     if (userRole === "software developer") {
-      const [rows] = await pool.query("SELECT * FROM organizations where status <> 'Deleted' ORDER BY id ASC");
+      const [rows] = await pool.query("SELECT o.*, count(u.id) as usercount FROM organizations o LEFT JOIN users u ON u.org_id = o.id where o.status <> 'Deleted' Group by o.id  ORDER BY o.id ASC");
       return res.json(rows);
     }
 

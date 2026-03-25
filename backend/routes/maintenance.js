@@ -112,6 +112,8 @@ router.put("/:id", verifyToken, async (req, res) => {
     const { status, description } = req.body;
     const { id } = req.params;
 
+    console.log(`[MAINT PUT] id=${id} status=${status} role=${req.user?.role}`);
+
     try {
         const [record] = await pool.query("SELECT * FROM maintenance_records WHERE id = ?", [id]);
         if (record.length === 0) return res.status(404).json({ message: "Record not found" });
@@ -124,19 +126,33 @@ router.put("/:id", verifyToken, async (req, res) => {
             return res.status(403).json({ message: "Access denied" });
         }
 
-        await pool.query(
-            "UPDATE maintenance_records SET status = ?, description = ? WHERE id = ?",
-            [status, description, id]
-        );
+        if (description !== undefined && description !== null) {
+            await pool.query(
+                "UPDATE maintenance_records SET status = ?, description = ? WHERE id = ?",
+                [status, description, id]
+            );
+        } else {
+            await pool.query(
+                "UPDATE maintenance_records SET status = ? WHERE id = ?",
+                [status, id]
+            );
+        }
 
-        // If completed, update asset status to Available
+        // If completed, update asset status to Available AND close the linked asset_request
         if (status === "Completed") {
             await pool.query("UPDATE assets SET status = 'Available' WHERE id = ?", [record[0].asset_id]);
+
+            // Update the matching asset_request that is still "In Progress" for this asset
+            const [arResult] = await pool.query(
+                "UPDATE asset_requests SET status = 'Completed' WHERE asset_id = ? AND status = 'In Progress'",
+                [record[0].asset_id]
+            );
+            console.log(`[MAINT PUT] asset_requests updated: ${arResult.affectedRows} row(s)`);
         }
 
         res.json({ message: "Maintenance record updated" });
     } catch (err) {
-        console.error(err);
+        console.error("[MAINT PUT ERROR]", err);
         res.status(500).json({ message: "Server error" });
     }
 });
