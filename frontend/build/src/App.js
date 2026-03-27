@@ -1,0 +1,129 @@
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
+import { AuthProvider } from "./contexts/AuthContext"
+import { ToastProvider } from "./contexts/ToastContext"
+import { ThemeProvider } from "./contexts/ThemeContext"
+import ToastContainer from "./components/ToastContainer"
+
+import ProtectedRoute from "./components/ProtectedRoute"
+import Layout from "./components/Layout"
+
+// ---------- COMMON PAGES ----------
+import Login from "./pages/Login"
+import Register from "./pages/Register"
+import RoleSelection from "./pages/RoleSelection"
+import Profile from "./pages/Profile"
+import Dashboard from "./pages/Dashboard"
+import ResetPassword from "./pages/ResetPassword"
+import UpdatePassword from "./pages/UpdatePassword"
+
+// ---------- SUPER ADMIN PAGES ----------
+import Categories from "./pages/Categories"
+import Locations from "./pages/Locations"
+import LocationRooms from "./pages/LocationRooms"
+import Assets from "./pages/Assets"
+import AdminDashboard from "./pages/AdminDashboard"
+import Users from "./pages/Users"
+import MainUsers from "./pages/MainUsers"
+import TeamUser from "./pages/TeamUser"
+import LocationRoomAssets from "./pages/LocationRoomAssets"
+import LocationAssets from "./pages/LocationAssets"
+
+// ---------- SUPERVISOR PAGES ----------
+import PurchaseOrders from "./pages/purchase-orders"
+import Requests from "./pages/Requests"
+import SupervisorDashboard from "./pages/SupervisorDashboard"
+
+// ---------- EMPLOYEE PAGES ----------
+import EmployeeDashboard from "./pages/EmployeeDashboard"
+
+// ---------- VENDOR PAGES ----------
+import SupplyAssets from "./pages/SupplyAssets"
+import VendorDashboard from "./pages/VendorDashboard"
+import VendorAssets from "./pages/VendorAssets"
+import VendorRequests from "./pages/VendorRequests"
+
+// ---------- MAINTENANCE STAFF PAGES ----------
+import NewConfiguration from "./pages/NewConfiguration"
+import UpdateMaintenance from "./pages/UpdateMaintenance"
+import MaintenanceDashboard from "./pages/MaintenanceDashboard"
+import MaintenanceTasks from "./pages/MaintenanceTasks"
+
+// ---------- SOFTWARE DEVELOPER PAGES ----------
+import Organizations from "./pages/Organizations"
+
+import "./App.css"
+
+function App() {
+  return (
+    <ThemeProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <Routes>
+              {/* Default Redirect */}
+              <Route path="/" element={<Navigate to="/login" replace />} />
+              
+              {/* Public Routes */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/role-selection" element={<RoleSelection />} />
+
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/update-password" element={<UpdatePassword />} />
+
+              {/* Protected Routes */}
+              <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+                {/* Common */}
+                <Route path="dashboard" element={<ProtectedRoute roles={['Super Admin', 'Supervisor', 'Employee', 'Vendor', 'Maintenance', 'Software Developer']}><Dashboard /></ProtectedRoute>} />
+                <Route path="profile" element={<ProtectedRoute roles={['Super Admin', 'Supervisor', 'Employee', 'Vendor', 'Maintenance', 'Software Developer']}><Profile /></ProtectedRoute>} />
+                
+                {/* Software Developer, Vendor */}
+                <Route path="organizations" element={<ProtectedRoute roles={['Software Developer' ,'Vendor']}><Organizations /></ProtectedRoute>} />
+
+                {/* Super Admin */}
+                <Route path="dashboard/admin" element={<ProtectedRoute roles={['Super Admin']}><AdminDashboard /></ProtectedRoute>} />
+                <Route path="locations" element={<ProtectedRoute roles={['Super Admin']}><Locations /></ProtectedRoute>} />
+                <Route path="rooms" element={<ProtectedRoute roles={['Super Admin']}><LocationRooms /></ProtectedRoute>} />
+                <Route path="lr-assets" element={<ProtectedRoute roles={['Super Admin']}><LocationRoomAssets /></ProtectedRoute>} />
+                <Route path="mainusers" element={<ProtectedRoute roles={['Super Admin']}><MainUsers /></ProtectedRoute>} />
+                <Route path="l-assets" element={<ProtectedRoute roles={['Super Admin']}><LocationAssets /></ProtectedRoute>} />
+                <Route path="categories" element={<ProtectedRoute roles={['Super Admin']}><Categories /></ProtectedRoute>} />
+                <Route path="users" element={<ProtectedRoute roles={['Super Admin']}><Users /></ProtectedRoute>} />
+               
+                {/* Supervisor */}
+                <Route path="dashboard/supervisor" element={<ProtectedRoute roles={['Supervisor']}><SupervisorDashboard /></ProtectedRoute>} />
+                
+                {/* Super Admin, Supervisor */}
+                <Route path="team-user" element={<ProtectedRoute roles={['Super Admin', 'Supervisor']}><TeamUser /></ProtectedRoute>} />
+                <Route path="purchase-orders" element={<ProtectedRoute roles={['Super Admin', 'Supervisor']}><PurchaseOrders /></ProtectedRoute>} />
+
+                {/* Employee */}
+                <Route path="dashboard/employee" element={<ProtectedRoute roles={['Employee']}><EmployeeDashboard /></ProtectedRoute>} />
+
+                {/* Super Admin, Supervisor, Employee */}
+                <Route path="assets" element={<ProtectedRoute roles={['Super Admin', 'Supervisor', 'Employee']}><Assets /></ProtectedRoute>} /> {/*Employee Remaining */}
+                <Route path="requests" element={<ProtectedRoute roles={['Super Admin', 'Supervisor', 'Employee', 'Software Developer']}><Requests /></ProtectedRoute>} />
+
+                {/* Maintenance Staff */}
+                <Route path="dashboard/maintenance" element={<ProtectedRoute roles={['Maintenance']}><MaintenanceDashboard /></ProtectedRoute>} />
+                <Route path="new-configuration" element={<ProtectedRoute roles={['Maintenance']}><NewConfiguration /></ProtectedRoute>} />
+                <Route path="update-maintenance" element={<ProtectedRoute roles={['Maintenance']}><UpdateMaintenance /></ProtectedRoute>} />
+                <Route path="maintenance-tasks" element={<ProtectedRoute roles={['Maintenance']}><MaintenanceTasks /></ProtectedRoute>} />
+
+                {/* Vendor */}
+                <Route path="dashboard/vendor" element={<ProtectedRoute roles={['Vendor']}><VendorDashboard /></ProtectedRoute>} />
+                <Route path="supply-assets" element={<ProtectedRoute roles={['Vendor']}><SupplyAssets /></ProtectedRoute>} />
+                <Route path="vendor-assets" element={<ProtectedRoute roles={['Vendor']}><VendorAssets /></ProtectedRoute>} />
+                <Route path="vendor-requests" element={<ProtectedRoute roles={['Vendor']}><VendorRequests /></ProtectedRoute>} />
+
+              </Route>
+            </Routes>
+          </Router>
+          <ToastContainer />
+        </AuthProvider>
+      </ToastProvider>
+    </ThemeProvider>
+  )
+}
+
+export default App

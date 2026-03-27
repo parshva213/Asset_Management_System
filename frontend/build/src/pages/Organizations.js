@@ -1,0 +1,441 @@
+"use client"
+
+import React, { useState, useEffect } from "react"
+import { useToast } from "../contexts/ToastContext"
+import { useAuth } from "../contexts/AuthContext"
+import api from "../api"
+import Button from "../components/Button"
+import { formatDate } from "../utils/dateUtils"
+
+const Organizations = () => {
+    const { user } = useAuth()
+    const { showSuccess, showError, showInfo } = useToast()
+    const [organizations, setOrganizations] = useState([])
+    const [loading, setLoading] = useState(true)
+    const [showModal, setShowModal] = useState(false)
+    const [editingOrganization, setEditingOrganization] = useState(null)
+    const [formData, setFormData] = useState({
+        name: "",
+        description: "",
+        member: "1",
+    })
+    const [submitting, setSubmitting] = useState(false)
+    const [error, setError] = useState(null)
+    const [registeringOrgId, setRegisteringOrgId] = useState(null)
+    const [showVendorRegisterModal, setShowVendorRegisterModal] = useState(false)
+    const [selectedOrganization, setSelectedOrganization] = useState(null)
+    const [vendorOrgKey, setVendorOrgKey] = useState("")
+
+    const isVendor = (user?.role || "").toLowerCase() === "vendor"
+
+    useEffect(() => {
+        fetchOrganizations()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+
+    const fetchOrganizations = async () => {
+        try {
+            const response = await api.get("/organizations")
+            setOrganizations(Array.isArray(response.data) ? response.data : [])
+        } catch (err) {
+            console.error("Error fetching organizations:", err)
+            showError("Failed to load organizations")
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const openVendorRegisterModal = (organization) => {
+        const alreadyRegistered = Number(organization.is_registered) === 1
+        if (alreadyRegistered) {
+            showInfo(`Already registered with ${organization.name}`)
+            return
+        }
+        if (organization.status !== "Active") {
+            showError("Only active organizations can be registered")
+            return
+        }
+
+        setSelectedOrganization(organization)
+        setVendorOrgKey("")
+        setShowVendorRegisterModal(true)
+    }
+
+    const handleVendorRegister = async () => {
+        if (!selectedOrganization) return
+        if (!vendorOrgKey.trim()) {
+            showError("Please enter v_org key")
+            return
+        }
+
+        const organization = selectedOrganization
+        setRegisteringOrgId(organization.id)
+        try {
+            await api.post(`/organizations/${organization.id}/register`, {
+                v_org: vendorOrgKey.trim(),
+            })
+            showSuccess(`Registered with ${organization.name}`)
+            await fetchOrganizations()
+            setShowVendorRegisterModal(false)
+            setSelectedOrganization(null)
+            setVendorOrgKey("")
+        } catch (err) {
+            console.error("Error registering organization:", err)
+            showError(err?.message || "Failed to register")
+        } finally {
+            setRegisteringOrgId(null)
+        }
+    }
+
+    const handleSubmit = async (e) => {
+        e.preventDefault()
+        setError(null)
+
+        if (!formData.name || formData.name.trim().length < 2) {
+            setError("Organization name must be at least 2 characters")
+            return
+        }
+
+        setSubmitting(true)
+        try {
+            if (editingOrganization) {
+                await api.put(`/organizations/${editingOrganization.id}`, formData)
+                showSuccess("Organization updated successfully")
+                setOrganizations(prev => prev.map(org =>
+                    org.id === editingOrganization.id
+                        ? { ...org, ...formData }
+                        : org
+                ))
+            } else {
+                const response = await api.post("/organizations", formData)
+                showSuccess("Organization added successfully")
+                setOrganizations(prev => [...prev, {
+                    id: response.data.id,
+                    ...formData,
+                    created_at: new Date().toISOString()
+                }])
+            }
+            setShowModal(false)
+            setEditingOrganization(null)
+            resetForm()
+        } catch (err) {
+            console.error("Error saving organization:", err)
+            showError(err?.response?.data?.message || "Error saving organization")
+        } finally {
+            setSubmitting(false)
+        }
+    }
+
+    const handleEdit = (organization) => {
+        setEditingOrganization(organization)
+        setFormData({
+            name: organization.name,
+            description: organization.description,
+            member: organization.member,
+        })
+        setShowModal(true)
+    }
+
+    const handleDelete = async (id, name) => {
+        try {
+            await api.put(`/organizations/${id}/${name}`)
+            setOrganizations(prev => prev.filter(org => org.id !== id))
+            showSuccess(`organization ${name} successfully`)
+            fetchOrganizations()
+        } catch (err) {
+            console.error("Error deleting organization:", err)
+            showError(err?.response?.data?.message || "Error deleting organization")
+        }
+    }
+
+    const resetForm = () => setFormData({
+        name: "",
+        description: "",
+        member: "1",
+    })
+
+    const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value })
+
+    if (loading) return <div className="loading">Loading organizations...</div>
+
+    if (isVendor) {
+        return (
+            <div className="page-container">
+                <div className="flex-between mb-4">
+                    <h2>Organizations</h2>
+                </div>
+
+                <p className="text-secondary mb-4">
+                    Register with an organization to see its supply requirements.
+                </p>
+
+                {organizations.length === 0 ? (
+                    <div className="empty-state">
+                        <p>No organizations found</p>
+                    </div>
+                ) : (
+                    <div className="table-container">
+                        <table className="table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Description</th>
+                                    <th>Status</th>
+                                    <th>Registration</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {organizations.filter(org => org.id !== 1).map((organization) => {
+                                    const registered = Number(organization.is_registered) === 1
+                                    return (
+                                        <tr key={organization.id} id={`org-${organization.id}`}>
+                                            <td>{organization.name}</td>
+                                            <td>{organization.description || "N/A"}</td>
+                                            <td>{organization.status || "N/A"}</td>
+                                            <td>{registered ? "Registered" : "Not Registered"}</td>
+                                            <td>
+                                                <Button
+                                                    onClick={() => openVendorRegisterModal(organization)}
+                                                    disabled={registered || registeringOrgId === organization.id || organization.status !== "Active"}
+                                                >
+                                                    {registered
+                                                        ? "Registered"
+                                                        : registeringOrgId === organization.id
+                                                            ? "Registering..."
+                                                            : "Register"}
+                                                </Button>
+                                            </td>
+                                        </tr>
+                                    )
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+
+                {showVendorRegisterModal && selectedOrganization && (
+                    <div className="modal-overlay" role="dialog" aria-modal="true">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h2 className="modal-title">Register Company</h2>
+                                <button
+                                    className="close-modal"
+                                    aria-label="Close"
+                                    onClick={() => {
+                                        setShowVendorRegisterModal(false)
+                                        setSelectedOrganization(null)
+                                        setVendorOrgKey("")
+                                    }}
+                                >
+                                    ×
+                                </button>
+                            </div>
+                            <div className="modal-body">
+                                <p style={{ marginBottom: "1rem" }}>
+                                    Enter <strong>Vendor Org Key</strong> for <strong>{selectedOrganization.name}</strong>.
+                                </p>
+                                <div className="form-group">
+                                    <label className="form-label">Vendor Org Key</label>
+                                    <input
+                                        type="text"
+                                        className="form-input"
+                                        value={vendorOrgKey}
+                                        onChange={(e) => setVendorOrgKey(e.target.value)}
+                                        placeholder="Enter company vendor Org Key"
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex gap-2 mt-4 modal-footer">
+                                <Button
+                                    onClick={handleVendorRegister}
+                                    disabled={registeringOrgId === selectedOrganization.id}
+                                >
+                                    {registeringOrgId === selectedOrganization.id ? "Registering..." : "Register"}
+                                </Button>
+                                <Button
+                                    variant="secondary"
+                                    onClick={() => {
+                                        setShowVendorRegisterModal(false)
+                                        setSelectedOrganization(null)
+                                        setVendorOrgKey("")
+                                    }}
+                                >
+                                    Cancel
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+        )
+    }
+
+    return (
+        <div className="page-container">
+            <div className="flex-between mb-4">
+                <h2>Organizations Management</h2>
+                <Button onClick={() => {
+                    setEditingOrganization(null)
+                    setFormData({
+                        name: "",
+                        description: "",
+                        member: "1",
+                    })
+                    setShowModal(true)
+                }}>
+                    Add Organization
+                </Button>
+            </div>
+
+            {organizations.length === 0 || organizations.filter(org => org.id !== 1).length === 0 ? (
+                <div className="empty-state">
+                    <p>No organizations found</p>
+                </div>
+            ) : (
+                <div className="table-container">
+                    <table className="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Org PK</th>
+                                <th>Member</th>
+                                <th>V OPK</th>
+                                <th>Created At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {organizations.filter(org => org.id !== 1).map((organization) => (
+                                <tr key={organization.id} id={`org-${organization.id}`}>
+                                    <td>{organization.name}</td>
+                                    <td>{organization.description || "N/A"}</td>
+                                    <td>{organization.orgpk}</td>
+                                    <td>{organization.member}</td>
+                                    <td>{organization.v_opk}</td>
+                                    <td>{organization.created_at ? formatDate(organization.created_at) : "-"}</td>
+                                    <td>
+                                        <div className="flex gap-2">
+                                            <Button variant="secondary" onClick={() => handleEdit(organization)}>
+                                                Edit
+                                            </Button>
+                                            {organization.status !== "Active" && (
+                                                <Button variant="success" onClick={() => handleDelete(organization.id, "Active")}>
+                                                    Active
+                                                </Button>
+                                            )}
+                                            {organization.status !== "Suspended" && (
+                                                <Button variant="warning" onClick={() => handleDelete(organization.id, "Suspended")}>
+                                                    Suspended
+                                                </Button>
+                                            )}
+                                            {organization.status !== "Closed" && (
+                                                <Button variant="danger" onClick={() => handleDelete(organization.id, "Closed")}>
+                                                    Closed
+                                                </Button>
+                                            )}
+                                            {organization.status !== "Deleted" && (
+                                                <Button variant="danger" onClick={() => handleDelete(organization.id, "Deleted")}>
+                                                    Delete
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
+            {showModal && (
+                <div className="modal-overlay" role="dialog" aria-modal="true">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h2 className="modal-title">{editingOrganization ? "Edit Organization" : "Add New Organization"}</h2>
+                            <button
+                                className="close-modal"
+                                aria-label="Close"
+                                onClick={() => {
+                                    setShowModal(false)
+                                    setEditingOrganization(null)
+                                    resetForm()
+                                    setError(null)
+                                }}
+                            >
+                                ×
+                            </button>
+                        </div>
+
+                        <div className="modal-body">
+                            <form onSubmit={handleSubmit}>
+                                <div className="form-group">
+                                    <label className="form-label">Organization Name *</label>
+                                    <input
+                                        type="text"
+                                        name="name"
+                                        className="form-input"
+                                        value={formData.name}
+                                        onChange={handleChange}
+                                        required
+                                        minLength={2}
+                                        maxLength={150}
+                                        placeholder="Enter organization name"
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Description</label>
+                                    <input
+                                        type="text"
+                                        name="description"
+                                        className="form-input"
+                                        value={formData.description}
+                                        onChange={handleChange}
+                                        placeholder="Enter organization description"
+                                        maxLength={255}
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Member</label>
+                                    <input
+                                        type="number"
+                                        name="member"
+                                        className="form-input"
+                                        value={formData.member}
+                                        onChange={handleChange}
+                                        placeholder="Enter Org Member"
+                                    />
+                                </div>
+
+                                {error && <div className="alert alert-error mb-4">{error}</div>}
+
+                                <div className="flex gap-2 mt-6">
+                                    <Button type="submit" disabled={submitting}>
+                                        {submitting ? (editingOrganization ? "Updating..." : "Adding...") : editingOrganization ? "Update Organization" : "Add Organization"}
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="secondary"
+                                        onClick={() => {
+                                            setShowModal(false)
+                                            setEditingOrganization(null)
+                                            resetForm()
+                                            setError(null)
+                                        }}
+                                    >
+                                        Cancel
+                                    </Button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    )
+}
+
+export default Organizations
