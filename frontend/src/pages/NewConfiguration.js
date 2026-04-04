@@ -121,7 +121,7 @@ const NewConfiguration = () => {
     <div>
       <div className="flex-between mb-4">
         <h2>Asset Configuration</h2>
-        <button
+        {/* <button
           className="btn btn-primary"
           onClick={() => {
             resetForm()
@@ -129,7 +129,7 @@ const NewConfiguration = () => {
           }}
         >
           Add Configuration
-        </button>
+        </button> */}
       </div>
 
       {loading ? (

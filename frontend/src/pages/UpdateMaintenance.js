@@ -102,7 +102,7 @@ const UpdateMaintenance = () => {
     <div>
       <div className="flex-between mb-4">
         <h2>Update Maintenance Records</h2>
-        <button
+        {/* <button
           className="btn btn-primary"
           onClick={() => {
             resetForm()
@@ -110,7 +110,7 @@ const UpdateMaintenance = () => {
           }}
         >
           Add Record
-        </button>
+        </button> */}
       </div>
 
       {loading ? (
@@ -126,7 +126,7 @@ const UpdateMaintenance = () => {
                 <th>Maintained By</th>
                 <th>Date</th>
                 <th>Status</th>
-                <th>Actions</th>
+                {/* <th>Actions</th> */}
               </tr>
             </thead>
             <tbody>
@@ -142,11 +142,11 @@ const UpdateMaintenance = () => {
                       {record.status}
                     </span>
                   </td>
-                  <td>
+                  {/* <td>
                     <button onClick={() => handleEdit(record)} className="btn btn-secondary btn-sm">
                       Edit
                     </button>
-                  </td>
+                  </td> */}
                 </tr>
               ))}
             </tbody>
