@@ -211,8 +211,7 @@ const NewConfiguration = () => {
                         className="form-input"
                         name="company_name"
                         value={form.company_name}
-                        onChange={handleChange}
-                        placeholder="e.g. Apple"
+                        disabled
                       />
                     </div>
                   </>)}
