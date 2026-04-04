@@ -80,7 +80,7 @@ const Assets = () => {
           return 0;
         });
       }
-      setAssets(assetList) ? console.log("asset success") : console.log("asset Error");
+      setAssets(assetList);
 
     } catch (err) {
       console.error("Error fetching assets:", err);
@@ -90,7 +90,7 @@ const Assets = () => {
   const fetchCategories = useCallback(async () => {
     try {
       const res = await api.get("/categories");
-      setCategories(res.data) ? console.log("cat success") : console.log("cat Error");
+      setCategories(res.data);
     } catch (err) {
       console.error("Error fetching categories:", err);
     }
@@ -99,7 +99,7 @@ const Assets = () => {
   const fetchLocations = useCallback(async () => {
     try {
       const res = await api.get("/locations");
-      setLocations(res.data) ? console.log("loc success") : console.log("loc Error");
+      setLocations(res.data);
     } catch (err) {
       console.error("Error fetching locations:", err);
     }

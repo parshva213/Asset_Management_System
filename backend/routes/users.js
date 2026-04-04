@@ -56,14 +56,33 @@ router.get("/", verifyToken, async (req, res) => {
         query += " AND u.role = 'Maintenance'";
       }
     } else if (req.user.role === "Supervisor") {
-      // Supervisor can only see employees whose unpk matches supervisor's ownpk
+      // Supervisors can view employees from their team by:
+      // 1) legacy key-linking (employee.unpk === supervisor.ownpk), OR
+      // 2) same location/room (fallback used by seeded/demo data).
+      const supervisorLocId = location_id || req.user.loc_id || null;
+      const supervisorRoomId = room_id || req.user.room_id || null;
+      const visibilityClauses = [];
+
+      query += " AND u.role = 'Employee'";
+
       if (currentUser?.ownpk) {
-        query += " AND u.unpk = ? AND u.role = 'Employee'";
+        visibilityClauses.push("u.unpk = ?");
         params.push(currentUser.ownpk);
+      }
+
+      if (supervisorLocId && supervisorRoomId) {
+        visibilityClauses.push("(u.loc_id = ? AND u.room_id = ?)");
+        params.push(supervisorLocId, supervisorRoomId);
+      } else if (supervisorLocId) {
+        visibilityClauses.push("u.loc_id = ?");
+        params.push(supervisorLocId);
+      }
+
+      if (visibilityClauses.length > 0) {
+        query += ` AND (${visibilityClauses.join(" OR ")})`;
       } else {
-        // If supervisor has no ownpk, show no employees
+        // No way to infer the supervisor scope: return no rows safely.
         query += " AND 1=0";
-        return res.status(403).json({ message: "Access denied or supervisor PK not found" });
       }
     }
 
