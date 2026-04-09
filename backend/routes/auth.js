@@ -225,13 +225,7 @@ router.post("/forgot-password", async (req, res) => {
       return res.status(404).json({ message: "Email not found" });
     }
 
-    // Generate a simple PIN (for simulation)
-    const resetPin = Math.floor(100000 + Math.random() * 900000).toString();
-    console.log(`[RESET PASSWORD] PIN for ${email}: ${resetPin}`);
-
-    // In a real app, send email here.
-
-    res.json({ message: "Reset PIN sent to your email", resetPin });
+    res.json({ message: "Email Verified" });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });

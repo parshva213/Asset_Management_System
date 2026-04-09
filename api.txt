@@ -1,6 +1,8 @@
 role-selection - POST /api/auth/verify-registration-key
 register - POST /api/auth/register
 login - POST /api/auth/login
+reset-password - POST /api/auth/forgot-password
+update-password - POST /api/auth/forgot-password-conform
 locations - POST /api/locations, PUT /api/locations/:id
 rooms - POST /api/locations/rooms, PUT /api/locations/rooms/:id
 team-user - POST /api/users/assign-asset, POST /api/users/unassign-asset, PUT /api/users/:id
