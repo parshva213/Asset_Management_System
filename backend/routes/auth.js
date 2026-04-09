@@ -202,11 +202,12 @@ router.put("/change-password", authenticate(), async (req, res) => {
     const [userRows] = await db.query("SELECT password FROM users WHERE id=?", [req.user.id]);
     if (userRows.length === 0) return res.status(404).json({ message: "User not found" });
 
-    if (userRows[0].password !== currentPassword) {
+    if (!await bcrypt.compare(currentPassword, userRows[0].password)) {
       return res.status(400).json({ message: "Current password is incorrect" });
     }
-
-    await db.query("UPDATE users SET password=? WHERE id=?", [newPassword, req.user.id]);
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    await db.query("UPDATE users SET password=? WHERE id=?", [hashedPassword, req.user.id]);
     res.json({ message: "Password changed successfully" });
   } catch (err) {
     console.error("Password Change Error:", err);
@@ -291,7 +292,7 @@ router.post("/verify-registration-key", async (req, res) => {
         })
       }
       if (count[0].count >= org.member) {
-        return res.status(400).json({ message: "Organization limit reached"});
+        return res.status(400).json({ message: "Organization limit reached" });
       }
       return res.json({
         type: "organization",

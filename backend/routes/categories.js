@@ -35,9 +35,9 @@ router.post("/", verifyToken, async (req, res) => {
       return res.status(403).json({ message: "Access denied" })
     }
 
-    const { name, description } = req.body
+    const { name, description, type } = req.body
 
-    const [result] = await db.query("INSERT INTO categories (name, description, org_id) VALUES (?, ?, ?)", [name, description, req.user.org_id])
+    const [result] = await db.query("INSERT INTO categories (name, description, org_id, type) VALUES (?, ?, ?, ?)", [name, description, req.user.org_id, type])
     const categoryId = result.insertId
 
     // Log activity safely
@@ -57,9 +57,9 @@ router.put("/:id", verifyToken, async (req, res) => {
     }
 
     const { id } = req.params
-    const { name, description } = req.body
+    const { name, description, type } = req.body
 
-    await db.query("UPDATE categories SET name = ?, description = ? WHERE id = ?", [name, description, id])
+    await db.query("UPDATE categories SET name = ?, description = ?, type = ? WHERE id = ?", [name, description, type, id])
 
     // Log activity safely
     await logActivity(req.user.id, "Updated category", "category", id, `Updated category: ${name}`)

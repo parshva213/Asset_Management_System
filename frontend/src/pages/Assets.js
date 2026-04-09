@@ -104,14 +104,16 @@ const Assets = () => {
       console.error("Error fetching locations:", err);
     }
   }, []);
-  
-  const fetchRooms = useCallback(async () => {
+
+  const fetchRooms = useCallback(async (locationId) => {
     try {
-      if (!user?.loc_id) {
+      const fetchLocId = typeof locationId === 'object' ? user?.loc_id : (locationId || user?.loc_id);
+      if (!fetchLocId) {
         setRooms([]);
         return;
       }
-      const res = await api.get(`/locations/${user?.loc_id}/rooms`);
+      const res = await api.get(`/locations/${fetchLocId}/rooms`);
+      console.log("Fetched rooms for location", fetchLocId, res.data);
       setRooms(res.data);
     } catch (err) {
       console.error("Error fetching rooms:", err);
@@ -129,12 +131,12 @@ const Assets = () => {
     } catch (err) {
       console.error("Error fetching location name:", err);
     }
-  }, [user?.loc_id]); 
+  }, [user?.loc_id]);
 
   const fetchRoomName = useCallback(async () => {
     try {
       if (!user?.room_id) {
-        if(user?.role === "Supervisor") {
+        if (user?.role === "Supervisor") {
           setRoomName("");
         }
         return;
@@ -286,8 +288,8 @@ const Assets = () => {
     }
     try {
       setAssigningLoading(true);
-      await api.post("/users/assign-asset", { 
-        user_id: selectedAssignee, 
+      await api.post("/users/assign-asset", {
+        user_id: selectedAssignee,
         asset_id: itemToAssign.id,
         notes: "Assigned via Assets page"
       });
@@ -349,14 +351,14 @@ const Assets = () => {
               Add Asset
             </button>
           )}
-          {user?.role === "Supervisor" && (
+          {/* user?.role === "Supervisor" && (
             <button
               onClick={() => setViewType(viewType === "assets" ? "requests" : "assets")}
               className="btn btn-primary"
             >
               {viewType === "assets" ? "Requested Assets" : "Assets"}
             </button>
-          )}
+          ) */}
         </div>
       </div>
       {user?.role === "Supervisor" && viewType === "requests" && (
@@ -386,183 +388,181 @@ const Assets = () => {
         </div>
       )}
       {(user?.role === "Super Admin" || user?.role === "Supervisor" || user?.role === "Employee") && (
-      <>
-      {user?.role === "Supervisor" && viewType === "requests" ? (
-        // Requested Assets View for Supervisors
         <>
-        {(() => {
-          const filteredRequests = requestFilter === "my" 
-            ? requests.filter(req => req.requested_by === user?.id)
-            : requests.filter(req => req.requested_by !== user?.id);
-          
-          return filteredRequests.length === 0 ? (
-            <div className="empty-state">
-              <p>No {requestFilter === "my" ? "personal" : "other"} requested assets found</p>
-            </div>
-          ) : (
-            <div className="table-container">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>ASSET NAME</th>
-                    <th>REQUEST TYPE</th>
-                    <th>PRIORITY</th>
-                    <th>STATUS</th>
-                    <th>REQUESTED BY</th>
-                    <th>REASON</th>
-                    <th>DESCRIPTION</th>
-                    <th>DATE REQUESTED</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredRequests.map((request) => (
-                    <tr key={request.id}>
-                      <td>{request.asset_name || "N/A"}</td>
-                    <td>{request.request_type}</td>
-                    <td>
-                      <span className={`badge ${
-                        request.priority === "High" ? "badge-danger" :
-                        request.priority === "Medium" ? "badge-warning" :
-                        "badge-success"
-                      }`}>
-                        {request.priority}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`badge ${
-                        request.status === "Approved" ? "badge-success" :
-                        request.status === "Rejected" ? "badge-danger" :
-                        "badge-primary"
-                      }`}>
-                        {request.status}
-                      </span>
-                    </td>
-                    <td>{request.requester_name || "N/A"}</td>
-                    <td>{request.reason || "N/A"}</td>
-                    <td>{request.description || "N/A"}</td>
-                    <td>{formatDate(request.created_at)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          );
-        })()}
-        </>
-      ) : (
-        // Assets View
-        <>
-      {assets.length === 0 ? (
-        <div className="empty-state">
-          <p>No assets found</p>
-        </div>
-      ) : (
-        <div className="table-container">
-          <table className="table">
-            <thead>
-              <tr>
-                {user?.role === "Super Admin" ? (
-                  <>
-                    <th>Serial Number</th>
-                    <th>Name</th>
-                    <th>Status</th>
-                    <th>Category</th>
-                    <th>Location</th>
-                    <th>Room</th>
-                    <th>Warranty</th>
-                    <th>Purchase Cost</th>
-                  </>
-                ) : user?.role === "Supervisor" ? (
-                  <>
-                    <th>NAME</th>
-                    <th>QUANTITY</th>
-                    <th>ASSIGNED</th>
-                    <th>ACTIVE</th>
-                    <th>NOT ACTIVE</th>
-                    <th>CATEGORY</th>
-                    <th>ACTIONS</th>
-                  </>
+          {user?.role === "Supervisor" && viewType === "requests" ? (
+            // Requested Assets View for Supervisors
+            <>
+              {(() => {
+                const filteredRequests = requestFilter === "my"
+                  ? requests.filter(req => req.requested_by === user?.id)
+                  : requests.filter(req => req.requested_by !== user?.id);
+
+                return filteredRequests.length === 0 ? (
+                  <div className="empty-state">
+                    <p>No {requestFilter === "my" ? "personal" : "other"} requested assets found</p>
+                  </div>
                 ) : (
-                  <>
-                    <th>SERIAL NUMBER</th>
-                    <th>ASSET NAME</th>
-                    <th>CATEGORY</th>
-                    <th>ACTIONS</th>
-                  </>
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {assets.map((asset, index) => (
-                <tr key={asset.id || index} id={asset.id ? `asset-${asset.id}` : `asset-row-${index}`}>
-                  {user?.role === "Super Admin" ? (
-                    <>
-                      <td>{asset.sn}</td>
-                        <td>{asset.aname}</td>
-                      <td>{asset.status}</td>
-                      <td>{asset.cat_name}</td>
-                      <td>{asset.loc_name}</td>
-                      <td>{asset.room_name}</td>
-                      <td>{asset.warranty_expiry}</td>
-                      <td>{asset.purchase_cost}</td>
-                    </>
-                  ) : user?.role === "Supervisor" ? (
-                    <>
-                      <td>{asset.aname}</td>
-                      <td>{asset.quantity}</td>
-                      <td>{asset.assigned_total || 0}</td>
-                      <td>{asset.active}</td>
-                      <td>{asset.not_active}</td>
-                      <td>{asset.cat_name || "N/A"}</td>
-                      <td>
-                        <button 
-                          className="btn btn-primary" 
-                          style={{ padding: '0.4rem 0.8rem', fontSize: '13px' }}
-                          onClick={() => handleViewItems(asset.aname, asset.asset_type)}
-                        >
-                          View Items
-                        </button>
-                      </td>
-                    </>
-                  ) : (
-                    <>
-                      <td>{asset.serial_number || asset.sn || "N/A"}</td>
-                      <td>
-                        <div className="fw-bold">{asset.name || asset.aname}</div>
-                      </td>
-                      <td>{asset.category_name || asset.cat_name || "N/A"}</td>
-                      <td>
-                        <button
-                          className="btn btn-primary"
-                          style={{ padding: '0.4rem 0.8rem', fontSize: '13px' }}
-                          onClick={() => {
-                            setRequestFormData({
-                              asset_id: asset.id,
-                              request_type: "Repair",
-                              reason: "",
-                              description: "",
-                              priority: "Medium",
-                              location_id: user?.loc_id,
-                              room_id: user?.room_id,
-                              asset_name: `${asset.name || asset.aname}${asset.serial_number || asset.sn ? ` - ${asset.serial_number || asset.sn}` : ""}`
-                            });
-                            setShowRequestModal(true);
-                          }}
-                        >
-                          Request
-                        </button>
-                      </td>
-                    </>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-      </>
-      )}
-      </>
+                  <div className="table-container">
+                    <table className="table">
+                      <thead>
+                        <tr>
+                          <th>ASSET NAME</th>
+                          <th>REQUEST TYPE</th>
+                          <th>PRIORITY</th>
+                          <th>STATUS</th>
+                          <th>REQUESTED BY</th>
+                          <th>REASON</th>
+                          <th>DESCRIPTION</th>
+                          <th>DATE REQUESTED</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredRequests.map((request) => (
+                          <tr key={request.id}>
+                            <td>{request.asset_name || "N/A"}</td>
+                            <td>{request.request_type}</td>
+                            <td>
+                              <span className={`badge ${request.priority === "High" ? "badge-danger" :
+                                  request.priority === "Medium" ? "badge-warning" :
+                                    "badge-success"
+                                }`}>
+                                {request.priority}
+                              </span>
+                            </td>
+                            <td>
+                              <span className={`badge ${request.status === "Approved" ? "badge-success" :
+                                  request.status === "Rejected" ? "badge-danger" :
+                                    "badge-primary"
+                                }`}>
+                                {request.status}
+                              </span>
+                            </td>
+                            <td>{request.requester_name || "N/A"}</td>
+                            <td>{request.reason || "N/A"}</td>
+                            <td>{request.description || "N/A"}</td>
+                            <td>{formatDate(request.created_at)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })()}
+            </>
+          ) : (
+            // Assets View
+            <>
+              {assets.length === 0 ? (
+                <div className="empty-state">
+                  <p>No assets found</p>
+                </div>
+              ) : (
+                <div className="table-container">
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        {user?.role === "Super Admin" ? (
+                          <>
+                            <th>Serial Number</th>
+                            <th>Name</th>
+                            <th>Status</th>
+                            <th>Category</th>
+                            <th>Location</th>
+                            <th>Room</th>
+                            <th>Warranty</th>
+                            <th>Purchase Cost</th>
+                          </>
+                        ) : user?.role === "Supervisor" ? (
+                          <>
+                            <th>NAME</th>
+                            <th>QUANTITY</th>
+                            <th>ASSIGNED</th>
+                            <th>ACTIVE</th>
+                            <th>NOT ACTIVE</th>
+                            <th>CATEGORY</th>
+                            <th>ACTIONS</th>
+                          </>
+                        ) : (
+                          <>
+                            <th>SERIAL NUMBER</th>
+                            <th>ASSET NAME</th>
+                            <th>CATEGORY</th>
+                            <th>ACTIONS</th>
+                          </>
+                        )}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {assets.map((asset, index) => (
+                        <tr key={asset.id || index} id={asset.id ? `asset-${asset.id}` : `asset-row-${index}`}>
+                          {user?.role === "Super Admin" ? (
+                            <>
+                              <td>{asset.sn}</td>
+                              <td>{asset.aname}</td>
+                              <td>{asset.status}</td>
+                              <td>{asset.cat_name}</td>
+                              <td>{asset.loc_name}</td>
+                              <td>{asset.room_name}</td>
+                              <td>{asset.warranty_expiry}</td>
+                              <td>{asset.purchase_cost}</td>
+                            </>
+                          ) : user?.role === "Supervisor" ? (
+                            <>
+                              <td>{asset.aname}</td>
+                              <td>{asset.quantity}</td>
+                              <td>{asset.assigned_total || 0}</td>
+                              <td>{asset.active}</td>
+                              <td>{asset.not_active}</td>
+                              <td>{asset.cat_name || "N/A"}</td>
+                              <td>
+                                <button
+                                  className="btn btn-primary"
+                                  style={{ padding: '0.4rem 0.8rem', fontSize: '13px' }}
+                                  onClick={() => handleViewItems(asset.aname, asset.asset_type)}
+                                >
+                                  View Items
+                                </button>
+                              </td>
+                            </>
+                          ) : (
+                            <>
+                              <td>{asset.serial_number || asset.sn || "N/A"}</td>
+                              <td>
+                                <div className="fw-bold">{asset.name || asset.aname}</div>
+                              </td>
+                              <td>{asset.category_name || asset.cat_name || "N/A"}</td>
+                              <td>
+                                <button
+                                  className="btn btn-primary"
+                                  style={{ padding: '0.4rem 0.8rem', fontSize: '13px' }}
+                                  onClick={() => {
+                                    setRequestFormData({
+                                      asset_id: asset.id,
+                                      request_type: "Repair",
+                                      reason: "",
+                                      description: "",
+                                      priority: "Medium",
+                                      location_id: user?.loc_id,
+                                      room_id: user?.room_id,
+                                      asset_name: `${asset.name || asset.aname}${asset.serial_number || asset.sn ? ` - ${asset.serial_number || asset.sn}` : ""}`
+                                    });
+                                    setShowRequestModal(true);
+                                  }}
+                                >
+                                  Request
+                                </button>
+                              </td>
+                            </>
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </>
+          )}
+        </>
       )}
       {showModal && (
         <div className="modal-overlay">
@@ -692,83 +692,82 @@ const Assets = () => {
               ) : itemsList.length === 0 ? (
                 <div className="text-center p-12"><p style={{ color: '#a3b1c6', fontSize: '1.1rem' }}>No individual items found.</p></div>
               ) : (
-                  <table className="table" style={{ borderCollapse: 'separate', borderSpacing: '0 8px', width: '100%' }}>
-                    <thead style={{ position: 'sticky', top: -25, zIndex: 10 }}>
-                      <tr>
-                        <th style={{ backgroundColor: '#13152a', color: '#7e8db4', padding: '20px 15px 10px 15px', textAlign: 'left', textTransform: 'uppercase', fontSize: '12px', fontWeight: '600', letterSpacing: '1px', borderBottom: '1px solid #3d447a' }}>Serial Number</th>
-                        <th style={{ backgroundColor: '#13152a', color: '#7e8db4', padding: '20px 15px 10px 15px', textAlign: 'left', textTransform: 'uppercase', fontSize: '12px', fontWeight: '600', letterSpacing: '1px', borderBottom: '1px solid #3d447a' }}>Status</th>
-                        <th style={{ backgroundColor: '#13152a', color: '#7e8db4', padding: '20px 15px 10px 15px', textAlign: 'left', textTransform: 'uppercase', fontSize: '12px', fontWeight: '600', letterSpacing: '1px', borderBottom: '1px solid #3d447a' }}>Assigned To</th>
-                        <th style={{ backgroundColor: '#13152a', color: '#7e8db4', padding: '20px 15px 10px 15px', textAlign: 'left', textTransform: 'uppercase', fontSize: '12px', fontWeight: '600', letterSpacing: '1px', borderBottom: '1px solid #3d447a' }}>Warranty</th>
-                        <th style={{ backgroundColor: '#13152a', color: '#7e8db4', padding: '20px 15px 10px 15px', textAlign: 'left', textTransform: 'uppercase', fontSize: '12px', fontWeight: '600', letterSpacing: '1px', borderBottom: '1px solid #3d447a' }}>Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {itemsList.map((item) => (
-                        <tr key={item.id} className="premium-row" style={{ backgroundColor: '#1a1d3a', transition: 'transform 0.2s, background-color 0.2s' }}>
-                          <td style={{ padding: '15px', fontSize: '14px', fontWeight: '500', color: '#fff', borderTopLeftRadius: '8px', borderBottomLeftRadius: '8px' }}>{item.sn}</td>
-                          <td style={{ padding: '15px' }}>
-                            <span className={`badge ${
-                              item.status === 'Available' ? 'badge-success' : 
+                <table className="table" style={{ borderCollapse: 'separate', borderSpacing: '0 8px', width: '100%' }}>
+                  <thead style={{ position: 'sticky', top: -25, zIndex: 10 }}>
+                    <tr>
+                      <th style={{ backgroundColor: '#13152a', color: '#7e8db4', padding: '20px 15px 10px 15px', textAlign: 'left', textTransform: 'uppercase', fontSize: '12px', fontWeight: '600', letterSpacing: '1px', borderBottom: '1px solid #3d447a' }}>Serial Number</th>
+                      <th style={{ backgroundColor: '#13152a', color: '#7e8db4', padding: '20px 15px 10px 15px', textAlign: 'left', textTransform: 'uppercase', fontSize: '12px', fontWeight: '600', letterSpacing: '1px', borderBottom: '1px solid #3d447a' }}>Status</th>
+                      <th style={{ backgroundColor: '#13152a', color: '#7e8db4', padding: '20px 15px 10px 15px', textAlign: 'left', textTransform: 'uppercase', fontSize: '12px', fontWeight: '600', letterSpacing: '1px', borderBottom: '1px solid #3d447a' }}>Assigned To</th>
+                      <th style={{ backgroundColor: '#13152a', color: '#7e8db4', padding: '20px 15px 10px 15px', textAlign: 'left', textTransform: 'uppercase', fontSize: '12px', fontWeight: '600', letterSpacing: '1px', borderBottom: '1px solid #3d447a' }}>Warranty</th>
+                      <th style={{ backgroundColor: '#13152a', color: '#7e8db4', padding: '20px 15px 10px 15px', textAlign: 'left', textTransform: 'uppercase', fontSize: '12px', fontWeight: '600', letterSpacing: '1px', borderBottom: '1px solid #3d447a' }}>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {itemsList.map((item) => (
+                      <tr key={item.id} className="premium-row" style={{ backgroundColor: '#1a1d3a', transition: 'transform 0.2s, background-color 0.2s' }}>
+                        <td style={{ padding: '15px', fontSize: '14px', fontWeight: '500', color: '#fff', borderTopLeftRadius: '8px', borderBottomLeftRadius: '8px' }}>{item.sn}</td>
+                        <td style={{ padding: '15px' }}>
+                          <span className={`badge ${item.status === 'Available' ? 'badge-success' :
                               item.status === 'Assigned' ? 'badge-primary' : 'badge-warning'
                             }`} style={{ padding: '0.4rem 0.8rem', borderRadius: '6px', fontSize: '11px', fontWeight: '700', letterSpacing: '0.5px', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
-                              {item.status.toUpperCase()}
-                            </span>
-                          </td>
-                          <td style={{ padding: '15px', fontSize: '14px', color: '#e2e8f0', fontWeight: '500' }}>{item.assign_to || "-"}</td>
-                          <td style={{ padding: '15px', fontSize: '14px', color: '#a3b1c6' }}>{formatDate(item.warranty_expiry)}</td>
-                          <td style={{ padding: '15px', borderTopRightRadius: '8px', borderBottomRightRadius: '8px' }}>
-                            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                              {item.status === 'Available' ? (
-                                <button 
-                                  onClick={() => handleAssignClick(item)}
-                                  className="btn-polish-primary"
-                                  style={{ 
-                                    padding: '0.5rem 0', 
-                                    fontSize: '12px', 
+                            {item.status.toUpperCase()}
+                          </span>
+                        </td>
+                        <td style={{ padding: '15px', fontSize: '14px', color: '#e2e8f0', fontWeight: '500' }}>{item.assign_to || "-"}</td>
+                        <td style={{ padding: '15px', fontSize: '14px', color: '#a3b1c6' }}>{formatDate(item.warranty_expiry)}</td>
+                        <td style={{ padding: '15px', borderTopRightRadius: '8px', borderBottomRightRadius: '8px' }}>
+                          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                            {item.status === 'Available' ? (
+                              <button
+                                onClick={() => handleAssignClick(item)}
+                                className="btn-polish-primary"
+                                style={{
+                                  padding: '0.5rem 0',
+                                  fontSize: '12px',
+                                  fontWeight: '600',
+                                  borderRadius: '6px',
+                                  border: 'none',
+                                  backgroundColor: '#4e54c8',
+                                  color: '#fff',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s',
+                                  boxShadow: '0 4px 6px rgba(78, 84, 200, 0.3)',
+                                  width: '85px',
+                                  textAlign: 'center'
+                                }}
+                              >
+                                Assign
+                              </button>
+                            ) : (
+                              item.status === 'Assigned' && item.assignee_ownpk === null && item.assignee_unpk === user?.ownpk && (
+                                <button
+                                  onClick={() => handleUnassign(item.id)}
+                                  className="btn-polish-danger"
+                                  style={{
+                                    padding: '0.5rem 0',
+                                    fontSize: '12px',
                                     fontWeight: '600',
                                     borderRadius: '6px',
                                     border: 'none',
-                                    backgroundColor: '#4e54c8',
+                                    backgroundColor: '#ff4b2b',
                                     color: '#fff',
                                     cursor: 'pointer',
                                     transition: 'all 0.2s',
-                                    boxShadow: '0 4px 6px rgba(78, 84, 200, 0.3)',
+                                    boxShadow: '0 4px 6px rgba(255, 75, 43, 0.3)',
                                     width: '85px',
                                     textAlign: 'center'
                                   }}
                                 >
-                                  Assign
+                                  Unassign
                                 </button>
-                              ) : (
-                                item.status === 'Assigned' && item.assignee_ownpk === null && item.assignee_unpk === user?.ownpk && (
-                                  <button 
-                                    onClick={() => handleUnassign(item.id)}
-                                    className="btn-polish-danger"
-                                    style={{ 
-                                      padding: '0.5rem 0', 
-                                      fontSize: '12px', 
-                                      fontWeight: '600',
-                                      borderRadius: '6px',
-                                      border: 'none',
-                                      backgroundColor: '#ff4b2b',
-                                      color: '#fff',
-                                      cursor: 'pointer',
-                                      transition: 'all 0.2s',
-                                      boxShadow: '0 4px 6px rgba(255, 75, 43, 0.3)',
-                                      width: '85px',
-                                      textAlign: 'center'
-                                    }}
-                                  >
-                                    Unassign
-                                  </button>
-                                )
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                              )
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               )}
             </div>
           </div>
@@ -786,7 +785,7 @@ const Assets = () => {
             <div className="modal-body">
               <div className="form-group mb-4">
                 <label className="form-label">Select Team Member</label>
-                <select 
+                <select
                   className="form-input"
                   value={selectedAssignee}
                   onChange={(e) => setSelectedAssignee(e.target.value)}
@@ -800,8 +799,8 @@ const Assets = () => {
             </div>
             <div className="modal-footer">
               <button className="btn btn-secondary" onClick={() => setShowAssignModal(false)}>Cancel</button>
-              <button 
-                className="btn btn-primary" 
+              <button
+                className="btn btn-primary"
                 onClick={confirmAssign}
                 disabled={assigningLoading || !selectedAssignee}
               >
@@ -818,8 +817,8 @@ const Assets = () => {
           <div className="modal-content" style={{ maxWidth: "500px" }}>
             <div className="modal-header">
               <h2>Add Request</h2>
-              <button 
-                className="close-modal" 
+              <button
+                className="close-modal"
                 onClick={() => {
                   setShowRequestModal(false);
                   setRequestFormData({
@@ -851,7 +850,7 @@ const Assets = () => {
 
                 <div className="form-group">
                   <label className="form-label">Request Type</label>
-                  <select 
+                  <select
                     className="form-input"
                     value={requestFormData.request_type}
                     onChange={(e) => setRequestFormData(prev => ({ ...prev, request_type: e.target.value }))}
@@ -863,7 +862,7 @@ const Assets = () => {
 
                 <div className="form-group">
                   <label className="form-label">Priority</label>
-                  <select 
+                  <select
                     className="form-input"
                     value={requestFormData.priority}
                     onChange={(e) => setRequestFormData(prev => ({ ...prev, priority: e.target.value }))}
@@ -876,9 +875,9 @@ const Assets = () => {
 
                 <div className="form-group">
                   <label className="form-label">Reason</label>
-                  <input 
-                    type="text" 
-                    className="form-input" 
+                  <input
+                    type="text"
+                    className="form-input"
                     placeholder="Enter reason"
                     value={requestFormData.reason}
                     onChange={(e) => setRequestFormData(prev => ({ ...prev, reason: e.target.value }))}
@@ -887,8 +886,8 @@ const Assets = () => {
 
                 <div className="form-group">
                   <label className="form-label">Description</label>
-                  <textarea 
-                    className="form-input" 
+                  <textarea
+                    className="form-input"
                     rows="4"
                     placeholder="Enter description"
                     value={requestFormData.description}
@@ -898,8 +897,8 @@ const Assets = () => {
               </form>
             </div>
             <div className="modal-footer">
-              <button 
-                className="btn btn-secondary" 
+              <button
+                className="btn btn-secondary"
                 onClick={() => {
                   setShowRequestModal(false);
                   setRequestFormData({
@@ -916,7 +915,7 @@ const Assets = () => {
               >
                 Cancel
               </button>
-              <button 
+              <button
                 className="btn btn-primary"
                 onClick={async () => {
                   try {

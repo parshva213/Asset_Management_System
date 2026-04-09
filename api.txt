@@ -1,0 +1,15 @@
+role-selection - POST /api/auth/verify-registration-key
+register - POST /api/auth/register
+login - POST /api/auth/login
+locations - POST /api/locations, PUT /api/locations/:id
+rooms - POST /api/locations/rooms, PUT /api/locations/rooms/:id
+team-user - POST /api/users/assign-asset, POST /api/users/unassign-asset, PUT /api/users/:id
+categories - POST /api/categories, PUT /api/categories/:id
+assets - POST /api/assets, POST api/users/assign-asset, POST /api/requests
+purchase-orders - POST /api/purchase-orders, PUT /api/purchase-orders/:id/status
+users - PUT /api/users/:id
+requests - POST /api/requests, PUT /api/requests/:id, PUT /api/requests/:id/status
+profile - PUT /api/auth/profile, PUT api/auth/change-password
+maintenance-task - PUT api/maintenance/:id
+organization - POST /api/organizations, POST /api/organizations/:id/register PUT /api/organizations/:id/:status, PUT /api organizations/:id
+supply-assets - PUT /api/purchase-orders/:id/status

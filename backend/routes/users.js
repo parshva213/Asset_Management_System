@@ -248,13 +248,7 @@ router.post("/assign-asset", verifyToken, async (req, res) => {
       return rollbackAndRespond(403, { message: "Access denied" });
     }
 
-    if (req.user.role === "Supervisor") {
-      const [supervisorRows] = await conn.execute("SELECT room_id FROM users WHERE id = ?", [req.user.id]);
-      const supervisorRoomId = supervisorRows[0]?.room_id;
-      if (!supervisorRoomId || String(supervisorRoomId) !== String(targetUser.room_id) || targetUser.role !== "Employee") {
-        return rollbackAndRespond(403, { message: "Access denied" });
-      }
-    }
+    // Relaxed Supervisor check: Supervisors are allowed to assign within the same org
 
     const userRoomId = targetUser.room_id || null;
 

@@ -300,11 +300,11 @@ app.get("/api/admin/dashboard", authenticate(["Super Admin", "Admin"]), async (r
         const [maintainedAssets] = await pool.query("SELECT COUNT(*) as count FROM assets WHERE org_id = ? AND status not in ('Available', 'Assigned')", [req.user.org_id]);
         const [activeUsers] = await pool.query("SELECT COUNT(*) as count FROM users WHERE org_id = ? AND role != 'Super Admin' AND status IN ('Active', 'On Leave')", [req.user.org_id]);
         const [inactiveUsers] = await pool.query("SELECT COUNT(*) as count FROM users WHERE org_id = ? AND role != 'Super Admin' AND status NOT IN ('Active', 'On Leave')", [req.user.org_id]);
-        
+
         // Separate category counts by type
         const [hwCategories] = await pool.query("SELECT COUNT(*) as count FROM categories WHERE org_id = ? AND type = 'Hardware'", [req.user.org_id]);
         const [swCategories] = await pool.query("SELECT COUNT(*) as count FROM categories WHERE org_id = ? AND type = 'Software'", [req.user.org_id]);
-        
+
         const [totalLocations] = await pool.query("SELECT COUNT(*) as count FROM locations WHERE org_id = ?", [req.user.org_id]);
         const [totalRooms] = await pool.query("SELECT COUNT(*) as count FROM rooms WHERE location_id IN (SELECT id from locations where org_id = ?) ", [req.user.org_id]);
         const [pendingRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE status IN ('Pending', 'In Progress') and requested_by IN (SELECT id from users where org_id = ?)", [req.user.org_id]);
@@ -326,6 +326,7 @@ app.get("/api/admin/dashboard", authenticate(["Super Admin", "Admin"]), async (r
             pendingOrders: pendingOrders[0].count,
             completedOrders: completedOrders[0].count,
         });
+        res.end();
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Server error" });
@@ -343,13 +344,13 @@ app.get("/api/supervisor/dashboard", authenticate(["Supervisor"]), async (req, r
         const [availableAssets] = await pool.query("SELECT COUNT(*) as count FROM assets WHERE org_id = ? AND (room_id = ? OR ? IS NULL) AND status = 'Available'", [orgId, roomId, roomId]);
         const [myAssets] = await pool.query("SELECT COUNT(*) as count FROM asset_assignments WHERE assigned_to = ? AND unassigned_at IS NULL", [req.user.id]);
         const [teamAssets] = await pool.query("SELECT COUNT(*) as count FROM asset_assignments aa JOIN users u ON aa.assigned_to = u.id WHERE (u.room_id = ? OR ? IS NULL) AND u.role = 'Employee' AND aa.unassigned_at IS NULL", [roomId, roomId]);
-        
+
         const [[supervisorInfo]] = await pool.query("SELECT ownpk FROM users WHERE id = ?", [req.user.id]);
         const ownpk = supervisorInfo?.ownpk;
 
         const [activeTeam] = await pool.query("SELECT COUNT(*) as count FROM users WHERE unpk = ? AND role = 'Employee' AND status = 'Active'", [ownpk]);
         const [onLeaveTeam] = await pool.query("SELECT COUNT(*) as count FROM users WHERE unpk = ? AND role = 'Employee' AND status = 'On Leave'", [ownpk]);
-        
+
         const [pendingRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE status not in ('Completed', 'Rejected') AND requested_by IN (SELECT id FROM users WHERE org_id = ? AND (room_id = ? OR ? IS NULL))", [orgId, roomId, roomId]);
         const [completedRequests] = await pool.query("SELECT COUNT(*) as count FROM asset_requests WHERE status = 'Completed' AND requested_by IN (SELECT id FROM users WHERE org_id = ? AND (room_id = ? OR ? IS NULL))", [orgId, roomId, roomId]);
         // Split Orders logic
@@ -463,7 +464,7 @@ app.get("/api/maintenance/dashboard", authenticate(["Maintenance", "Super Admin"
         `, [orgId]);
 
         const [configTasks] = await pool.query("SELECT COUNT(*) as count FROM maintenance_records mr JOIN assets a ON mr.asset_id = a.id WHERE mr.maintenance_type = 'Configuration' AND a.org_id = ?", [orgId]);
-        
+
         const pendingCount = pendingTasks.length;
         const completedCount = completedTasks.length;
         const totalAssets = assetsToMaintain.length;

@@ -7,93 +7,93 @@ import api from "../api"
 import Button from "../components/Button"
 
 const Categories = () => {
-        const { user } = useAuth()
-        const { showSuccess, showError } = useToast()
-        const [categories, setCategories] = useState([])
-        const [loading, setLoading] = useState(true)
-        const [showModal, setShowModal] = useState(false)
-        const [editingCategory, setEditingCategory] = useState(null)
-        const [formData, setFormData] = useState({ name: "", description: "", type: "" })
-        const [submitting, setSubmitting] = useState(false)
-        const [error, setError] = useState(null)
-        const [filterType, setFilterType] = useState("")
+    const { user } = useAuth()
+    const { showSuccess, showError } = useToast()
+    const [categories, setCategories] = useState([])
+    const [loading, setLoading] = useState(true)
+    const [showModal, setShowModal] = useState(false)
+    const [editingCategory, setEditingCategory] = useState(null)
+    const [formData, setFormData] = useState({ name: "", description: "", type: "" })
+    const [submitting, setSubmitting] = useState(false)
+    const [error, setError] = useState(null)
+    const [filterType, setFilterType] = useState("")
 
-        useEffect(() => {
-            fetchCategories()
-                // eslint-disable-next-line react-hooks/exhaustive-deps
-        }, [])
+    useEffect(() => {
+        fetchCategories()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     const fetchCategories = async () => {
-            try {
-                const response = await api.get("/categories")
-                setCategories(response.data)
-            } catch (err) {
-                console.error("Error fetching categories:", err)
-                showError("Failed to load categories")
-            } finally {
-                setLoading(false)
-            }
+        try {
+            const response = await api.get("/categories")
+            setCategories(response.data)
+        } catch (err) {
+            console.error("Error fetching categories:", err)
+            showError("Failed to load categories")
+        } finally {
+            setLoading(false)
         }
+    }
 
     const handleSubmit = async (e) => {
-            e.preventDefault()
-            setError(null)
+        e.preventDefault()
+        setError(null)
 
-            if (!formData.type) {
-                setError("Please select a category type")
-                return
-            }
-
-            if (!formData.name || formData.name.trim().length < 2) {
-                setError("Category name must be at least 2 characters")
-                return
-            }
-
-            setSubmitting(true)
-            try {
-                if (editingCategory) {
-                    await api.put(`/categories/${editingCategory.id}`, formData)
-                    showSuccess("Category updated successfully")
-                    // Update the category in the local state immediately
-                    setCategories(prev => prev.map(cat => 
-                        cat.id === editingCategory.id 
-                            ? { ...cat, name: formData.name, description: formData.description }
-                            : cat
-                    ))
-                } else {
-                    const response = await api.post("/categories", formData)
-                    showSuccess("Category added successfully")
-                    // Add the new category to the local state immediately
-                    setCategories(prev => [...prev, { 
-                        id: response.data.id, 
-                        name: formData.name, 
-                        description: formData.description,
-                        created_at: new Date().toISOString()
-                    }])
-                }
-                setShowModal(false)
-                setEditingCategory(null)
-                resetForm()
-            } catch (err) {
-                console.error("Error saving category:", err)
-                showError(err?.response?.data?.message || "Error saving category")
-            } finally {
-                setSubmitting(false)
-            }
+        if (!formData.type) {
+            setError("Please select a category type")
+            return
         }
 
-        const handleEdit = (category) => {
-            setEditingCategory(category)
-            setFormData({ 
-                name: category.name || "", 
-                description: category.description || "",
-                type: category.type || "" 
-            })
-            setShowModal(true)
+        if (!formData.name || formData.name.trim().length < 2) {
+            setError("Category name must be at least 2 characters")
+            return
         }
 
+        setSubmitting(true)
+        try {
+            if (editingCategory) {
+                await api.put(`/categories/${editingCategory.id}`, formData)
+                showSuccess("Category updated successfully")
+                // Update the category in the local state immediately
+                setCategories(prev => prev.map(cat =>
+                    cat.id === editingCategory.id
+                        ? { ...cat, name: formData.name, description: formData.description }
+                        : cat
+                ))
+            } else {
+                const response = await api.post("/categories", formData)
+                showSuccess("Category added successfully")
+                // Add the new category to the local state immediately
+                setCategories(prev => [...prev, {
+                    id: response.data.id,
+                    name: formData.name,
+                    description: formData.description,
+                    created_at: new Date().toISOString()
+                }])
+            }
+            setShowModal(false)
+            setEditingCategory(null)
+            resetForm()
+        } catch (err) {
+            console.error("Error saving category:", err)
+            showError(err?.response?.data?.message || "Error saving category")
+        } finally {
+            setSubmitting(false)
+        }
+    }
 
-        const resetForm = () => setFormData({ name: "", description: "", type: "" })
+    const handleEdit = (category) => {
+        setEditingCategory(category)
+        setFormData({
+            name: category.name || "",
+            description: category.description || "",
+            type: category.type || ""
+        })
+        setShowModal(true)
+    }
+
+
+    const resetForm = () => setFormData({ name: "", description: "", type: "" })
 
     const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value })
 
@@ -117,12 +117,12 @@ const Categories = () => {
                     )}
                 </div>
             </div>
-            
+
             <div className="categories-filter-section">
                 <label className="categories-filter-label">Filter by Type:</label>
-                <select 
-                    className="categories-filter-select" 
-                    value={filterType} 
+                <select
+                    className="categories-filter-select"
+                    value={filterType}
                     onChange={(e) => setFilterType(e.target.value)}
                 >
                     <option value="">All Types</option>
@@ -150,17 +150,17 @@ const Categories = () => {
                             {categories
                                 .filter(category => !filterType || category.type === filterType)
                                 .map((category) => (
-                                <tr key={category.id} id={`cat-${category.id}`}>
-                                    <td>{category.name}</td>
-                                    <td>{category.description || "N/A"}</td>
-                                    <td>{category.type || "N/A"}</td>
-                                    <td style={{ textAlign: 'center' }}>
-                                        <button className="btn-edit-category" onClick={() => handleEdit(category)}>
-                                            Edit
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
+                                    <tr key={category.id} id={`cat-${category.id}`}>
+                                        <td>{category.name}</td>
+                                        <td>{category.description || "N/A"}</td>
+                                        <td>{category.type || "N/A"}</td>
+                                        <td style={{ textAlign: 'center' }}>
+                                            <button className="btn-edit-category" onClick={() => handleEdit(category)}>
+                                                Edit
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
                         </tbody>
                     </table>
                 </div>
@@ -175,23 +175,23 @@ const Categories = () => {
                                 className="close-modal"
                                 aria-label="Close"
                                 onClick={() => {
-                                        setShowModal(false)
-                                        setEditingCategory(null)
-                                        resetForm()
+                                    setShowModal(false)
+                                    setEditingCategory(null)
+                                    resetForm()
                                 }}
                             >
                                 ×
                             </button>
                         </div>
 
-                             <div className="modal-body">
-                        <form onSubmit={handleSubmit}>
+                        <div className="modal-body">
+                            <form onSubmit={handleSubmit}>
                                 <div className="form-group">
                                     <label className="form-label">Category Type</label>
-                                    <select 
-                                        name="type" 
+                                    <select
+                                        name="type"
                                         className="form-select"
-                                        value={formData.type} 
+                                        value={formData.type}
                                         onChange={handleChange}
                                         required
                                     >
@@ -230,32 +230,32 @@ const Categories = () => {
                                 )}
 
                                 {error && <div className="alert alert-error">{error}</div>}
-                        </form>
-                            </div>
-                            <div className="modal-footer" style={{ borderTop: '1px solid #eee', padding: '1rem', display: 'flex', justifyContent: 'flex-start', gap: '0.5rem' }}>
+                            </form>
+                        </div>
+                        <div className="modal-footer" style={{ borderTop: '1px solid #eee', padding: '1rem', display: 'flex', justifyContent: 'flex-start', gap: '0.5rem' }}>
                             {formData.name && (
-                                    <Button type="submit" onClick={handleSubmit} disabled={submitting}>
-                                        {submitting ? (editingCategory ? "Updating..." : "Adding...") : editingCategory ? "Update Category" : "Add Category"}
-                                    </Button>
-                                )}   
-                            <Button
-                                    type="button"
-                                    variant="secondary"
-                                    onClick={() => {
-                                        setShowModal(false)
-                                        setEditingCategory(null)
-                                        resetForm()
-                                        setError(null)
-                                    }}
-                                >
-                                    Cancel
+                                <Button type="submit" onClick={handleSubmit} disabled={submitting}>
+                                    {submitting ? (editingCategory ? "Updating..." : "Adding...") : editingCategory ? "Update Category" : "Add Category"}
                                 </Button>
-                                
-                            </div>
+                            )}
+                            <Button
+                                type="button"
+                                variant="secondary"
+                                onClick={() => {
+                                    setShowModal(false)
+                                    setEditingCategory(null)
+                                    resetForm()
+                                    setError(null)
+                                }}
+                            >
+                                Cancel
+                            </Button>
+
+                        </div>
                     </div>
                 </div>
             )}
         </div>
-        )
-    }
+    )
+}
 export default Categories
